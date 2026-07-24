@@ -61,8 +61,11 @@ session login on the operator pages).
 | `/mcp-tools/request` (POST) | A member requests MCP access |
 | `/mcp-admin` | Operator console: ledger, metrics, approvals, access mgmt, registry, eval |
 | `/mcp-admin/{approve,reject}` (POST) | Operator decides a pending tool-call approval |
+| `/mcp-admin/reject-principal` (POST) | Operator bulk-rejects every pending approval for one principal (queue drain) |
 | `/mcp-admin/access` (POST) | Operator grants/revokes a member's access/role |
+| `/mcp-admin/token-revoke` (POST) | Operator kill-switch — revoke any bearer token by id |
 | `/mcp-admin/eval` (POST) | Operator runs the tool-surface eval |
+| `/mcp-admin/ledger-export.json` (GET) | Operator — paginated JSON ledger export (honors active filters; capped) |
 
 **RPC methods:** `initialize`, `ping`, `tools/list`, `tools/call`, `resources/list`,
 `resources/read`, `resources/templates/list`, `prompts/list`, `prompts/get`,
@@ -92,6 +95,7 @@ every request — no redeploy needed.
 | `defaults.timeout_ms` | `5000` | handler time budget |
 | `defaults.idempotency_window_seconds` | `86400` | how long an idempotency key can replay |
 | `defaults.approval_window_seconds` | `604800` | how long a pending approval can be acted on |
+| `defaults.approval_max_pending_per_principal` | `3` | max non-expired pending approvals per principal (queue-flood cap) |
 | `resources.expose_markdown_pages` | `false` | `.md` resources on/off toggle |
 | `resources.markdown_page_prefixes` | `["docs"]` | slug prefixes exposed as resources (allowlist) |
 | `ledger.retention_days` | `730` | ledger retention |
@@ -250,6 +254,12 @@ review as security-relevant.
   and re-authorized), with the execution ledger entry linked to the request by
   `request_id`. The agent polls the built-in `mcp_approval_status` tool with the
   handle. This keeps genuinely high-impact actions out of autonomous execution.
+  **Queue-flood protection:** a duplicate pending request (same principal + identical
+  argument hash) returns the existing handle instead of stacking a new one, and each
+  principal is capped at `approval_max_pending_per_principal` non-expired pending
+  approvals (default 3). Excess is refused (`queue_full`) and both cases are attested
+  (`approval_duplicate` / `approval_throttled`) and counted as violations. An operator
+  can drain a principal's entire queue in one action from the console.
 
 ---
 
@@ -288,11 +298,15 @@ per principal, and attested. Revoke on `/mcp-tools` (IDOR-guarded).
 
 ### Operator console (`/mcp-admin`)
 
-Gated to `admin`. Shows: hash-chain verification status; metrics (calls, denial/
-rollback rate, schema rejections, rate-limited, by-tool); **pending approvals**
-(approve/reject); **MCP access** (approve requests, make admin/user, revoke, grant by
-id); **registered tools** (name/version/read|write/approval/policy + excluded
-manifests); the **tool-surface eval** (Run + latest result); and a filterable ledger.
+Gated to `admin`; a tabbed console (Overview · Approvals · Tokens & access · Ledger ·
+Tools & config) that preserves context on switch. Shows: hash-chain verification
+status; metrics (calls, denial/rollback rate, schema rejections, rate-limited,
+approval throttle/dup, by-tool); **pending approvals** (approve/reject, plus
+per-principal bulk-drain); **active tokens** with an abuse watchlist (violation count
+per principal) and one-click revoke; **MCP access** (approve requests, make admin/user,
+revoke, grant by id); **registered tools** (name/version/read|write/approval/policy +
+excluded manifests); the **tool-surface eval** (Run + latest result); and a filterable
+ledger with security-lens quick filters and a paginated JSON export.
 
 ---
 

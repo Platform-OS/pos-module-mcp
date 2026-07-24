@@ -1,0 +1,9 @@
+{
+  "name": "pos-module-mcp",
+  "machine_name": "mcp",
+  "type": "module",
+  "version": "0.1.0",
+  "dependencies": {
+    "user": "^5.2.11"
+  }
+}
