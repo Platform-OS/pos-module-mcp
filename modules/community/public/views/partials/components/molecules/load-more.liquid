@@ -1,0 +1,28 @@
+{% assign page = page | to_positive_integer: 1 %}
+<div
+  x-data='frames()'
+  x-frames-target="loadmore_target-{{ page }}"
+>
+  <div class="flex items-center justify-center"
+    x-show="spinner"
+    x-cloak
+  >
+    {% theme_render_rc 'components/atoms/spinner', classes: "w-8 h-8" %}
+  </div>
+
+  <div class="w-full text-center"
+    x-init="hidden = false"
+    x-show="!spinner && !hidden">
+    <form action="{{ url }}" method="GET"
+      class="button button-small button-secondary"
+      x-ref="form"
+    >
+      <input type="hidden" name="page" value="{{ page | plus: 1 }}" />
+      <button
+        x-on:click.prevent="hidden = true; insert({where: 'afterbegin', target: 'loadmore_target-{{ page }}'})">
+        {{ 'modules/community/feed.see_more' | t }}
+        {% theme_render_rc 'components/atoms/icon', name: 'dashDown', class: 'w-4 h-4 mx-auto' %}
+      </button>
+    </form>
+  </div>
+</div>

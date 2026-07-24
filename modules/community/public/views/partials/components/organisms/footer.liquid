@@ -1,0 +1,85 @@
+---
+metadata:
+  name: Footer
+  params:
+    profile: {}
+---
+{% liquid
+  assign profile = profile | default: params.profile
+  if profile and profile.user_id != blank
+    assign registered_profile = true
+  endif
+%}
+<footer class="mt-16 py-14 bg-panel">
+  <div class="container lg:grid lg:grid-cols-3 lg:gap-5">
+    <div class="w-full lg:w-1/5 sm:min-w-80 mb-12 lg:mb-0 flex-shrink-0 text-center lg:text-start">
+      <a href="/" class="pos-clean">{% theme_render_rc 'components/atoms/logo' %}</a>
+      <p class="mt-4 text-sm">{{ 'modules/community/seo.meta_description' | t | strip_html }}</p>
+    </div>
+
+    <div class="col-span-2 sm:flex sm:justify-between lg:justify-start text-center sm:text-start">
+      <div class="lg:w-1/4 lg:ms-4">
+        <h2 class="mb-2 subtitle !font-bold uppercase">General</h2>
+        <ul class="mb-10 md:mb-0 leading-loose">
+          <li>
+            <a href="/" class="pos-clean text-content-sidenote hover:underline hover:text-interaction-hover transition-colors">Home</a>
+          </li>
+          <li>
+            <a href="/about-us" class="pos-clean text-content-sidenote hover:underline hover:text-interaction-hover transition-colors">About us</a>
+          </li>
+          <li>
+            <a href="/terms-of-service" class="pos-clean text-content-sidenote hover:underline hover:text-interaction-hover transition-colors">Terms of use</a>
+          </li>
+          <li>
+            <a href="/code-of-conduct" class="pos-clean text-content-sidenote hover:underline hover:text-interaction-hover transition-colors">Code of conduct</a>
+          </li>
+        </ul>
+      </div>
+
+      {% unless registered_profile %}
+      <div class="lg:w-1/4 lg:ms-1">
+        <h2 class="mb-2 subtitle !font-bold uppercase">Join</h2>
+        <ul class="mb-10 md:mb-0 leading-loose">
+          <li>
+            <a href="/users/new" class="pos-clean text-content-sidenote hover:underline hover:text-interaction-hover transition-colors">Sign up</a>
+          </li>
+          <li>
+            <a href="/sessions/new" class="pos-clean text-content-sidenote hover:underline hover:text-interaction-hover transition-colors">Log in</a>
+          </li>
+        </ul>
+      </div>
+      {% endunless %}
+
+      <div class="lg:w-1/4 lg:ms-1">
+        <h2 class="mb-2 subtitle !font-bold uppercase">Support</h2>
+        <ul class="mb-10 md:mb-0 leading-loose">
+          <li>
+            <a href="/contact-us" class="pos-clean text-content-sidenote hover:underline hover:text-interaction-hover transition-colors">Contact us</a>
+          </li>
+          <li>
+            <a href="/faq" class="pos-clean text-content-sidenote hover:underline hover:text-interaction-hover transition-colors">FAQ</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pt-6 pb-5 md:flex md:justify-between md:items-center bg-page text-center md:text-start text-content-sidenote">
+    <p class="sidenote text-content-sidenote">
+      {{ "now" | date: "%Y" }} {{ 'modules/community/footer.copyrights.title' | t }}
+      <a href="https://www.platformos.com" rel="noopener external noreferrer" target="_blank" class="hover:underline">{{ 'modules/community/footer.copyrights.product_owner' | t }}</a>
+    </p>
+    <div class="mt-4 md:mt-0 inline-flex justify-center gap-6">
+      <a target="_blank" rel="noopener external noreferrer" href="#" class="hover:text-interaction-hover transition-colors">
+        <span class="sr-only">Facebook</span>
+        {% theme_render_rc 'components/atoms/icon', name: 'facebook', class: 'w-6' %}
+      </a>
+
+      <a target="_blank" rel="noopener external noreferrer" href="#" class="hover:text-interaction-hover transition-colors">
+        <span class="sr-only">Twitter</span>
+        {% theme_render_rc 'components/atoms/icon', name: 'twitter', class: 'w-6' %}
+      </a>
+    </div>
+  </div>
+
+</footer>

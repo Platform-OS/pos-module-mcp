@@ -1,0 +1,11 @@
+{%  liquid
+  function object = 'modules/community/commands/groups/feature/build', object: object
+  function object = 'modules/community/commands/groups/feature/check', object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', object: object, mutation_name: 'modules/community/groups/feature', selection: 'record'
+  endif
+
+  return object
+  %}
+  

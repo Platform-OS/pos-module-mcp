@@ -1,0 +1,7 @@
+{% liquid
+  if context.constants.SLACK_WEBHOOK_URL
+    # platformos-check-disable MissingPartial
+    graphql notify = 'slack/send_message', data: event
+    # platformos-check-enable MissingPartial
+  endif
+%}

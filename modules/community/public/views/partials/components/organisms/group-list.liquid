@@ -1,0 +1,33 @@
+---
+metadata:
+  name: Group list
+  params:
+    list: {}
+    filters: {}
+---
+{% liquid
+  assign list = list | default: params.list
+  assign filters = filters | default: params.filters
+%}
+{% if list.results.size > 0 %}
+  <div
+    x-init="currentPage = 0; totalPages = {{ list.total_pages }}; totalEntries = {{ list.total_entries }};"
+    class="pos-app pos-community-space-grid"
+  >
+    {% for record in list.results %}
+      {% render 'modules/community/migrated/groups/card', group: record, pending_acceptance: null %}
+    {% endfor %}
+  </div>
+
+  {% liquid
+    if list.total_pages > 1
+      render 'modules/common-styling/pagination', total_pages: list.total_pages
+    endif
+  %}
+
+{% else %}
+
+  {% render 'modules/community/migrated/groups/empty' %}
+
+{% endif %}
+

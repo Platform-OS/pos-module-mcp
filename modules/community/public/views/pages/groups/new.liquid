@@ -1,0 +1,14 @@
+---
+slug: groups/new
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function _ = 'modules/community/helpers/extend_context', group: null, tags: true, post_templates: true, group_templates: true, photo_presign: true
+  render 'modules/community/migrated/groups/manage/create', current_profile: current_profile, object: null
+%}

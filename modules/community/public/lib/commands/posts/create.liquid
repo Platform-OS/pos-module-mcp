@@ -1,0 +1,19 @@
+{%  liquid
+  # Will be used in AI hashtags generation
+  assign post_photos = object['photos']
+
+  function object = 'modules/community/commands/posts/create/build', object: object, current_profile: current_profile
+  function object = 'modules/community/commands/posts/create/check', object: object
+
+  if object.valid
+    # Generate hashtags with AI gpt model
+    function post_body_with_tags = 'modules/community/helpers/hashtags/add_tags_to_post', content: object['body'], post_photos: post_photos
+
+    hash_assign object['body'] = post_body_with_tags
+    # End Generate hashtags with AI gpt model
+
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/posts/create' object: object, selection: 'record'
+  endif
+
+  return object
+%}

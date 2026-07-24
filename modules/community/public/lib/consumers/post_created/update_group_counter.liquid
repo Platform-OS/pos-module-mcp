@@ -1,0 +1,12 @@
+{% liquid
+  if event.entity_type == 'modules/community/group'
+    assign group_id = event.group_id
+
+    assign object = '{}' | parse_json
+    hash_assign object['id'] = group_id
+    function res = 'modules/community/commands/groups/post_count_increment', object: object
+    if res.valid != true
+      log res, type: 'ERROR: post_created/update_group_counter'
+    endif
+  endif
+%}

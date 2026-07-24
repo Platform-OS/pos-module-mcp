@@ -1,0 +1,155 @@
+query search(
+  $id: ID
+  $limit: Int = 20
+  $parent_id: String
+  $creator_id: String
+  $group_ids: [String!]
+  $title: String
+  $body: String
+  $tags: [String!]
+  $upvote_profile_ids: String
+  $downvote_profile_ids: String
+  $accepted_post_id: String
+  $c__score: String
+  $parent_id_exists: Boolean
+  $profile_table: [String]!
+) {
+  posts: records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/post" }
+      deleted_at: { exists: false }
+      properties: [
+        { name: "parent_id", value: $parent_id }
+        { name: "creator_id", value: $creator_id }
+        { name: "group_id", value_in: $group_ids }
+        { name: "title", value: $title }
+        { name: "body", value: $body }
+        { name: "tags", array_contains: $tags }
+        { name: "upvote_profile_ids", value: $upvote_profile_ids }
+        { name: "downvote_profile_ids", value: $downvote_profile_ids }
+        { name: "accepted_post_id", value: $accepted_post_id }
+        { name: "c__score", value: $c__score }
+        { name: "parent_id", exists: $parent_id_exists }
+        { name: "removed_at", exists: false }
+      ]
+    }
+    sort: [{ created_at: { order: DESC } }]
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+
+      uuid: property(name: "uuid")
+      parent_id: property(name: "parent_id")
+      group_id: property(name: "group_id")
+      creator_id: property(name: "creator_id")
+      title: property(name: "title")
+      body: property(name: "body")
+      tags: property_array(name: "tags")
+      upvote_profile_ids: property_array(name: "upvote_profile_ids")
+      downvote_profile_ids: property_array(name: "downvote_profile_ids")
+      accepted_post_id: property(name: "accepted_post_id")
+      slug: property(name: "slug")
+      commentable: property_boolean(name: "commentable")
+      replyable: property_boolean(name: "replyable")
+      votable: property_boolean(name: "votable")
+      followable: property_boolean(name: "followable")
+      featurable: property_boolean(name: "featurable")
+
+      c__score: property_int(name: "c__score")
+      c__answers: property_int(name: "c__answers")
+      creator: related_record(
+        table: "modules/user/profile"
+        join_on_property: "creator_id"
+      ) {
+        ...profile
+      }
+      comments: related_records(table: "modules/community/comment", join_on_property: "uuid", foreign_property: "commentable_uuid") {
+        ...comment
+      }
+
+      group: related_record(table: "modules/community/group" join_on_property: "group_id" foreign_property: "id") {
+        id
+        type: table
+        name: property(name: "name")
+        content_type: property(name: "content_type")
+      }
+
+      parent: related_record(table: "modules/community/post" join_on_property: "parent_id" foreign_property: "id") {
+        id
+        type: table
+        group_id: property(name: "group_id")
+        body: property(name: "body")
+      }
+
+      posts: related_records(
+        table: "modules/community/post"
+        join_on_property: "id"
+        foreign_property: "parent_id"
+        sort: [
+          { properties: { name: "accepted_post_id", order: ASC } }
+          { properties: { name: "c__score", order: DESC } }
+          { created_at: { order: ASC } }
+        ]
+      ) {
+        id
+        created_at
+        type: table
+        uuid: property(name: "uuid")
+        parent_id: property(name: "parent_id")
+        creator_id: property(name: "creator_id")
+        group_id: property(name: "group_id")
+        title: property(name: "title")
+        body: property(name: "body")
+        upvote_profile_ids: property_array(name: "upvote_profile_ids")
+        downvote_profile_ids: property_array(name: "downvote_profile_ids")
+        score: property_int(name: "score")
+        c__score: property_int(name: "c__score")
+        c__answers: property_int(name: "c__answers")
+        creator: related_record(
+          table: $profile_table
+          join_on_property: "creator_id"
+        ) {
+          ...profile
+        }
+        comments: related_records(table: "modules/community/comment", join_on_property: "uuid", foreign_property: "commentable_uuid") {
+          ...comment
+        }
+      }
+    }
+  }
+}
+
+fragment profile on Record {
+  id
+  name: property(name: "name")
+  first_name: property(name: "first_name")
+  last_name: property(name: "last_name")
+  slug: property(name: "slug")
+  avatar: related_record(
+    table: "modules/community/photo"
+    join_on_property: "uuid"
+    foreign_property: "object_uuid"
+    filter: { properties: { name: "photo_type", value: "avatar" } }
+  ) {
+    photo_width: property_int(name: "photo_width")
+    photo_height: property_int(name: "photo_height")
+    photo: property_upload(name: "photo") {
+      url
+      versions
+    }
+  }
+}
+fragment comment on Record {
+  id
+  created_at
+  body: property(name: "body")
+  creator: related_record(table: "modules/user/profile", join_on_property: "creator_id"){
+    ...profile
+  }
+  removed_at: property(name: "removed_at")
+}

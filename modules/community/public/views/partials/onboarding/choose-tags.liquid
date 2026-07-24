@@ -1,0 +1,80 @@
+<div class="community-user-form">
+
+  <section class="community-user-form-content-container">
+
+    <div class="community-user-form-content">
+
+      <a href="/" class="community-user-form-title">
+        <h1>
+          <span class="community-user-form-title-label">
+            {{ 'app.title' | t }}
+          </span>
+          {% render 'modules/community/migrated/layout/logo' %}
+        </h1>
+      </a>
+
+      <h1 class="pos-heading-2">
+        {{ 'modules/community/onboard.welcome' | t }}
+      </h1>
+
+      <p class="community-user-form-intro">{{ 'modules/community/onboard.desc' | t }}</p>
+
+      <form action="/onboarding" method="post" class="pos-form">
+        
+        {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+        <input type="hidden" name="name" value="followship:tag">
+        
+        <fieldset class="pos-mt-text-text">
+          <ul class="pos-tags-list pos-community-onboarding-interests">
+            {% for tag in context.tags %}
+              <li>
+                <input type="checkbox" name="r_ids[]" value="{{ tag.id }}" id="tag_{{ tag.id }}">
+                <label for="tag_{{ tag.id }}">{{ tag.name }}</label>
+              </li>
+            {% endfor %}
+          </ul>
+        </fieldset>
+
+        <fieldset class="pos-community-onboarding-timezone">
+          {% liquid
+            function default_timezone = 'modules/core/queries/variable/get', name: 'SITE_DEFAULT_TIMEZONE', default: 'Eastern Time (US & Canada)', type: null
+            function timezones = 'modules/core/helpers/timezone/get_all'
+          %}
+
+          <label for="pos-community-onboarding-timezone">{{ 'modules/community/onboard.select_timezone' | t }}</label>
+          <select name="timezone" id="pos-community-onboarding-timezone" required>
+            {% for timezone in timezones %}
+              <option value="{{ timezone.name }}" {% if timezone.name == default_timezone %}selected{% endif %}>{{ timezone.formatted_name }}</option>
+            {% endfor %}
+          </select>
+
+          <script>
+            // set user timezone based on what the browser reports
+            const timezones = {{ timezones }};
+
+            const userTimezone = timezones.find(timezone => timezone.name === Intl.DateTimeFormat().resolvedOptions().timeZone.split('/')[1]);
+
+            if(userTimezone){
+              const select = document.querySelector('#pos-community-onboarding-timezone');
+
+              select.querySelector(`option[selected]`).selected = false;
+              select.querySelector(`option[value="${userTimezone.name}"]`).selected = true;
+            }
+          </script>
+        </fieldset>
+
+        <fieldset class="pos-form-actions">
+          <a href="/" class="pos-button">{{ 'modules/community/onboard.skip' | t }}</a>
+          <button type="submit" class="pos-button pos-button-primary">{{ 'modules/community/onboard.submit' | t }}</button>
+        </fieldset>
+
+      </form>
+
+    </div>
+
+  </section>
+
+  <aside class="community-user-form-aside" style="--background: url('{{ 'image/community-user-form-background.avif' | asset_url }}');">
+  </aside>
+
+</div>

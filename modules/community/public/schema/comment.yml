@@ -1,0 +1,12 @@
+name: comment
+properties:
+  - name: uuid
+  - name: commentable_uuid
+  - name: target_activity_uuid
+  - name: commentable_type
+  - name: creator_id
+  - name: title
+  - name: body
+    type: text
+  - name: removed_at
+    type: datetime

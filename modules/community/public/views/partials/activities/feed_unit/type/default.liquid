@@ -1,0 +1,71 @@
+{% liquid
+  for item in payload
+    assign o = item[1]
+    if o.type == "collection"
+      assign urls = '[]' | parse_json
+      for c_item in o.items
+        function url = 'modules/community/activities/html/a', object: c_item, namespace: namespace, role: role, class: null, type: null
+        assign urls = urls | add_to_array: url
+      endfor
+      hash_assign o['url'] = urls | join: ', '
+
+    # platformos-check-disable UnknownProperty
+    elsif o.type
+    # platformos-check-enable UnknownProperty
+      # platformos-check-disable UnknownProperty
+      if o.type == 'post' or o.type == 'modules/community/post'
+      # platformos-check-enable UnknownProperty
+        function url = 'modules/community/activities/html/a', object: payload, type: 'activity', class: null, namespace: null, role: null
+      else
+        function url = 'modules/community/activities/html/a', object: o, namespace: namespace, role: role, class: null, type: null
+      endif
+      hash_assign o['url'] = url
+    endif
+  endfor
+
+  if payload.attributed_to
+
+    if payload.attributed_to.type == 'collection'
+      assign urls = '[]' | parse_json
+      for item in payload.attributed_to.items
+        function url = 'modules/community/activities/html/a', object: item, namespace: namespace, role: role, class: null, type: null
+        assign urls = urls | add_to_array: url
+      endfor
+
+      assign urls = urls | join: ", "
+    else
+      function url = 'modules/community/activities/html/a', object: payload.attributed_to, namespace: namespace, role: role, class: null, type: null
+    endif
+
+  else
+    function url = 'modules/community/activities/html/a', object: event.object, namespace: namespace, role: role, class: null, type: null
+  endif
+
+  assign type = type | default: payload.type
+%}
+
+{% liquid
+  if payload.attributed_to.type == 'project' or payload.attributed_to.type == 'modules/community/project'
+    assign target_url = payload.attributed_to.url
+  else
+    assign target_url = payload.target.url
+  endif
+
+  if payload.target.type == 'modules/community/event'
+    function target_url = 'modules/community/activities/html/a', object: payload.target, type: 'event', class: null, namespace: null, role: null
+  endif
+%}
+
+{% print type | t:
+  target: payload.target.name,
+  object_url: payload.object.url,
+  target_url: target_url,
+  attributed_to_url: payload.attributed_to.url,
+  url: url,
+  scope: 'modules/community/activities.types',
+  title: payload.object.name,
+  name: payload.object.name,
+  object_id: payload.object.id,
+  meta: meta,
+  urls: urls
+%}

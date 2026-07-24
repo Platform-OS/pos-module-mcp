@@ -1,0 +1,74 @@
+---
+metadata:
+  name: Group details
+  params:
+    group_type: ''
+    created_at: ''
+    description: ''
+    id: ''
+    classes: ''
+    admins: ''
+  styleguide:
+    group_type: 'group'
+    created_at: '2023-01-06T12:59:04.080Z'
+    first_name: 'Thomas'
+    last_name: 'May'
+    imageSrc: 'https://picsum.photos/300/180'
+    url: '/sample'
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vehicula dui eget pellentesque pharetra. Morbi nec euismod dui. Sed id sem ut dolor auctor dignissim. Aenean quis tortor at mi maximus tincidunt sit amet et tellus. Duis eget tempor felis, ut ultricies justo. Praesent nisl felis, ultrices eu fermentum sed, pharetra vitae neque. Donec facilisis rutrum condimentum. Nam in porttitor nibh. Duis leo erat, tristique eu pellentesque eget, lobortis eget leo. Pellentesque porta nisi at lobortis bibendum. '
+    id: '123'
+    classes: 'w-1/4'
+---
+{% liquid
+  assign group_type = group_type | default: params.group_type
+  assign created_at = created_at | default: params.created_at
+  assign admins = admins | default: params.admins
+  assign description = description | default: params.description
+  assign id = id | default: params.id
+  assign classes = classes | default: params.classes
+
+  function description = 'modules/community/helpers/linkify_hashtags', input: description
+%}
+
+{% capture card_content %}
+  <div>
+    {% assign note_text = 'modules/community/groups.nav.group_type' | t: type: group_type | capitalize %}
+    {% theme_render_rc 'components/atoms/sidenote', content: note_text %}
+  </div>
+  <div class="flex gap-1 flex-col flex-wrap">
+    <strong class="font-semibold">{{ 'modules/community/groups.nav.admins' | t }}:</strong>
+
+    {% for admin in admins %}
+
+      <div class="w-full">
+      {% assign name = admin.profile.properties.name %}
+      {% function url = 'modules/community/helpers/link_to', object: admin.profile, type: 'profile' %}
+      {% assign image_src = admin.profile.avatar.photo.url %}
+        <div class="flex gap-2 pb-1">
+          <a href="{{ url }}">
+            {% theme_render_rc 'components/atoms/avatar', size: 's', name: name, imageSrc: image_src %}
+          </a>
+          <a href="{{ url }}" class="truncate" title="{{ name }}">
+            {{ name }}
+          </a>
+      </div>
+  </div>
+{% endfor %}
+  </div>
+  <hr>
+  <div>
+    {% assign note_text = 'modules/community/groups.description' | t %}
+    {% theme_render_rc 'components/atoms/sidenote', content: note_text %}
+  </div>
+  <div class="prose">
+    {{ description | markdown }}
+  </div>
+  <hr>
+  <div>
+    <a class="underline" href="/groups/{{ id }}/about">{{ 'modules/community/groups.code_of_conduct' | t }}</a>
+  </div>
+{% endcapture %}
+
+<div>
+  {% theme_render_rc 'components/atoms/card', content: card_content, classes: classes %}
+</div>

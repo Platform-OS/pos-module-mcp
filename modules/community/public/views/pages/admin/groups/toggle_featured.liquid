@@ -1,0 +1,35 @@
+---
+slug: admin/groups/:id/toggle_featured
+method: patch
+---
+{% liquid
+  assign return_to = context.params.return_to | default: '/admin/community/groups'
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign group_id = context.params.id | split: '-' | last
+  function group = 'modules/community/queries/groups/find', id: group_id, current_profile: null
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'groups.mark_as_featured', requester: current_profile, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/groups/feature', object: group
+  if object.valid
+    if group.featured_at != null
+      # platformos-check-disable DeprecatedTag
+      include 'modules/community/helpers/redirect_to', url: return_to , notice: 'modules/community/groups.marked_as_featured'
+      # platformos-check-enable DeprecatedTag
+    else
+      # platformos-check-disable DeprecatedTag
+      include 'modules/community/helpers/redirect_to', url: return_to , notice: 'modules/community/groups.unmarked_as_featured'
+      # platformos-check-enable DeprecatedTag
+    endif
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: return_to, error: 'modules/community/groups.feature_failed'
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

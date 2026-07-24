@@ -1,0 +1,215 @@
+/*
+  stores configurable variables used for styling
+
+  colors
+    light mode
+  fonts
+  spacing
+  buttons and inputs shape
+  card and panel shape
+  shadows
+  transitions
+*/
+
+
+
+/* colors */
+/* ================================================================================ */
+
+/* light mode */
+/* -------------------------------------------------------------------------------- */
+:root {
+
+  /* general content */
+  /* ---------------------------------------- */
+  /* whole page background */
+  --pos-color-light-page-background: #f3f4f6;
+  /* background color used under the content (grid, cards, panels) */
+  --pos-color-light-content-background: #fff;
+  /* general content text */
+  --pos-color-light-content-text: #374151;
+  /* general content icons (moight be different shade due to contrast) */
+  --pos-color-light-content-icon: #405568;
+  /* sidenotes, metadata, table headers */
+  --pos-color-light-content-text-supplementary: #6b7280;
+  /* prominent text used to highlight important information */
+  --pos-color-light-content-text-prominent: var(--prominent);
+  /* content text when placed on an inverted contrasty background */
+  --pos-color-light-content-inverted-text: #fff;
+  /* dividers, separators, frames, table rows */
+  --pos-color-light-frame: #e2e8f0;
+  /* highlighted elements background, like a navigation item when it is hovered or panels that need to stand out from the rest of the page like a filters panel */
+  --pos-color-light-highlight-background: #e7ecf3;
+  /* highlighted elements text and icons */
+  --pos-color-light-highlight-text: rgb(var(--highlighted));
+  /* background of sections of the page that needs to really stand out, like call to actions */
+  --pos-color-light-standout-background: #344785;
+  /* background of sections of the page that needs to really stand out when poitner hovers over */
+  --pos-color-light-standout-background-hover: #1d4ed8;
+  /* text and icons placed on the sections that needs to really stand out */
+  --pos-color-light-standout-text: #000;
+
+
+
+  /* interactive elements */
+  /* ---------------------------------------- */
+  /* active elements suggesting a possible interaction */
+  --pos-color-light-interactive: #1d4ed8;
+  /* active elements with possible interaction when a pointer is over them */
+  --pos-color-light-interactive-hover: #344785;
+  /* active elements with possible interaction when they are pressed */
+  --pos-color-light-interactive-active: #344785;
+  /* disabled elements that could become or has been interactive */
+  --pos-color-light-interactive-disabled: #bfdbfe;
+
+  /* primary action button background */
+  --pos-color-light-button-primary-background: #1d4ed8;
+  /* primary action button text and icons */
+  --pos-color-light-button-primary-text: #fff;
+  /* border around primary action button */
+  --pos-color-light-button-primary-frame: #1d4ed8;
+  /* primary action button background when a pointer is over it */
+  --pos-color-light-button-primary-hover-background: #344785;
+  /* primary action button text and icons icons when a pointer is over it */
+  --pos-color-light-button-primary-hover-text: var(--pos-color-light-button-primary-text);
+  /* border around primary action button when a pointer is over it */
+  --pos-color-light-button-primary-hover-frame: #3466e3;
+  /* primary action button background when it is being pressed */
+  --pos-color-light-button-primary-active-background: #344785;
+  /* primary action button text and icons icons when it is being pressed */
+  --pos-color-light-button-primary-active-text: var(--pos-color-light-button-primary-hover-text);
+  /* border around primary action button when it is being pressed */
+  --pos-color-light-button-primary-active-frame: var(--pos-color-light-button-primary-hover-frame);
+  /* primary action button background when it is disabled */
+  --pos-color-light-button-primary-disabled-background: #dfdbfe;
+  /* primary action button text and icons when it is disabled */
+  --pos-color-light-button-primary-disabled-text: #ffffff;
+  /* border around primary action button when it is disabled */
+  --pos-color-light-button-primary-disabled-frame: var(--pos-color-light-button-primary-disabled-background);
+
+  /* secondary action button background */
+  --pos-color-light-button-secondary-background: #fff;
+  /* secondary action button text and icons */
+  --pos-color-light-button-secondary-text: var(--pos-color-light-button-primary-background);
+  /* border around secondary action button */
+  --pos-color-light-button-secondary-frame: var(--pos-color-light-button-primary-frame);
+  /* secondary action button background when a pointer is over it */
+  --pos-color-light-button-secondary-hover-background: #e2e8f0;
+  /* secondary action button text and icons icons when a pointer is over it */
+  --pos-color-light-button-secondary-hover-text: var(--pos-color-light-button-primary-hover-frame);
+  /* border around secondary action button when a pointer is over it */
+  --pos-color-light-button-secondary-hover-frame: var(--pos-color-light-button-primary-hover-frame);
+  /* secondary action button background when it is being pressed */
+  --pos-color-light-button-secondary-active-background: var(--pos-color-light-button-secondary-hover-background);
+  /* secondary action button text and icons icons when it is being pressed */
+  --pos-color-light-button-secondary-active-text: var(--pos-color-light-button-secondary-hover-text);
+  /* border around secondary action button when it is being pressed */
+  --pos-color-light-button-secondary-active-frame: var(--pos-color-light-button-primary-active-frame);
+  /* secondary action button background when it is disabled */
+  --pos-color-light-button-secondary-disabled-background: #ffffff00;
+  /* secondary action button text and icons when it is disabled */
+  --pos-color-light-button-secondary-disabled-text: var(--pos-color-light-interactive-disabled);
+  /* border around secondary action button when it is disabled */
+  --pos-color-light-button-secondary-disabled-frame: var(--pos-color-light-interactive-disabled);
+
+
+  /* colors user for variety of browser-related UI elements */
+  /* ---------------------------------------- */
+
+  /* outline for focused elements */
+  --pos-color-light-focused: #8326ff;
+
+  /* background color for selected text */
+  --pos-color-light-selection-background: #8326FF;
+  /* foreground color for selected text */
+  --pos-color-light-selection-text: #fff;
+
+
+  /* forms */
+  /* ---------------------------------------- */
+
+  /* placeholder text in input fields */
+  --pos-color-light-input-placeholder: var(--pos-color-light-content-text-supplementary);
+
+  /* input field background */
+  --pos-color-light-input-background: #fff;
+  /* input field text and icon */
+  --pos-color-light-input-text: #6b7280;
+  /* border around input field */
+  --pos-color-light-input-frame: #6b7280;
+  /* input field background when a pointer is over it */
+  --pos-color-light-input-hover-background: var(--pos-color-light-input-background);
+  /* input field text and icon when a pointer is over it */
+  --pos-color-light-input-hover-text: var(--pos-color-light-input-text);
+  /* border around input field when a pointer is over it */
+  --pos-color-light-input-hover-frame: #1d4ed8;
+  /* input field background when it is being focused */
+  --pos-color-light-input-active-background: var(--pos-color-light-input-background);
+  /* input field text and icon when it is being focused */
+  --pos-color-light-input-active-text: #1a1d21;
+  /* border around input field when it is being focused */
+  --pos-color-light-input-active-frame: #6b7280;
+  /* background of disabled input field */
+  --pos-color-light-input-disabled-background: var(--pos-color-light-input-background);
+  /* text and icon of disabled input field */
+  --pos-color-light-input-disabled-text: #a8b6cd;
+  /* border around input field when it is disabled */
+  --pos-color-light-input-disabled-frame: var(--pos-color-light-input-disabled-text);
+
+
+  /* utility */
+  /* ---------------------------------------- */
+
+  /* errors, actions that can't be undone */
+  --pos-color-light-important: #b91c1c;
+  --pos-color-light-important-hover: #520e0e;
+  --pos-color-light-important-disabled: #fecaca;
+  /* warnings, actions that might have unwanted consequences */
+  --pos-color-light-warning: #f3b14e;
+  --pos-color-light-warning-hover: #593e15;
+  --pos-color-light-warning-disabled: #ffe9c8;
+  /* confirmations of a successful actions */
+  --pos-color-light-confirmation: #0f7b0a;
+  --pos-color-light-confirmation-hover: #0a4607;
+  --pos-color-light-confirmation-disabled: #bbddd3;
+
+}
+
+
+
+/* fonts */
+/* ================================================================================ */
+:root {
+  /* default font for the whole page */
+  --pos-font-default: sans-serif;
+  /* headings */
+  --pos-font-heading: sans-serif;
+}
+
+
+
+/* spacing */
+/* ================================================================================ */
+:root {
+  /* gap between cards */
+  --pos-gap-card-card: 24px;
+}
+
+
+
+/* corners */
+/* ================================================================================ */
+:root {
+  /* border radius for content panels */
+  --pos-radius-panel: 8px;
+  /* border radius for ????? */
+  --pos-radius-card: 8px;
+}
+
+
+
+/* transitions */
+/* ================================================================================ */
+:root {
+  --pos-community-transition-ui-detail: cubic-bezier(.3, 1, .06, 1);
+}

@@ -1,0 +1,11 @@
+{% comment %} Create default tags {% endcomment %}
+
+{% liquid
+  assign tags = '["floral", "events", "photography", "art", "crafts", "graphic-arts", "music", "performing-arts", "writing", "fashion", "beauty", "home-garden" ]' | parse_json
+
+  for tag in tags
+    assign object = null | hash_merge: name: tag
+    function _ = 'modules/community/commands/tags/create', object: object
+  endfor
+%}
+{% log 'migrations/create_tags' %}

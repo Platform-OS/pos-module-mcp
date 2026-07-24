@@ -1,0 +1,9 @@
+{% liquid
+  graphql r = 'modules/community/posts/tags', limit: limit, query: query
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/handle_graphql_response', r: r, name: 'queries/posts/tags'
+  # platformos-check-enable DeprecatedTag
+
+  assign tags = r.posts.results | map: 'tags' | flatten
+  return tags
+%}

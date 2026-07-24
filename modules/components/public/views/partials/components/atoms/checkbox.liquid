@@ -1,0 +1,61 @@
+---
+metadata:
+  name: Checkbox
+  params:
+    name: 'my-checkbox'
+    value: ''
+    required:
+      - false
+      - true
+    checked:
+      - false
+      - true
+    id: 'my-checkbox'
+    disabled:
+      - false
+      - true
+    focusable:
+      - false
+      - true
+    attributes: {}
+---
+{% liquid
+  assign checked = checked | default: params.checked | default: false
+  assign id = id | default: params.id | default: params.name
+  assign name = name | default: params.name
+  assign value = value | default: params.value
+  assign disabled = disabled | default: params.disabled | default: false
+  assign attributes = attributes | default: params.attributes
+  assign focusable = focusable | default: params.focusable
+  assign required = required | default: params.required | default: false
+
+  if focusable != false
+    assign focusable = true
+  endif
+
+  assign container_classes = 'block relative '
+  assign input_classes = 'h-0 w-0 absolute top-0 left-0 '
+  assign checkmark_classes = 'pos-checkmark border w-4 h-4 border-input-border bg-input cursor-pointer block '
+
+  unless focusable
+    assign input_classes = input_classes | append: ' hidden'
+  endunless
+%}
+<label class="{{container_classes}}">
+  <input type="hidden" name="{{name}}" value="" />
+  <input class="{{input_classes}}"
+    type="checkbox"
+    id="{{id}}"
+    name="{{name}}"
+    aria-labelledby="{{name}}"
+    {% for attribute in attributes %}
+      {{ attribute[0] | html_safe }}="{{ attribute[1] | html_safe }}"
+    {% endfor %}
+    {% if value %}value="{{value}}"{% endif %}
+    {% if checked %}checked{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if required %}required{% endif %}
+  />
+  <span class="{{checkmark_classes}}"></span>
+</label>
+

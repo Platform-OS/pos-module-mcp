@@ -1,0 +1,17 @@
+{% liquid
+  assign errors = object.errors | default: params.object.errors
+
+  assign action = '/events/' | append: object.id
+  hash_assign object['start_date'] = object.start_date | strftime: '%Y-%m-%dT%H:%M', current_profile.timezone
+  # platformos-check-disable UnknownProperty
+  if object.end_date != blank
+  # platformos-check-enable UnknownProperty
+    # platformos-check-disable UnknownProperty
+    hash_assign object['end_date'] = object.end_date | strftime: '%Y-%m-%dT%H:%M', current_profile.timezone
+    # platformos-check-enable UnknownProperty
+  endif
+%}
+
+{% render 'modules/community/migrated/events/header', event: object, current_user_can_edit: false, current_profile: null %}
+
+{% theme_render_rc 'components/organisms/event-form', action: action, event: object, errors: errors, current_profile: current_profile, photos: photos %}

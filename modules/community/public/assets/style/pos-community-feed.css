@@ -1,0 +1,466 @@
+/*
+  feed
+
+  new post and comment form
+  post
+  post formatting
+  like button
+  comment
+  new comment form
+  welcome message
+  pagination
+*/
+
+
+
+/* new post and comment
+============================================================================ */
+.pos-community-feed-create {
+  display: flex;
+  align-items: start;
+  gap: 1rem;
+  position: relative;
+}
+
+  .pos-community-feed-create.pos-card {
+    margin-block-end: var(--pos-gap-card-card);
+  }
+
+.pos-community-feed-create .pos-avatar-md {
+  margin-block-start: .5rem;
+}
+
+.pos-community-feed-create-close:hover {
+  color: var(--pos-color-interactive-hover);
+}
+
+  .pos-community-feed-create-close:active {
+    color: var(--pos-color-interactive-active);
+  }
+
+  .pos-community-feed-create-close:focus-visible {
+    outline: 2px solid var(--pos-color-focused);
+    outline-offset: 2px;
+
+    border-radius: var(--pos-radius-button);
+  }
+
+/* new post box toggle */
+.pos-community-feed-create-activate {
+  height: 3rem;
+  position: absolute;
+  inset-inline-start: 5.5rem;
+  inset-inline-end: var(--pos-padding-card);
+  z-index: 2;
+
+  cursor: pointer;
+
+  transition-property: border-color, background-color, color, opacity, display;
+  transition-duration: .1s, .1s, .1s, .1s, .1s;
+  transition-timing-function: linear;
+  transition-behavior: allow-discrete;
+}
+
+  /* the toggle for new comment form */
+  .pos-community-feed-create:not(.pos-card) .pos-community-feed-create-activate {
+    inset-inline-start: 3rem;
+    inset-inline-end: 0;
+  }
+
+.pos-community-feed-create form {
+  height: 3rem;
+  margin: -2px -2px 0 -2px;
+  padding: 2px 2px 0 2px;
+  flex-grow: 1;
+
+  opacity: 0;
+  interpolate-size: allow-keywords;
+  overflow: clip;
+
+  transition-property: height, display, opacity;
+  transition-duration: .2s;
+  transition-timing-function: var(--pos-transition-ui-detail);
+}
+
+/* active state */
+.pos-community-feed-create-active .pos-community-feed-create-activate {
+  display: none;
+  opacity: 0;
+}
+
+.pos-community-feed-create-active form {
+  height: auto;
+  opacity: 1;
+}
+
+.pos-community-feed-create .editor-toolbar {
+  height: 3rem;
+}
+
+
+/* post
+============================================================================ */
+#pos-community-feed-posts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pos-gap-card-card);
+}
+
+/* header */
+.pos-community-post header {
+  display: flex;
+  align-items: center;
+  gap: .75em;
+}
+
+.pos-community-post-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: .1em;
+  align-items: start;
+}
+
+.pos-community-post header .pos-avatar {
+  transition: scale .2s var(--pos-transition-ui-detail);
+}
+
+  .pos-community-post header .pos-avatar img {
+    image-rendering: crisp-edges;
+  }
+
+  .pos-community-post header .pos-avatar:hover {
+    scale: 1.05;
+  }
+
+.pos-community-post-header-author {
+  font-weight: 700;
+}
+
+.pos-community-post-header-date {
+  font-size: .75em;
+  color: var(--pos-color-content-text-supplementary);
+}
+
+  .pos-community-post-header-date:hover,
+  .pos-community-post-header-date:focus-visible {
+    color: var(--pos-color-interactive-hover);
+  }
+
+  .pos-community-post-header-date:active {
+    color: var(--pos-color-interactive-active);
+  }
+
+.pos-community-post-menu {
+  margin-inline-start: auto;
+}
+
+.pos-community-post-menu .pos-label {
+  position: absolute;
+  inset-inline-start: -150vw;
+}
+
+.pos-community-post-menu-toggle {
+  width: 2.5rem;
+  padding: .5rem;
+  margin-inline-end: -.5rem;
+  margin-block-start: -.5rem;
+
+  border-radius: var(--pos-radius-button);
+}
+
+  .pos-community-post-menu-toggle:hover {
+    color: var(--pos-color-interactive-hover);
+  }
+
+  .pos-community-post-menu-toggle:focus-visible {
+    outline: 2px solid var(--pos-color-focused);
+    outline-offset: 2px;
+  }
+
+  .pos-community-post-menu-toggle svg {
+    fill: currentColor;
+  }
+
+/* content */
+.pos-community-post-content {
+  margin-block-start: var(--pos-gap-section-elements);
+
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/* footer */
+.pos-community-post footer {
+  margin-block-start: var(--pos-gap-section-elements);
+
+  display: flex;
+  align-items: center;
+  gap: .5em;
+
+  font-size: .75em;
+}
+
+.pos-community-post footer ul {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+}
+
+  .pos-community-post footer ul li {
+    display: flex;
+    gap: .5em;
+    align-items: center;
+
+    white-space: nowrap;
+  }
+
+  .pos-community-post footer ul li svg {
+    width: 1lh;
+    height: 1lh;
+  }
+
+/* editor */
+.pos-community-post-edit {
+  margin-block-start: var(--pos-gap-section-elements);
+  display: none;
+}
+
+  .pos-community-post.pos-community-post-editing .pos-community-post-edit {
+    display: block;
+  }
+
+  .pos-community-post.pos-community-post-editing .pos-community-post-content {
+    display: none;
+  }
+
+
+
+/* post formatting
+============================================================================ */
+.pos-community-post img {
+  max-height: 50vh;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+}
+
+.pos-community-feed-fresh {
+  animation-name: pos-community-feed-fresh;
+  animation-duration: .5s;
+  animation-timing-function: var(--pos-transition-ui-detail);
+}
+
+  @keyframes pos-community-feed-fresh {
+    0% {
+      translate: 0 -1rem;
+      opacity: 0;
+    }
+
+    100% {
+      translate: 0;
+      opacity: 1;
+    }
+  }
+
+
+
+/* like button
+============================================================================ */
+.pos-community-post-like [type="submit"] {
+  min-width: 10ex;
+  padding: .2em;
+  display: flex;
+  gap: .4em;
+
+  border-radius: var(--pos-radius-button);
+
+  transition: color .1s linear;
+}
+
+  .pos-community-post-like [type="submit"] .pos-icon {
+    width: 1lh;
+    height: 1lh;
+    position: relative;
+    inset-block-start: -1px;
+
+    transition: color .1s linear;
+  }
+
+  .pos-community-post-like [type="submit"]:hover {
+    color: var(--pos-color-interactive-hover);
+  }
+
+  .pos-community-post-like .pos-button-label {
+    position: absolute;
+    left: -150vw;
+  }
+
+.pos-community-post-like:not(.pos-community-post-like-active) .pos-community-post-like-liked {
+  display: none;
+}
+
+  .pos-community-post-like.pos-community-post-like-active .pos-community-post-like-unliked {
+    display: none;
+  }
+
+.pos-community-post-like.pos-community-post-like-fresh .pos-community-post-like-liked {
+  animation-name: pos-community-post-like-liked;
+  animation-duration: 1s;
+  animation-timing-function: var(--pos-transition-ui-detail);
+}
+
+  @keyframes pos-community-post-like-liked {
+    0% {
+      scale: 0;
+      opacity: 0;
+    }
+
+    50% {
+      scale: 1.2;
+      opacity: 1;
+    }
+
+    100% {
+      scale: 1;
+    }
+  }
+
+/* multiple vs single like counter label */
+.pos-community-post-like-multiple .pos-community-post-like-count-single {
+  display: none;
+}
+
+.pos-community-post-like:not(.pos-community-post-like-multiple) .pos-community-post-like-count-multiple {
+  display: none;
+}
+
+
+/* comment
+============================================================================ */
+.pos-community-post-comments {
+  margin-block-start: var(--pos-gap-section-elements);
+  margin-inline: calc(var(--pos-padding-card) * -1);
+}
+
+  .pos-community-post-comments:last-child {
+    margin-block-end: calc(var(--pos-padding-card) * -1);
+  }
+
+.pos-community-post-comment {
+  padding: calc(var(--pos-padding-card) / 2) var(--pos-padding-card);
+  
+  border-block-start: 1px solid var(--pos-color-frame);
+}
+
+  .pos-community-post-comment:nth-child(odd) {
+    background-color: color-mix(in srgb, var(--pos-color-highlight-background) 20%, transparent);
+  }
+
+/* header */
+.pos-community-post-comment-header {
+  margin-block-end: var(--pos-gap-section-elements);
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: .75em;
+}
+
+.pos-community-post-comment-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: .1em;
+  align-items: start;
+}
+
+.pos-community-post-comment-header-date {
+  font-size: .75em;
+  color: var(--pos-color-content-text-supplementary);
+}
+
+/* editor */
+.pos-community-post-comment-edit {
+  margin-block-start: var(--pos-gap-section-elements);
+  display: none;
+}
+
+  .pos-community-post-comment.pos-community-post-comment-editing .pos-community-post-comment-edit {
+    display: block;
+  }
+
+  .pos-community-post-comment.pos-community-post-comment-editing .pos-community-post-comment-content {
+    display: none;
+  }
+
+/* load more */
+.pos-community-post-comments-more {
+  padding: var(--pos-padding-button);
+  margin-block-end: var(--pos-gap-section-elements);
+  
+  background-color: var(--pos-color-highlight-background);
+  border-radius: var(--pos-radius-button);
+
+  color: var(--pos-color-highlight-text);
+}
+
+  .pos-community-post-comments-more:hover,
+  .pos-community-post-comments-more:focus-visible {
+    color: var(--pos-color-interactive-hover);
+  }
+
+  .pos-community-post-comments-more:focus-visible {
+    outline: 2px solid var(--pos-color-focused);
+    outline-offset: 2px;
+  }
+
+  .pos-community-post-comments-more:active {
+    color: var(--pos-color-interactive-hover);
+  }
+
+
+/* new comment form
+============================================================================ */
+.pos-community-feed-comment-form {
+  margin-inline: calc(var(--pos-padding-card) * -1);
+  padding-block-start: var(--pos-padding-card);
+  padding-inline: var(--pos-padding-card);
+
+  border-block-start: 1px solid var(--pos-color-frame);
+}
+
+
+/* welcome message
+============================================================================ */
+.pos-community-feed-welcome {
+  margin-block-start: var(--pos-gap-card-card);
+  padding-inline: var(--pos-padding-card);
+}
+
+
+/* pagination
+============================================================================ */
+#pos-community-load-feed-more {
+  align-self: center;
+
+  text-align: center;
+}
+
+
+
+/* public feed cta
+============================================================================ */
+.pos-community-feed-cta {
+  margin-block-start: var(--pos-gap-card-card);
+  margin-block-end: calc(var(--pos-padding-page) * -1);
+  margin-inline: calc(var(--pos-padding-page) * -1);
+
+  background-color: var(--pos-color-highlight-background);
+}
+
+.pos-community-feed-cta .pos-community-container {
+  min-height: 272px;
+  padding: var(--pos-padding-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pos-gap-section-elements);
+}

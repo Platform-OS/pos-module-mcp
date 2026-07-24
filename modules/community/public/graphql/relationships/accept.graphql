@@ -1,0 +1,17 @@
+mutation update(
+  $id: ID!
+  $l_accepted_at: String!
+  $r_accepted_at: String!
+) {
+  record: record_update(
+    id: $id
+    record: {
+      properties: [
+        { name: "l_accepted_at" value: $l_accepted_at }
+        { name: "r_accepted_at" value: $r_accepted_at }
+      ]
+    }
+  ){
+    id
+  }
+}

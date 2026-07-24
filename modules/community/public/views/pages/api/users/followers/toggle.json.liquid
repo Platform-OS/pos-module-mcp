@@ -1,0 +1,38 @@
+---
+method: post
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign now = 'now' | to_time
+
+  function follower = 'modules/user/queries/profiles/find', user_id: context.current_user.id, id: null, uuid: null, first_name: null, last_name: null
+  function followed = 'modules/user/queries/profiles/find', id: context.params.user_id, uuid: null, user_id: null, first_name: null, last_name: null
+
+  if context.params.action_name == 'follow'
+    assign event_type = 'user_followed_user'
+    function object = 'modules/community/commands/relationships/create', name: 'followship', l_id: follower.id, r_id: followed.id, created_by_id: current_profile.id, l_at: now, r_at: now
+    assign relation = object
+  endif
+
+  if context.params.action_name == 'unfollow'
+    assign event_type = 'user_unfollowed_user'
+    function relation = 'modules/community/queries/relationships/find', name: 'followship', l_id: follower.id, r_id: followed.id, include_related: null
+
+    if relation
+      function object = 'modules/community/commands/relationships/delete', object: relation, skip_execution: null
+    endif
+  endif
+
+  if object.valid
+    assign event_payload = null | hash_merge: actor_id: follower.id, followed_profile_id: followed.id, relation_id: relation.id
+    function _ = 'modules/core/commands/events/publish', type: event_type, object: event_payload, delay: 0, max_attempts: null
+  endif
+
+  # platformos-check-disable MissingPartial
+  render 'modules/community/json/items/index', response: object
+  # platformos-check-enable MissingPartial
+%}

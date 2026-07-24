@@ -1,0 +1,16 @@
+---
+metadata:
+  event:
+    group_id
+    creator_id
+---
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'group_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'creator_id', key: 'modules/core/validation.blank'
+
+  function _ = 'modules/community/commands/activities/enhance_event', event: event, object_id: event.group_id, actor_id: event.creator_id, target_id: null
+
+  return c
+%}

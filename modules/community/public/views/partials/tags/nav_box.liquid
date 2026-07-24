@@ -1,0 +1,66 @@
+{% if tags %}
+
+  <section class="card mt-4 sidenote uppercase" data-tc="followedTags">
+
+    <header class="mb-2 text-content-sidenote font-semibold">
+      {{ 'modules/community/tags.followed' | t }}
+    </header>
+
+    <div class="flex flex-wrap uppercase gap-2">
+      {% for tag in tags.results %}
+        <form
+          action="#"
+          x-data="relationship('tagIds')"
+          x-ref="form"
+          x-on:submit.prevent
+          data-id="{{ tag.id }}"
+          x-init="initManual()"
+          x-show.transition="exists"
+          x-cloak
+        >
+          <input type="hidden" name="r_id" value="{{ tag.id }}">
+          <input type="hidden" name="name" value="followship:tag">
+          <button
+            class="px-2 py-1 rounded uppercase bg-panel-highlight hover:line-through"
+            x-on:click="toggle()"
+            title="{{ "modules/community/relationships.posts.title" | t }}"
+          >#{{ tag.name }}</button>
+        </form>
+      {% endfor %}
+    </div>
+
+  </section>
+
+
+  <section class="card mt-4 sidenote uppercase" data-tc="tagsToFollow">
+
+    <header class="mb-2 text-content-sidenote font-semibold">
+      {{ 'modules/community/tags.followable' | t  }}
+    </header>
+
+    <div class="flex flex-wrap uppercase gap-2">
+      {% for tag in tags.results %}
+        <form
+          action="#"
+          x-data="relationship('tagIds')"
+          x-ref="form"
+          x-on:submit.prevent
+          data-id="{{ tag.id }}"
+          x-init="initManual()"
+          x-show.transition="exists === false"
+          x-cloak
+        >
+          <input type="hidden" name="r_id" value="{{ tag.id }}">
+          <input type="hidden" name="name" value="followship:tag">
+          <button
+            class="px-2 py-1 uppercase border rounded hover:bg-panel-highlight hover:border-interaction-hover transition-colors"
+            x-on:click="toggle()"
+            title="{{ "modules/community/relationships.posts.title" | t }}"
+          >#{{ tag.name }}</button>
+        </form>
+      {% endfor %}
+    </div>
+
+  </section>
+
+{% endif %}

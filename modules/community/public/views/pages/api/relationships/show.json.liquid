@@ -1,0 +1,16 @@
+{% liquid
+  assign relation = context.params
+
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function relationship = 'modules/community/queries/relationships/find', name: relation.name, l_id: relation.l_id, r_id: relation.r_id, include_related: false
+
+  unless relationship
+    echo '{ "status": 404 }'
+  endunless
+
+  echo relationship
+%}

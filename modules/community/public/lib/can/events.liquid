@@ -1,0 +1,69 @@
+{% liquid
+  assign can = false
+
+  assign event = entity
+
+  if event == blank
+    return false
+  endif
+
+  function can_manage_all = 'modules/user/helpers/can_do', requester: requester, do: 'events.manage.all', entity: null, access_callback: null
+
+  assign going = requester.relationships['event:going'] | detect: r_id: event.id
+  assign maybe_going = requester.relationships['event:maybe'] | detect: r_id: event.id
+  if going or maybe_going
+    assign member = true
+  endif
+  assign owner = requester.relationships.owner | detect: r_id: event.id
+
+
+  case do
+
+  when 'edit' or 'delete'
+    if can_manage_all or owner.valid
+      return true
+    endif
+
+  when 'approve' or 'reject'
+    if can_manage_all and event.status == 'pending'
+      return true
+    endif
+
+  when 'join'
+    if member
+      return false
+    elsif event.status == 'published'
+      return true
+    endif
+
+  when 'post'
+    if can_manage_all or owner.valid
+      return true
+    elsif event.commentable and event.status == 'published'
+      return true
+    elsif member and event.status == 'published'
+      return true
+    else
+      return false
+    endif
+
+  when 'vote'
+    return true
+
+  when 'leave'
+    return true
+
+  when 'view'
+    if event.status == 'published' or event.status == 'cancelled'
+      return true
+    elsif can_manage_all or owner.valid
+      return true
+    endif
+
+
+  return false
+
+  endcase
+
+  return can
+%}

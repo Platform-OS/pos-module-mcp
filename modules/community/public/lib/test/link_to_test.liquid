@@ -1,0 +1,119 @@
+{% comment %}group{% endcomment %}
+{% liquid
+  assign object = '{"id":7889, "name": "My group", "type":"group"}' | parse_json
+
+  assign expected = '/groups/my-group-7889'
+  function url = 'modules/community/helpers/link_to', object: object
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'group', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+
+  assign expected = '/groups/7889/edit'
+  function url = 'modules/community/helpers/link_to', object: object, action: 'edit'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'group', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+
+  assign expected = '/admin/groups/7889/edit'
+  function url = 'modules/community/helpers/link_to', object: object, action: 'edit', namespace: 'admin'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'group', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+%}
+
+{% comment %}profile{% endcomment %}
+{% liquid
+  assign object = '{"id": 1, "first_name":"john", "last_name":"smith", "type":"profile"}' | parse_json
+  assign current_profile = '{"id": 1, "slug":"jane", "last_name":"smith", "type":"profile"}' | parse_json
+
+  assign expected = '/profile/john-smith-1'
+  function url = 'modules/community/helpers/link_to', object: object, current_profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'profile', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+%}
+
+{% comment %}profile{% endcomment %}
+{% liquid
+  assign object = '{"id": 5, "slug":"john", "first_name":"john", "last_name":"smith", "type":"profile"}' | parse_json
+
+  assign expected = '/profile/john-smith-5'
+  function url = 'modules/community/helpers/link_to', object: object
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'profile', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+%}
+
+{% comment %}activity{% endcomment %}
+{% liquid
+  assign object = '{"uuid": "uuid", "type":"activity", "actor": { "id": 5, "first_name":"john", "last_name":"smith" }}' | parse_json
+
+  assign expected = '/profile/john-smith-5/feed/uuid'
+  function url = 'modules/community/helpers/link_to', object: object
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'activity', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+%}
+
+{% comment %}unknown{% endcomment %}
+{% liquid
+  assign object = '{"id": 404, "type":"unknown"}' | parse_json
+
+  assign expected = '/404?type=unknown&id=404'
+  function url = 'modules/community/helpers/link_to', object: object
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'unknown', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+
+  assign expected = '/404?type=unknown&id=404'
+  function url = 'modules/community/helpers/link_to', object: object, action: 'edit'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'unknown', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+
+  assign expected = '/404?type=unknown&id=404'
+  function url = 'modules/community/helpers/link_to', object: object, action: 'edit', namespace: 'admin'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'unknown', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+%}
+
+{% comment %}comment{% endcomment %}
+{% liquid
+  assign object = '{ "url": "/comment/url", "type": "comment" }' | parse_json
+
+  assign expected = "/comment/url"
+  function url = 'modules/community/helpers/link_to', object: object
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'commenr', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+
+  assign expected = "/comment/url/edit"
+  function url = 'modules/community/helpers/link_to', object: object, action: 'edit'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'commenr', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+
+  assign expected = "/comment/url/edit"
+  function url = 'modules/community/helpers/link_to', object: object, action: 'edit', namespace: 'admin'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'commenr', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+%}
+
+{% comment %}post{% endcomment %}
+{% liquid
+  assign object = '{ "id": "429", "type": "post", "group_id": 4, "title": "title with space" }' | parse_json
+
+  assign expected = "/groups/4/content/title-with-space-429"
+  function url = 'modules/community/helpers/link_to', object: object, current_profile: profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'post', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+
+  assign expected = "/groups/4/content/title-with-space-429/edit"
+  function url = 'modules/community/helpers/link_to', object: object, action: 'edit'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'post', given: url, expected: expected
+  # platformos-check-enable DeprecatedTag
+%}

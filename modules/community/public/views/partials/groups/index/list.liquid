@@ -1,0 +1,28 @@
+{% if list.results.size > 0 %}
+
+  <div
+    x-init="currentPage = {{ list.current_page }}; itemsCounter += {{ list.results | size }}; totalPages = {{ list.total_pages }}; totalEntries = {{ list.total_entries }};"
+    class="mb-4 grid gap-4 grid-cols-1 md:grid-cols-3"
+  >
+    {% for group in list.results %}
+      {% render 'modules/community/groups/card', group: group, current_profile: current_profile %}
+    {% endfor %}
+  </div>
+
+{% else %}
+
+  <section
+    x-init="currentPage = 1; itemsCounter = 0; totalPages = {{ list.total_pages }}; totalEntries = {{ list.total_entries }};"
+    class="card md:h-64 flex flex-col md:flex-row justify-center items-center text-center md:text-start"
+  >
+    <div class="max-w-lg order-2 md:order-1">
+      <p class="subtitle">{{ 'modules/community/groups.index.empty.title' | t }}</p>
+      <p>{{ 'modules/community/groups.index.empty.desc' | t }}</p>
+      <a href="{% render 'modules/community/helpers/link_to', action: 'new', object: null, namespace: 'groups' %}" class="button mt-6">{{ 'modules/community/groups.index.empty.cta' | t }}</a>
+    </div>
+    <div class="w-16 mb-6 md:mb-0 md:w-32 md:ms-10 md:ps-10 md:mt-1 order-1 md:order-last md:border-s">
+      {% theme_render_rc 'components/atoms/icon', name: 'binocular', class: 'w-full text-interaction-disabled' %}
+    </div>
+  </section>
+
+{% endif %}

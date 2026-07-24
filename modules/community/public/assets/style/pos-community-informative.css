@@ -1,0 +1,82 @@
+/*
+  various informative boxes
+
+  headings
+  people to follow
+  hashtags to follow
+*/
+
+
+
+/* headings */
+/* ================================================================================ */
+.pos-community-informative-heading {
+  margin-block-end: var(--pos-gap-card-card);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.pos-community-informative-heading small {
+  margin-block-end: -.2em;
+  line-height: 1em;
+  text-transform: uppercase;
+  font-size: .75rem;
+  color: var(--pos-color-content-text-supplementary);
+}
+
+
+
+/* people to follow */
+/* ================================================================================ */
+.pos-community-peopletofollow ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pos-gap-section-elements);
+}
+
+.pos-community-peopletofollow li {
+  padding: var(--pos-padding-cell);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  border: 1px solid var(--pos-color-frame);
+  border-radius: var(--pos-radius-card);
+}
+
+.pos-community-peopletofollow li a {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+
+
+/* hashtags to follow */
+/* ================================================================================ */
+.pos-community-hashtagstofollow ul {
+  display: none; /* hide hashtags before relationships */
+  flex-direction: column;
+  gap: var(--pos-gap-section-elements);
+}
+
+  .pos-community-hashtagstofollow:has(.pos-community-tag-relationship-initialized) ul {
+    display: flex; /* show list after hastags relationshops have loaded */
+  }
+
+.pos-community-hashtagstofollow li {
+  padding: var(--pos-padding-cell);
+  display: none; /* hide all items by default and overwrite this later to show only two that has not yet been followed */
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  border: 1px solid var(--pos-color-frame);
+  border-radius: var(--pos-radius-card);
+}
+
+.pos-community-hashtagstofollow li:nth-child(-n + 2 of li:has(.pos-community-tag-relationship:not(.pos-community-tag-relationship-active))) {
+  display: flex;
+}

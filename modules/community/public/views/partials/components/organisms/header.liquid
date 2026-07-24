@@ -1,0 +1,245 @@
+---
+metadata:
+  name: Page header
+  params:
+    profile: {}
+    context: {}
+    variant:
+      - default
+      - clean
+  styleguide:
+    - profile: {}
+      context: {}
+    - profile:
+        user_id: 666
+        name: 'John Doe'
+        avatar:
+          photo:
+            versions:
+              sm: 'https://i.pravatar.cc/100'
+      context: {}
+---
+{% liquid
+assign profile = profile | default: params.profile
+assign context = context | default: params.context
+assign variant = variant | default: params.variant | default: 'default'
+assign registered_profile = false
+if profile and profile.user_id != blank
+  function profile_url = 'modules/community/helpers/link_to', object: profile, namespace: null, action: null, current_profile: null, role: null, anchor: null, template: null
+  assign registered_profile = true
+  function can_view_admin = 'modules/user/helpers/can_do', requester: profile, do: 'admin_pages.view', access_callback: null, entity: null
+endif
+
+function current_profile_navigation_path = 'modules/community/helpers/link_to', object: profile
+
+assign current_page = context.params.slug
+if context.exports.current_profile.id == profile.id and current_page == 'profile'
+  assign self = true
+endif
+assign active_class = active_class | default: ' text-interactive-graphic '
+assign section = context.location.pathname | split: '/' | last | strip
+%}
+<header class="py-4 bg-panel">
+  <div class="container flex flex-row items-center justify-between">
+    <div class="flex flex-row items-center">
+      <div><a href="/" class="pos-clean">{% theme_render_rc 'components/atoms/logo' %}</a></div>
+
+      {% if registered_profile and variant != 'clean' %}
+        <ul class="hidden lg:flex items-center text-xl md:border-l mb-2 md:mb-0 ml-16">
+          <li class="ml-3 w-[88px] text-center {% if current_page == 'profiles' %} border-b-4 pb-1 border-interactive-graphic text-interactive-graphic {% else %} border-b-2 pb-1.5 {% endif %}"><a href="/profiles">Members</a></li>
+          <li class="ml-3 w-[88px] text-center {% if current_page == 'groups' %} border-b-4 pb-1 border-interactive-graphic text-interactive-graphic {% else %} border-b-2 pb-1.5 {% endif %}"><a href="/groups">Groups</a></li>
+          <li class="ml-3 w-[88px] text-center {% if current_page == 'events' %} border-b-4 pb-1 border-interactive-graphic text-interactive-graphic {% else %} border-b-2 pb-1.5 {% endif %}"><a href="/events">Events</a></li>
+        </ul>
+        <div class="block lg:hidden">
+          {% capture mobile_nav_label %}
+            {% theme_render_rc 'components/atoms/icon', name: 'navigation', class: 'w-10 h-10 ms-2 pt-1' %}
+          {% endcapture %}
+          {% capture mobile_nav_content %}
+            <div data-dropdown-close class="absolute top-4 end-4">
+              {% theme_render_rc 'components/atoms/icon', name: 'x' %}
+            </div>
+            <style>
+              .nav-arrow {
+                transition: transform 0.2s ease-in-out;
+              }
+
+              details[open] .nav-arrow {
+                transform: rotate(180deg);
+              }
+            </style>
+            <ul class="pt-6">
+              <li class="text-xl p-2 {% if current_page == 'feed' %} {{ active_class }} {% endif %}"><a href="/feed">Home</a></li>
+              <li class="text-xl p-2 {% if current_page == 'profiles' %} {{ active_class }} {% endif %}"><a href="/profiles">Members</a></li>
+              <li class="text-xl p-2 {% if current_page == 'groups' %} {{ active_class }} {% endif %}"><a href="/groups">Groups</a></li>
+              <hr>
+              <div class="p-2">
+                <div class="flex flex-row justify-between">
+                  My corner
+                </div>
+                <hr>
+                <ul
+                  class="whitespace-nowrap md:whitespace-normal flex flex-col overflow-hidden scrollbar-hide transition-all duration-200 ease-in-out"
+                >
+                  <li class="p-2">
+                    <a
+                      href="{{current_profile_navigation_path}}/groups"
+                      class="{% if self and section == 'groups' %}{{ active_class }}{% endif %}"
+                    >
+                      My Groups
+                    </a>
+                  </li>
+                  <li class="p-2">
+                    <a
+                      href="{{current_profile_navigation_path}}/following"
+                      class="{% if self and section == 'following' %}{{ active_class }}{% endif %}"
+                    >
+                      Following
+                    </a>
+                  </li>
+                  <li class="p-2">
+                    <a
+                      href="{{current_profile_navigation_path}}/followers"
+                      class="{% if self and section == 'followers' %}{{ active_class }}{% endif %}"
+                    >
+                      Followers
+                    </a>
+                  </li>
+                  <li class="p-2">
+                    <a
+                      href="{{current_profile_navigation_path}}/tags"
+                      class="{% if self and section == 'tags' %}{{ active_class }}{% endif %}"
+                    >
+                      Hashtags
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </ul>
+          {% endcapture %}
+
+          {% theme_render_rc 'components/molecules/drawer', label: mobile_nav_label, content: mobile_nav_content, drawer_classes: 'w-80' %}
+        </div>
+        <div class="items-center ml-14 hidden md:flex">
+          <form action="/quick-search" name="search" class="">
+
+            <span class="sr-only">{{ 'modules/community/quick_search.name' | t }}</span>
+            {% liquid
+              assign search_placeholder = 'modules/community/quick_search.name' | t
+              assign qkeyword = context.params.qkeyword | strip
+              assign input_params = null | hash_merge: name: 'qkeyword', value: qkeyword, placeholder: search_placeholder, small_input_height: 'h-[30px]'
+              assign button_attributes = '{"aria-label": "Search"}' | parse_json
+              assign button_params = null | hash_merge: type: 'submit', icon: 'search', weight: 'primary', attributes: button_attributes, small_button_params: '!px-2'
+              theme_render_rc 'components/molecules/search-field', input_params: input_params, button: true, button_params: button_params, size: 'sm'
+            %}
+          </form>
+        </div>
+      {% endif %}
+    </div>
+
+  {% if registered_profile and variant != 'clean' %}
+
+    <nav class="">
+      <ul class="flex items-center gap-2">
+
+        {% comment %} notifications {% endcomment %}
+        {% capture notifications_label %}
+          <span class="text-graphic focus:text-interaction hover:text-interaction-hover transition-colors">
+            {% theme_render_rc 'components/atoms/icon', name: 'bell', class: 'w-6' %}
+            <span class="sr-only">{{ 'modules/community/notifications.title' | t }}</span>
+          </span>
+          <span x-data x-cloak
+            x-show="$store.notifications.unread_count"
+            x-text="$store.notifications.unread_count"
+            class="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs text-inverted bg-important rounded-full">
+          </span>
+        {% endcapture %}
+
+        {% capture notifications_content %}
+          <section class="w-full rounded bg-panel-highlight sm:min-w-80">
+            <div x-data='frames()' x-frames-target="notifications">
+              <div class="flex items-center justify-center" x-show="spinner" x-cloak>
+                {% theme_render_rc 'components/atoms/spinner', classes: 'w-8 h-8' %}
+              </div>
+
+              <form action="/notifications.frame?full=true" method="GET" x-ref="form" x-on:load-notifications.window="replace({target: 'notifications'})"></form>
+            </div>
+          </section>
+        {% endcapture %}
+
+        {% if profile.allow_notifications != 'false' %}
+          <li>
+          {% liquid
+            assign label_attributes = '{}' | parse_json
+            hash_assign label_attributes['x-on:click'] = "$dispatch('load-notifications')"
+            theme_render_rc 'components/molecules/dropdown', label: notifications_label, content: notifications_content, label_attributes: label_attributes, label_classes:'block p-3 relative'
+          %}
+          </li>
+        {% endif %}
+
+        {% comment %} chat {% endcomment %}
+        <li {% if profile %} x-data="navigationStats()" x-init="init($dispatch)" {% endif %}>
+          <a href="/inbox" class="relative block p-3 focus:outline-none text-graphic focus:text-interaction hover:text-interaction-hover transition-colors" title="Chat" id="notifications-chat" data-current-user-id="{{ profile.id }}" data-current-user-slug="{{ profile.slug }}">
+            {% theme_render_rc 'components/atoms/icon', name: 'commentText', class: 'w-6' %}
+            <span
+              id="notification-bell"
+              class="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs text-inverted rounded-full bg-interactive-graphic"
+              x-cloak
+              x-show="inboxUnread"
+              x-text="inboxUnread"
+            >
+            </span>
+          </a>
+        </li>
+
+        {% comment %} profile {% endcomment %}
+        <li data-tc="profile-menu-dropdown">
+          {% capture header_profile_label %}
+            {% theme_render_rc 'components/molecules/header-profile', name: profile.name, imageSrc: profile.avatar.photo.versions.sm %}
+          {% endcapture %}
+          {% capture header_profile_content %}
+            <ul class="whitespace-nowrap">
+              <li>
+                <a href="/feed" class="block py-3 px-7 text-normal hover:bg-interactive-graphic hover:text-inverted transition-colors">{{ 'modules/community/profiles.nav.activity' | t }}</a>
+              </li>
+              <li>
+                <a href="{{ profile_url }}" class="block py-3 px-7 text-normal hover:bg-interactive-graphic hover:text-inverted transition-colors">{{ 'modules/community/profiles.my_profile' | t }}</a>
+              </li>
+              <li class="border-t">
+                <a href="/settings" class="block py-3 px-7 text-normal hover:bg-interactive-graphic hover:text-inverted transition-colors">{{ 'modules/community/profiles.nav.settings' | t }}</a>
+              </li>
+              {% if can_view_admin %}
+              <li>
+                <a href="/admin" class="block py-3 px-7 text-normal hover:bg-interactive-graphic hover:text-inverted transition-colors">Admin</a>
+              </li>
+              {% endif %}
+              <li>
+                <form action="/sessions" method="post">
+                  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+                  <input type="hidden" name="_method" value="delete" />
+                  <button type="submit" class="block w-full py-3 px-7 text-normal hover:bg-interactive-graphic hover:text-inverted text-start transition-colors">
+                    Log Out
+                  </button>
+                </form>
+              </li>
+            </ul>
+          {% endcapture %}
+          {% theme_render_rc 'components/molecules/dropdown',
+            class: '-me-3',
+            label: header_profile_label,
+            content: header_profile_content,
+            dropdown_classes: 'px-0'
+          %}
+      </li>
+      </ul>
+    </nav>
+  {% elsif variant != 'clean' %}
+    <div>
+      {% liquid
+        theme_render_rc 'components/atoms/button', href: '/sessions/new', content: 'Log in'
+        theme_render_rc 'components/atoms/button', weight: 'secondary', href: '/users/new', content: 'Register'
+      %}
+    </div>
+  {% endif %}
+  </div>
+</header>
+{%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}

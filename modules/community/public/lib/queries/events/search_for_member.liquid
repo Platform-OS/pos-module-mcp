@@ -1,0 +1,21 @@
+{% doc %}
+  @param {string} member_id
+  @param {number} [limit]
+  @param {number} [page]
+  @param {boolean} [with_owner]
+  @param {string} [status]
+  @param {object} [current_profile]
+{% enddoc %}
+{% liquid
+  if member_id == blank
+    log 'Something went wrong. Member cannot be blank.', type: 'ERROR'
+    return null
+  endif
+
+  assign page = page | to_positive_integer: 1
+
+  graphql r = 'modules/community/events/search_for_member', limit: limit, page: page, member_id: member_id, with_owner: with_owner, status: status
+  function events = 'modules/community/queries/events/add_current_profile_role_info', events: r.events, current_profile: current_profile
+
+  return events
+%}

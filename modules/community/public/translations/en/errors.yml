@@ -1,0 +1,11 @@
+---
+en:
+  errors:
+    something_went_wrong: Something went wrong
+    unauthorized: The system has determined that <span class="font-semibold">you
+      are not</span> presently <span class="font-semibold">authorized</span> to
+      use this system function.
+    unauthenticated: Please <b class="font-semibold">sign in</b> with your credentials
+      or <b class="font-semibold">register</b> a new account before continuing.
+    blocked_user_notice: Your account has been blocked due to violations of the Code of Conduct. Please contact support for more information.
+    

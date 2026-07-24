@@ -1,0 +1,17 @@
+---
+layout: modules/community/community
+---
+
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function quick_search_function = 'modules/core/queries/variable/get', name: 'quick_search_function', default: 'modules/community/queries/quick-search/search', type: null
+  function search_results = quick_search_function, context: context, current_profile: current_profile
+
+  theme_render_rc 'components/pages/quick-search', list: search_results.list, current_profile: current_profile, context: context, pager: search_results.pager, filters: search_results.filters
+%}
+

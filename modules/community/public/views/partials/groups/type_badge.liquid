@@ -1,0 +1,16 @@
+<!-- TODO: Decide on visibility not group type -->
+
+{% liquid
+  case group.group_type
+  when 'public'
+    return 'Public'
+  when 'moderated'
+    return 'Moderated'
+  when 'private'
+    return 'Private'
+  when 'secret'
+    return 'Secret'
+  else
+    return ''
+  endcase
+%}

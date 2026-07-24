@@ -1,0 +1,10 @@
+{%  liquid
+  function object = 'modules/community/commands/groups/update_count_cache/build', object: object
+  function object = 'modules/community/commands/groups/update_count_cache/check', object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/groups/update_count_cache' object: object, selection: 'record'
+  endif
+
+  return object
+%}

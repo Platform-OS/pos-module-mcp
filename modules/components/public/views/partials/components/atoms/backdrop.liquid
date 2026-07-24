@@ -1,0 +1,25 @@
+---
+metadata:
+  name: Backdrop
+  params:
+    content: ''
+    hidden:
+      - true
+      - false
+    backdrop_id: 'myBackdropId'
+  styleguide:
+    - content: ''
+---
+{% liquid
+  assign content = content | default: params.content
+  assign hidden = hidden | default: params.hidden | default: false
+  assign backdrop_id = backdrop_id | default: params.backdrop_id
+
+  assign classes = params.classes | append: ' w-screen h-screen fixed inset-0 flex items-center justify-center bg-colorful bg-opacity-30 z-10'
+  if hidden == true
+    assign classes = classes | append: ' hidden'
+  endif
+%}
+<div data-backdrop-id="{{backdrop_id}}" class="{{classes}}" data-pos-component="backdrop">
+  {% print content %}
+</div>

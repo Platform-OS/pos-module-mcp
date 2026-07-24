@@ -1,0 +1,17 @@
+{% liquid
+  if id == blank
+    log '(groups) ID cannot be blank when searching for audience'
+    return null
+  endif
+
+  graphql r = 'modules/community/activities/groups/audience', id: id, limit: 1000
+  assign group = r.groups.results.first
+  assign audience = '{ "owners": [], "members": [] }' | parse_json
+
+  assign relationships = group.relationships | group_by: 'name'
+
+  hash_assign audience['owners'] = relationships.owner | map: 'l_id'
+  hash_assign audience['members'] = relationships.membership | map: 'l_id'
+
+  return audience
+%}

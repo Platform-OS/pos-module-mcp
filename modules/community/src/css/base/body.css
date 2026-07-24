@@ -1,0 +1,225 @@
+/*
+  fonts
+  general styling
+  links
+  titles
+  content
+  grid extensions
+  appearance reset
+  scrolling
+  will-change
+*/
+
+
+
+
+/* fonts
+============================================================================ */
+@font-face {
+  font-family: 'Brown';
+  src: url('../fonts/brown-light.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Brown';
+  src: url('../fonts/brown-regular.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+
+/* links
+============================================================================ */
+main a:not(.pos-clean) {
+  @apply
+    text-interactive-text
+    transition-colors;
+}
+
+main a:not(.pos-clean):hover {
+  @apply
+    text-interactive-hover;
+}
+
+a:focus {
+  outline: none;
+}
+
+a:focus-visible {
+  @apply
+    ring-2;
+}
+
+
+
+/* titles
+============================================================================ */
+@layer utilities {
+  @variants responsive {
+
+    .pagetitle {
+      @apply
+        !-mt-8
+        mb-8
+        py-11
+        bg-highlighted
+        uppercase
+        tracking-widest
+        text-3xl
+        text-center
+        font-bold;
+    }
+
+    .bigtitle {
+      @apply
+        mt-10 text-3xl first:mt-0 font-bold uppercase tracking-widest;
+    }
+
+    .bigtitle:not(:last-child) {
+      @apply mb-4;
+    }
+
+    .title {
+      @apply
+        mb-2 text-2xl font-normal font-bold uppercase tracking-widest;
+    }
+
+    .subtitle {
+      @apply
+        mb-1 text-xl font-bold tracking-widest;
+    }
+
+  }
+}
+
+
+
+/* content
+============================================================================ */
+main p + p {
+  @apply
+    mt-4;
+}
+
+@layer utilities {
+  @variants responsive {
+
+    /* small annotations and sidenotes */
+    .sidenote {
+      @apply
+        text-xs
+        font-bold;
+    }
+
+  }
+}
+
+
+
+/* grid extensions
+============================================================================ */
+@layer utilities {
+  @variants responsive {
+
+    .grid-masonry {
+      @apply
+        grid
+        gap-4;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-rows: masonry;
+    }
+
+    .grid-icons {
+      @apply
+        grid
+        gap-10;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr))
+    }
+
+  }
+}
+
+
+
+/* appearance reset
+============================================================================ */
+@layer utilities {
+
+  .appearance-reset {
+    -moz-appearance: textfield;
+  }
+
+  .appearance-reset::-webkit-outer-spin-button,
+  .appearance-reset::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+}
+
+
+
+/* container reset
+============================================================================ */
+@layer utilities {
+  @variants responsive {
+
+    .container-none {
+      max-width: auto;
+      margin: 0;
+      padding: 0;
+    }
+
+  }
+}
+
+
+
+/* scrolling margin
+============================================================================ */
+@layer utilities {
+
+  .scroll-mt-16 {
+    scroll-margin-top: 4rem;
+  }
+
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+}
+
+
+
+/* will-change
+============================================================================ */
+@layer utilities {
+
+  .changes-transform {
+    will-change: transform;
+  }
+
+}
+
+/* login/register screen
+============================================================================ */
+.pos-user-content {
+  margin: auto;
+}
+
+/* hide-scroll-bar
+============================================================================ */
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

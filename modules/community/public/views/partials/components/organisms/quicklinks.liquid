@@ -1,0 +1,55 @@
+---
+metadata:
+  name: Quicklinks
+---
+<section class="container relative text-inverted xs:flex">
+  <div class="relative flex flex-col flex-1 px-6 py-8 mb-2 overflow-hidden rounded me-2 bg-colorful">
+
+    <div class="absolute top-0 left-0 w-full h-full bg-no-repeat bg-cover"
+      style="background-image: url({{ 'modules/community/images/lines_horizontal.svg' | asset_url }})">
+    </div>
+
+    <h3 class="bigtitle">
+      {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+      <a href="/admin/inventory/items/new" class="pos-clean text-inverted hover:text-inverted">Explore</a>
+      {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+    </h3>
+
+    <p>topics</p>
+    {% assign icon_button_params = {"gap": 0, "icon": "dashRight", "weight": "primary", "href": "#", "classes": "z-10 p-4 ml-auto"} %}
+
+    {% theme_render_rc 'components/molecules/iconbutton', params: icon_button_params %}
+  </div>
+
+  <div class="relative flex flex-col flex-1 p-6 mb-2 overflow-hidden rounded bg-colorful me-2">
+
+    <div class="absolute top-0 left-0 w-full h-full bg-no-repeat bg-cover"
+      style="background-image: url({{ 'modules/community/images/lines_horizontal2.svg' | asset_url }})">
+    </div>
+
+    <h3 class="bigtitle">
+      {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+      <a href="/search" class="pos-clean text-inverted hover:text-inverted">Join</a>
+      {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+    </h3>
+    <p>your favourite groups</p>
+
+    {% theme_render_rc 'components/molecules/iconbutton', params: icon_button_params %}
+  </div>
+
+  <div class="relative flex flex-col flex-1 p-6 mb-2 overflow-hidden rounded bg-colorful me-2">
+
+    <div class="absolute top-0 left-0 w-full h-full bg-no-repeat bg-cover"
+      style="background-image: url({{ 'modules/community/images/lines_horizontal3.svg' | asset_url }})">
+    </div>
+
+    <h3 class="bigtitle">
+      {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+      <a href="/questions" class="pos-clean text-inverted hover:text-inverted">Ask</a>
+      {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+    </h3>
+    <p>questions</p>
+
+    {% theme_render_rc 'components/molecules/iconbutton', params: icon_button_params %}
+  </div>
+</section>

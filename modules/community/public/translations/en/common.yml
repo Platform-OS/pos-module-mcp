@@ -1,0 +1,11 @@
+en:
+  common:
+    submit: Save
+    delete: Delete
+    delete_failed: Delete failed
+    deleted: Deleted
+    updated: Updated
+    edit: Edit
+    confirm-delete: Are you sure you want to proceed with the deletion?
+    message_user: Send a message
+    admin_options: Additional admin options

@@ -1,0 +1,2 @@
+{% assign meta = payload.object | escape %}
+{% print payload.type | t: meta: meta, scope: 'modules/community/activities.types' %}

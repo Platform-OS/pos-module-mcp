@@ -1,0 +1,91 @@
+---
+metadata:
+  name: Notification
+  params:
+    name: ''
+    imgSrc: ''
+    actor_url: ''
+    icon: ''
+    message: ''
+    date: ''
+    size:
+      - normal
+      - small
+    classes: ''
+  styleguide:
+    - name: "John Doe"
+      imgSrc: "https://i.pravatar.cc/150?img=18"
+      icon: "heart"
+      message: "started following you"
+      date: "2 days ago"
+      size: 'normal'
+    - name: "Jane Doe"
+      imgSrc: "https://i.pravatar.cc/150?img=19"
+      icon: "messages"
+      message: "started following you"
+      date: "2 days ago"
+      size: 'small'
+      classes: "w-80"
+---
+{% liquid
+  assign name = name | default: params.name
+  assign imgSrc = imgSrc | default: params.imgSrc
+  assign actor_url = actor_url | default: params.actor_url
+  assign message = message | default: params.message
+  assign date = date | default: params.date
+  assign icon = icon | default: params.icon
+  assign date = date | default: params.date
+  assign size = size | default: params.size | default: 'normal'
+  assign classes = classes | default: params.classes
+
+  assign card_classes = classes
+  if size == 'small'
+    assign card_classes = card_classes | append: ' p-2'
+  endif
+%}
+{% capture content %}
+<article class="flex flex-col relative">
+  <div class="mb-3 last:mb-0 flex-col md:flex-row flex justify-between gap-4">
+    <div class="inline-block flex-col md:flex-row flex md:items-center gap-4">
+      <div class="relative inline-block mr-4">
+      {% if actor_url %}
+        <a href="{{ actor_url }}" class="flex-shrink-0">
+      {% endif %}
+        {% theme_render_rc 'components/atoms/avatar', size: 'm', name: name, imageSrc: imgSrc %}
+      {% if actor_url %}
+        </a>
+      {% endif %}
+
+        <div class="absolute top-5 left-6 rounded-full bg-colorful p-1">
+          {% theme_render_rc 'components/atoms/icon', name: icon, class: 'w-3 h-3 text-colorful-foreground'  %}
+        </div>
+      </div>
+
+      <div>
+        <div>
+          {% if actor_url %}
+            <a href="{{ actor_url }}" class="font-semibold text-content">{{ name }}</a>
+          {% else %}
+            {{ name }}
+          {% endif %}
+
+          {% print message %}
+        </div>
+        {% if size == 'small' %}
+        <div class="text-supplementary text-xs">
+          {% print date %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% if size == 'normal' %}
+    <div class="text-supplementary text-xs">
+      {% print date %}
+    </div>
+    {% endif %}
+  </div>
+</article>
+{% endcapture %}
+
+{% theme_render_rc 'components/atoms/card', content: content, classes: card_classes %}
+

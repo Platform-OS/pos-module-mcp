@@ -1,0 +1,28 @@
+{%- comment -%}platformos-check-disable MissingAsset{%- endcomment -%}
+<script type="importmap">
+{
+  "imports": {
+      "/": "{{ 'modules/chat/js/' | asset_url }}",
+      "pos-chat.js": "{{ 'modules/chat/js/pos-chat.js' | asset_url }}",
+      "pos-chat-consumer.js": "{{ 'modules/chat/js/pos-chat-consumer.js' | asset_url }}",
+      "pos-chat-csrfToken.js": "{{ 'modules/chat/js/pos-chat-csrfToken.js' | asset_url }}",
+      "pos-chat-notifications.js": "{{ 'modules/chat/js/pos-chat-notifications.js' | asset_url }}",
+      "load.js": "{{ 'modules/community/js/load.js' | asset_url }}",
+      "notifications.js": "{{ 'modules/community/js/notifications.js' | asset_url }}",
+      "user/relationship.js": "{{ 'modules/community/js/user/relationship.js' | asset_url }}",
+      "tag/relationship.js": "{{ 'modules/community/js/tag/relationship.js' | asset_url }}",
+      "tag/list.js": "{{ 'modules/community/js/tag/list.js' | asset_url }}",
+      "photo/photo.js": "{{ 'modules/community/js/photo/photo.js' | asset_url }}",
+      "feed/post.js": "{{ 'modules/community/js/feed/post.js' | asset_url }}",
+      "feed/comment.js": "{{ 'modules/community/js/feed/comment.js' | asset_url }}",
+      "feed/create.js": "{{ 'modules/community/js/feed/create.js' | asset_url }}",
+      "feed/feed.js": "{{ 'modules/community/js/feed/feed.js' | asset_url }}",
+      "modules/common-styling/js/pos-code.js": "{{ 'modules/common-styling/js/pos-code.js' | asset_url }}",
+
+      "feed/embed.js": "{{ 'modules/community/js/feed/embed.js' | asset_url }}",
+      "layout/position-header-popover-polyfill.js": "{{ 'modules/community/js/layout/position-header-popover-polyfill.js' | asset_url }}",
+      "./": "./"
+  }
+}
+</script>
+{%- comment -%}platformos-check-enable MissingAsset{%- endcomment -%}

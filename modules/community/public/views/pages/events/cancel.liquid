@@ -1,0 +1,29 @@
+---
+slug: events/:id/cancel
+method: put
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign event_id = context.params.id
+  function event = 'modules/community/queries/events/find', id: event_id, with_owner: true, current_profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: event, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/events', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/events/cancel', object: event
+  if object.valid
+    assign event_payload = null | hash_merge: event_id: object.id, actor_id: current_profile.id
+    function _ = 'modules/core/commands/events/publish', type: 'event_cancelled', object: event_payload, delay: 0, max_attempts: null
+  else
+    assign message = 'modules/community/errors.something_went_wrong' | t
+    assign flash = null | hash_merge: message: message, severity: 'error', force_clear: true
+    function _ = 'modules/core/commands/session/set', key: 'sflash', value: flash
+  endif
+
+  assign url = '/events/' | append: event_id
+  redirect_to url
+%}

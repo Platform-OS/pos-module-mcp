@@ -1,0 +1,25 @@
+<section>
+  {%- comment -%}platformos-check-disable MissingPartial{%- endcomment -%}
+  {% render 'modules/community/groups/header', group: group, current_profile: current_profile %}
+  {%- comment -%}platformos-check-enable MissingPartial{%- endcomment -%}
+</section>
+
+<div class="container flex flex-col md:flex-row gap-6">
+  {%- comment -%}platformos-check-disable MissingPartial{%- endcomment -%}
+  {% render 'modules/community/groups/nav', tab: tab, group: group, current_profile: current_profile %}
+  {%- comment -%}platformos-check-enable MissingPartial{%- endcomment -%}
+
+  <div class="flex-1">
+    {% liquid
+      function can_post = "modules/community/helpers/can", actor: current_profile, do: "post", object: group
+      if can_post.valid
+        # platformos-check-disable TranslationKeyExists
+        assign placeholder = 'modules/community/comments.placeholder' | t
+        # platformos-check-enable TranslationKeyExists
+        theme_render_rc 'components/organisms/feed-new-entry', current_profile: current_profile, placeholder: placeholder, target_entity: group, context: context
+      endif
+
+      render 'modules/community/groups/activity', group: group, current_profile: current_profile, list: list, page: 1, namespace: null
+    %}
+  </div>
+</div>

@@ -1,0 +1,23 @@
+mutation groups_update(
+  $id: ID!
+  $c__members_count: Int
+  $c__posts_count: Int
+  $c__full_members_count: Int
+) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/community/group"
+      properties: [
+        { name: "c__members_count", value_int: $c__members_count }
+        { name: "c__full_members_count", value_int: $c__full_members_count }
+        { name: "c__posts_count", value_int: $c__posts_count }
+      ]
+    }
+  ) {
+    id
+    type: table
+    c__members_count: property_int(name: "c__members_count")
+    c__posts_count: property_int(name: "c__posts_count")
+  }
+}

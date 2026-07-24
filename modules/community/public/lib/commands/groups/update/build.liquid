@@ -1,0 +1,13 @@
+{% liquid
+  assign name = object.name | strip
+  assign description = object.description | default: ""
+  assign data = {"id": object.id, "name": name, "summary": object.summary, "content_type": object.content_type, "description": description, "code_of_conduct": object.code_of_conduct, "group_type": object.group_type, "ask_to_join": object.ask_to_join, "meta_visible": object.meta_visible, "content_visible": object.content_visible, "approve_request": object.approve_request, "post_content": object.post_content, "invite_member": object.invite_member}
+
+  function group_templates = 'modules/community/queries/groups/group_templates'
+  # platformos-check-disable UnknownProperty
+  assign template = group_templates[data.group_type]
+  # platformos-check-enable UnknownProperty
+  assign data = data | hash_merge: template
+
+  return data
+%}

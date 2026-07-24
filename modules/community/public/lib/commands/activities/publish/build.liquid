@@ -1,0 +1,5 @@
+{% liquid
+  assign at_value = at | default: null
+  assign object = {"uuid": uuid, "type": type, "ids": ids, "at": at_value}
+  return object
+%}

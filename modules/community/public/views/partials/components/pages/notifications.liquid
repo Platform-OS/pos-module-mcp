@@ -1,0 +1,58 @@
+<section
+  x-data='{ selectedTags: [], showTags: false, hasNextPage: false, spinnerFilters: false, showFeatured: true, itemsCounter: 0, totalEntries: 0, totalPages: 0, currentPage: 0, ...frames() }'
+>
+  <form action="/notifications" method="GET" id="notification-list" x-ref="form">
+    <input type="hidden" name="page" x-bind:value="currentPage+1" value="{{ filters.page }}" x-ref="page">
+  </form>
+
+  <header class="pos-app pos-community-space-header pos-increaseLegibility">
+    <h2 class="pos-heading-2">{{ 'modules/community/notifications.title' | t }}</h2>
+  </header>
+
+  <section x-frames-target="list">
+
+    <div
+      x-init="currentPage++; totalEntries = {{ list.total_entries }}; hasNextPage = {{ list.has_next_page }};"
+    ></div>
+
+    {% if list.total_entries > 0 %}
+      <div class="pos-card">
+        {% liquid
+          for activity in list.results
+            theme_render_rc 'components/molecules/community-notification', payload: activity.payload, current_profile: current_profile, namespace: namespace, context: context, timezone: timezone
+          endfor
+        %}
+      </div>
+    {% else %}
+      <section class="pos-community-space-empty">
+        <div>
+            <h3 class="pos-heading-2">{{ 'modules/community/notifications.no_item' | t }}</h3>
+        </div>
+        {% render 'modules/common-styling/icon', icon: 'bell', class: null %}
+      </section>
+    {% endif %}
+  </section>
+
+  <div class="flex justify-center" x-cloak x-show="spinnerFilters" x-transition x-on:frame-rendered.window="spinnerFilters = false">
+    {% theme_render_rc 'components/atoms/spinner', classes: 'w-10 h-10' %}
+  </div>
+
+
+  <div
+    x-show="hasNextPage"
+    class="container mt-8 text-center"
+  >
+
+    <button type="button" x-bind:disabled="spinner" x-on:click='insert({where: "beforeEnd", target: "list"});' class="button relative">
+      {{ 'modules/community/app.show_more' | t }}
+      <div class="card-overlay" x-cloak x-show="spinner" x-transition>
+        {% theme_render_rc 'components/atoms/spinner', classes: 'w-8 h-8' %}
+      </div>
+    </button>
+    <hr x-show="currentPage < totalPages" class="border-0 border-t -mt-0.5 relative -z-10 -top-5">
+  </div>
+
+
+</section>
+
+

@@ -1,0 +1,39 @@
+{% liquid
+  assign can = false
+  assign comment = entity
+
+  if comment == blank
+    return false
+  endif
+
+  function can_manage_all = 'modules/user/helpers/can_do', requester: requester, do: 'comments.manage.all', entity: null, access_callback: null
+
+  if can_manage_all
+    return true
+  endif
+
+  if comment.creator.id == requester.id
+    assign owner = true
+  else
+    assign owner = false
+  endif
+
+  if comment.removed_at == blank
+    assign is_deleted = false
+  else
+    assign is_deleted = true
+  endif
+
+  case do
+  when 'edit'
+    unless is_deleted
+      return owner
+    endunless
+  when 'remove'
+    unless is_deleted
+      return owner
+    endunless
+  endcase
+
+  return can
+%}

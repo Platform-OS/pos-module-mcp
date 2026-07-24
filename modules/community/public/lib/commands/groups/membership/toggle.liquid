@@ -1,0 +1,27 @@
+{% liquid
+  assign now = 'now' | to_time
+
+  function profile = 'modules/user/queries/profiles/find', user_id: user_id, id: null, uuid: null, first_name: null, last_name: null
+  function group = 'modules/community/queries/groups/find', id: group_id, current_profile: null
+
+  if action_name == 'join'
+    assign event_type = 'user_joined_group'
+    function object = 'modules/community/commands/relationships/create', name: 'membership', l_id: profile.id, r_id: group.id, created_by_id: profile.id, l_at: now, r_at: now
+  endif
+
+  if action_name == 'leave'
+    assign event_type = 'user_left_group'
+    function relation = 'modules/community/queries/relationships/find', name: 'membership', l_id: profile.id, r_id: group.id, include_related: null
+
+    if relation
+      function object = 'modules/community/commands/relationships/delete', object: relation, skip_execution: null
+    endif
+  endif
+
+  if object.valid
+    assign event_payload = null | hash_merge: actor_id: profile.id, group_id: group.id
+    function _ = 'modules/core/commands/events/publish', type: event_type, object: event_payload, delay: 0, max_attempts: null
+  endif
+
+  return object
+%}

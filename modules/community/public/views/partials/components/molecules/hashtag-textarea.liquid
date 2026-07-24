@@ -1,0 +1,45 @@
+---
+metadata:
+  name: Textarea with hashtag support
+  params:
+    name: my-input
+    placeholder: Type here
+    value: ''
+    classes: ''
+    attributes: {}
+---
+{% liquid
+  assign name = name | default: params.name
+  assign placeholder = placeholder | default: params.placeholder | default: ''
+  assign value = value | default: params.value | default: ''
+  assign required = required | default: params.required | default: false
+  assign classes = classes | default: params.classes | default: ''
+  assign input_classes = input_classes | default: params.input_classes | default: ''
+  assign empty_object = null | parse_json
+  assign attributes = attributes | default: params.attributes | default: empty_object
+
+  assign contenteditable_classes = 'w-full block ' | append: input_classes
+%}
+<div class="hashtag min-w-0 {{ classes }}" data-pos-component="hashtag">
+  <div
+    class="overflow-y-auto break-words hashtag__editable pos-form-input {{ contenteditable_classes }}"
+    style="height: auto; min-height: var(--pos-height-input); padding-block: var(--pos-padding-input);"
+    contenteditable="true"
+    data-hashtag-input=""
+    placeholder="{{ placeholder }}"
+    {% for attribute in attributes %}
+      {{ attribute[0] | html_safe }}="{{ attribute[1] | html_safe }}"
+    {% endfor %}
+  ></div>
+  <div class="relative">
+    <ul
+      tabindex="0"
+      role="listbox"
+      class="hashtag__autosuggest hidden w-full border-input-border bg-panel py-2 px-2 rounded-md absolute top-0 z-50 shadow-sm"
+      data-hashtag-autosuggest=""
+    >
+    </ul>
+  </div>
+
+  <textarea tabindex="-1" class="hashtag__input" aria-hidden="true" name="{{name}}" data-post-input="" {%- if required %}required{%- endif -%}>{{value}}</textarea>
+</div>

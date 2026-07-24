@@ -1,0 +1,25 @@
+{% if list.total_entries > 0 %}
+  <div
+    class="hidden"
+    x-init="currentPage++; totalEntries = {{ list.total_entries }}; hasNextPage = {{ list.has_next_page }};"
+  ></div>
+
+  {% for relation in list.results %}
+    <span x-init='document.dispatchEvent(new CustomEvent("pos-user-card-loaded", { detail: {{ relation }} }));' style="display: none;"></span>
+    {% function url = 'modules/community/helpers/link_to', object: relation, type: 'profile', namespace: null, action: null, current_profile: null, role: null, anchor: null, template: null %}
+    {%- comment -%}platformos-check-disable LiquidHTMLSyntaxError{%- endcomment -%}
+    {% render 'modules/community/migrated/profiles/card',, my_profile: null
+      profile: relation,
+      first_name: relation.first_name,
+      last_name: relation.last_name,
+      job_title: relation.job_title,
+      employer: relation.employer,
+      location: relation.location,
+      imageSrc: relation.avatar.photo.url,
+      url: url,
+      allow_to_follow: true
+    %}
+    {%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}
+  {% endfor %}
+
+{% endif %}

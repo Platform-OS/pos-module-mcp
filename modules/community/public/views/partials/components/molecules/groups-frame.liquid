@@ -1,0 +1,11 @@
+{% if list.total_entries > 0 %}
+  <div
+    class="hidden"
+    x-init="currentPage = {{ list.current_page }}; totalEntries = {{ list.total_entries }}; hasNextPage = {{ list.has_next_page }};"
+  ></div>
+
+  {% for record in list.results %}
+    {% render 'modules/community/migrated/groups/card', group: record, pending_acceptance: null %}
+  {% endfor %}
+
+{% endif %}

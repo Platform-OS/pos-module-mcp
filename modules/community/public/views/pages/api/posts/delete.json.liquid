@@ -1,0 +1,31 @@
+---
+slug: api/posts
+method: delete
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function post = 'modules/community/queries/posts/find', id: context.params.post.id
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property:  post.id
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: post, do: 'delete', requester: current_profile, access_callback: 'modules/community/can/posts', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function hashtags = 'modules/community/helpers/extract_hashtags', input: post.body
+  function slugged_tags = 'modules/community/commands/tags/slugify_tags', tags: hashtags
+
+  function object = 'modules/community/commands/posts/remove', object: post
+
+  if object.valid
+    assign event_payload = null | hash_merge: actor_id: current_profile.id, post_id: post.id, tags: slugged_tags
+    function _ = 'modules/core/commands/events/publish', type: 'post_deleted', object: event_payload, delay: 0, max_attempts: null
+  endif
+
+  render 'modules/community/json/shared/show', object: object
+%}

@@ -1,0 +1,176 @@
+{%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+{% if list.results.size > 0 %}
+  {% for relation in list.results %}
+
+    {% function profile = 'modules/user/queries/profiles/find', id: relation.l.id, uuid: null, user_id: null, first_name: null, last_name: null %}
+
+    {% if show_remove_admin %}
+      {% assign remove_admin_dialog_id = 'remove-admin-' | append: relation.id %}
+      {% capture popup_remove_admin_content %}
+
+        <i class="pos-community-spaces-admin-remove-admin-icon">
+          {% render 'modules/common-styling/user/avatar', size: 'xl', name: profile.name, params: null %}
+          {% render 'modules/common-styling/icon', icon: 'crown', class: null %}
+        </i>
+
+        <h2 class="pos-heading-2 pos-text-center">{{ 'modules/community/groups.admin.remove.title' | t }}</h2>
+        <p class="pos-text-center">{{ 'modules/community/groups.admin.remove.description' | t: name: profile.name | html_safe }}</p>
+
+        <form action="/groups/{{ group.id }}/remove-admin" method="post">
+          {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+          <input type="hidden" name="_method" value="delete">
+          <input type="hidden" name="relation_id" value="{{ relation.id }}">
+          <input type="hidden" name="return_to" value="/groups/{{ group.id }}/relationships">
+
+          <fieldset class="pos-dialog-actions">
+            <button type="submit" class="pos-button pos-button-primary">{{ 'modules/community/groups.admin.remove.title' | t }}</button>
+            <button type="button" class="pos-button pos-dialog-close">{{ 'modules/community/app.cancel' | t }}</button>
+          </fieldset>
+        </form>
+
+      {% endcapture %}
+      {% render 'modules/common-styling/content/dialog' id: remove_admin_dialog_id, content: popup_remove_admin_content %}
+    {% endif %}
+
+    {% if show_make_admin %}
+      {% assign make_admin_dialog_id = 'make-admin-' | append: relation.id %}
+      {% capture popup_make_admin_content %}
+
+        <i class="pos-community-spaces-admin-make-admin-icon">
+          {% render 'modules/common-styling/icon', icon: 'crown', class: null %}
+          {% render 'modules/common-styling/user/avatar', size: 'xl', name: profile.name, params: null %}
+        </i>
+
+        <h2 class="pos-heading-2 pos-text-center">{{ 'modules/community/groups.admin.make.title' | t }}</h2>
+        <p class="pos-text-center">{{ 'modules/community/groups.admin.make.description' | t: name: profile.name | html_safe }}</p>
+
+        <form action="/groups/{{ group.id }}/set-admin" method="post">
+          {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+          <input type="hidden" name="user_id" value="{{ relation.l_id }}">
+          <input type="hidden" name="return_to" value="/groups/{{ group.id }}/relationships">
+
+          <fieldset class="pos-dialog-actions">
+            <button type="submit" class="pos-button pos-button-primary">{{ 'modules/community/groups.admin.make.title' | t }}</button>
+            <button type="button" class="pos-button pos-dialog-close">{{ 'modules/community/app.cancel' | t }}</button>
+          </fieldset>
+        </form>
+
+      {% endcapture %}
+      {% render 'modules/common-styling/content/dialog' id: make_admin_dialog_id, content: popup_make_admin_content %}
+    {% endif %}
+
+    {% if show_remove_group %}
+      {% assign remove_group_dialog_id = 'remove-group-' | append: relation.id %}
+      {% capture popup_remove_from_group_content %}
+
+        <i class="pos-community-spaces-admin-throw-icon">
+          {% render 'modules/common-styling/user/avatar', size: 'xl', name: profile.name, params: null %}
+          {% render 'modules/common-styling/icon', icon: 'leave', class: null %}
+        </i>
+
+        <h2 class="pos-heading-2 pos-text-center">{{ 'modules/community/groups.admin.throw.title' | t }}</h2>
+        <p class="pos-text-center">{{ 'modules/community/groups.admin.throw.description' | t: name: profile.name | html_safe }}</p>
+
+        <form action="/groups/{{ group.id }}/remove-member" method="post">
+          {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+          <input type="hidden" name="_method" value="delete">
+          <input type="hidden" name="user_id" value="{{ relation.l_id }}">
+          <input type="hidden" name="return_to" value="/groups/{{ group.id }}/relationships">
+
+          <fieldset class="pos-dialog-actions">
+            <button type="submit" class="pos-button pos-button-primary">{{ 'modules/community/groups.admin.throw.title' | t }}</button>
+            <button type="button" class="pos-button pos-dialog-close">{{ 'modules/community/app.cancel' | t }}</button>
+          </fieldset>
+        </form>
+
+      {% endcapture %}
+      {% render 'modules/common-styling/content/dialog' id: remove_group_dialog_id, content: popup_remove_from_group_content %}
+    {% endif %}
+
+    <ul>
+
+      <li class="pos-table-cell-priority">
+        <a href="/profile/{{ profile.slug }}" class="pos-community-spaces-admin-table-user">
+          {% render 'modules/common-styling/user/avatar', size: 'lg', name: profile.name, params: null %}
+          <div>
+            {{ profile.name }}
+            {% if profile.job_title or profile.employer %}
+              <small class="pos-community-spaces-admin-table-user-position">
+                {{ profile.job_title }}
+                {% if profile.employer %} at {{ profile.employer }} {% endif %}
+              </small>
+            {% endif %}
+          </div>
+        </a>
+      </li>
+
+      <li class="pos-table-cell-nowrap pos-table-number">
+        <span class="pos-table-content-heading">{{ 'modules/community/groups.relationships.l_accepted_at' | t }}</span>
+        {% if relation.r_accepted_at == blank %}
+          {% render 'modules/community/migrated/groups/approve_button', group: group, relation: relation %}
+        {% else %}
+          <time class="timeago" datetime="{{ relation.r_accepted_at }}">{{ relation.r_accepted_at }}</time>
+        {% endif %}
+      </li>
+
+      <li>
+        <div class="pos-community-spaces-admin-table-actions">
+          {% if profile.id != current_profile.id %}
+            <a href="/inbox/?to_uuid={{ profile.uuid }}" class="pos-button" title="{{ 'modules/community/common.message_user' | t }}">
+              {% render 'modules/common-styling/icon', icon: 'messagesTyping', class: null %}
+              <span class="pos-label">
+                {{ 'modules/chat/message' | t }}
+              </span>
+            </a>
+          {% endif %}
+          {% if show_remove_admin or show_make_admin or show_remove_group or profile.id != current_profile.id %}
+            <div class="pos-popover">
+              <button type="button" popovertarget="pos-community-user-{{ profile.id }}-options" title="{{ 'modules/community/common.admin_options' | t }}">
+                <span class="pos-label">Admin options for {{ profile.name }}</span>
+                {% render 'modules/common-styling/icon', icon: 'dots', class: null %}
+              </button>
+              <menu popover id="pos-community-user-{{ profile.id }}-options">
+                {% if profile.id != current_profile.id %}
+                  <li class="pos-community-spaces-admin-table-action-mobile">
+                    <a href="/inbox/?to_uuid={{ profile.uuid }}" title="{{ 'modules/community/common.message_user' | t }}">
+                      {% render 'modules/common-styling/icon', icon: 'messagesTyping', class: null %}
+                      {{ 'modules/chat/message' | t }}
+                    </a>
+                  </li>
+                {% endif %}
+                {% if show_remove_admin %}
+                  <li>
+                    <button type="button" data-dialogtarget="{{ remove_admin_dialog_id }}">
+                      {% render 'modules/common-styling/icon', icon: 'crownRotated', class: null %}
+                      {{ 'modules/community/groups.admin.remove.title' | t }}
+                    </button>
+                  </li>
+                {% endif %}
+                {% if show_make_admin %}
+                  <li>
+                    <button type="button" data-dialogtarget="{{ make_admin_dialog_id }}">
+                      {% render 'modules/common-styling/icon', icon: 'crown', class: null %}
+                      {{ 'modules/community/groups.admin.make.title' | t }}
+                    </button>
+                  </li>
+                {% endif %}
+                {% if show_remove_group %}
+                  <li>
+                    <button type="button" data-dialogtarget="{{ remove_group_dialog_id }}">
+                      {% render 'modules/common-styling/icon', icon: 'leave', class: null %}
+                      {{ 'modules/community/groups.admin.throw.title' | t }}
+                    </button>
+                  </li>
+                {% endif %}
+              </menu>
+            </div>
+          {% endif %}
+        </div>
+      </li>
+
+    </ul>
+
+  {% endfor %}
+
+{% endif %}
+{%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}

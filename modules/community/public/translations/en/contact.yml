@@ -1,0 +1,19 @@
+en:
+  contacts:
+    blank_reason: Select subject
+    reasons:
+      challenges: Challenges
+      groups: Groups
+      support: Support
+      partner: Become a Partner
+      other: Other
+    contact-us: Contact Us
+    message_sent: Message sent. We will contact you shortly.
+    message-explain: Experiencing a problem? Or just wanting to say hi? Share your message with us.
+    form:
+      email: Email
+      message: Message
+      message_placeholder: Your message
+      message_tip: Experiencing a problem? Or just wanting to say hi? Share your message with us.
+      reason: Subject
+      submit: Submit

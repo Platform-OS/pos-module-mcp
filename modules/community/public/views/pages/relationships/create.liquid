@@ -1,0 +1,31 @@
+---
+slug: relationships
+method: post
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign data = context.params | hash_merge: type: 'relationship', created_by_id: current_profile.id
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: data, do: 'create', requester: current_profile, access_callback: 'modules/community/can/relationships', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/relationships/find_or_create', object: data
+  if object.valid
+    if object.created
+      assign event_payload = null | hash_merge: l_id: object.l_id, r_id: object.r_id, relationship_id: object.id
+      function _ = 'modules/core/commands/events/publish', type: 'relationship_created', object: event_payload, delay: 0, max_attempts: null
+      function _event = 'modules/community/commands/core_events/factory/create', relation: object, _event: null
+    endif
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', notice: context.params.notice_key
+    # platformos-check-enable DeprecatedTag
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', error: context.params.error_key
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

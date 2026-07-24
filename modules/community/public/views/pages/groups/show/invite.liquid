@@ -1,0 +1,18 @@
+---
+slug: groups/:id/invite
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true, followships: true
+
+  assign group_id = context.params.id | split: '-' | last
+  function group = 'modules/community/queries/groups/find', id: group_id, with_owner: false, current_profile: null
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'see_meta', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function list = 'modules/community/queries/relationships/search', limit: 20, name: 'membership', r_id: group_id
+
+  # platformos-check-disable MissingPartial
+  render 'modules/community/groups/invitations', group: group, list: list, current_profile: current_profile
+  # platformos-check-enable MissingPartial
+%}

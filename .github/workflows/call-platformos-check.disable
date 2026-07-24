@@ -1,0 +1,15 @@
+name: Run platformos-check on Liquid files
+on:
+  push:
+    paths:
+      - 'app/**'
+      - 'modules/community/**'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'modules/community/**'
+  workflow_dispatch:
+
+jobs:
+  run-platformos-check:
+    uses: Platform-OS/gh-workflows/.github/workflows/run_platformos_check_reusable.yml@main

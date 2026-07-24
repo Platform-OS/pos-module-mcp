@@ -1,0 +1,10 @@
+{% liquid
+  if context.params.language != blank
+    assign url = "/?language=" | append: context.params.language
+    redirect_to url
+  else
+    function current_profile = 'modules/community/helpers/current_profile'
+    render 'modules/community/404', current_profile: current_profile
+  endif
+%}
+

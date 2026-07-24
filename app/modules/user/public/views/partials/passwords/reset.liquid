@@ -1,0 +1,58 @@
+{% liquid
+  assign errors = errors | default: params.errors
+%}
+
+
+<div class="community-user-form">
+  
+  <section class="community-user-form-content-container">
+
+    <div class="community-user-form-content">
+
+      <a href="/" class="community-user-form-title">
+        <h1>
+          <span class="community-user-form-title-label">
+            {{ 'app.title' | t }}
+          </span>
+          {% render 'modules/community/migrated/layout/logo' %}
+        </h1>
+      </a>
+
+      <h1 class="pos-heading-2">
+        <small>{{ 'user.forms.reset.welcome' | t }}</small>
+        {{ 'modules/user/passwords.edit' | t }}
+      </h1>
+
+      <p class="community-user-form-intro">{{ 'modules/user/passwords.email_desc' | t }}</p>
+
+      <form action="/authentication_links" method="POST" class="pos-form pos-form-simple">
+
+        <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+
+        <fieldset>
+          <label for="pos-user-email">{{ 'modules/user/passwords.email' | t }}</label>
+          <input type="email" name="authentication_link[email]" id="pos-user-email" value="{{ values.email }}" required placeholder="my@email.com" {% render 'modules/common-styling/forms/error_input_handler', name: 'email', errors: errors['email'] %}>
+          {% render 'modules/common-styling/forms/error_list', name: 'email', errors: errors['email'] %}
+        </fieldset>
+
+        {% render 'modules/common-styling/forms/hcaptcha' %}
+
+        <fieldset>
+          <button type="submit" class="pos-button pos-button-primary">{{ 'modules/user/passwords.reset_password' | t }}</button>
+        </fieldset>
+
+      </form>
+      
+    </div>
+
+    <footer class="community-user-form-footer">
+      {{ 'user.forms.reset.trouble' | t }}
+    </footer>
+
+  </section>
+
+
+  <aside class="community-user-form-aside" style="--background: url('{{ 'image/community-user-form-background.avif' | asset_url }}'); --ornament: url('{{ 'image/community-user-reset-ornamet.avif' | asset_url }}');">
+  </aside>
+
+</div>

@@ -1,0 +1,18 @@
+---
+en:
+  quick_search:
+    name: Search
+    results: Search result
+    see_more: See more
+    show_more: Show more
+    type:
+      profile: Profile
+      group: Group
+      groups: Groups
+      events: Events
+      people: People
+      comment: Post
+      item: Item
+      post: Question
+      project: Challange
+    selected: selected

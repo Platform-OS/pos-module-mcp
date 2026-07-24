@@ -1,0 +1,24 @@
+mutation event_update(
+  $id: ID!
+  $going: Float!
+  $maybe: Float!
+  $not_going: Float!
+) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/community/event"
+      properties: [
+        { name: "c__going", increment: $going },
+        { name: "c__maybe", increment: $maybe },
+        { name: "c__not_going", increment: $not_going }
+      ]
+    }
+  ) {
+    id
+    type: table
+    c__going: property_int(name: "c__going")
+    c__maybe: property_int(name: "c__maybe")
+    c__not_going: property_int(name: "c__not_going")
+  }
+}

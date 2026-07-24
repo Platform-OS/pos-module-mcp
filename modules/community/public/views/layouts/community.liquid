@@ -1,0 +1,112 @@
+{% liquid
+  function direction = 'modules/community/helpers/text_direction', lang: context.language
+  if context.current_user
+    response_headers '{ "Cache-Control": "no-store", "Pragma": "no-cache" }'
+  endif
+%}
+
+<!DOCTYPE html>
+
+<html dir="{{ direction }}" lang="{{ context.language }}">
+  <head>
+    
+    {% render 'modules/community/migrated/meta/importmap' %}
+
+    <link rel="manifest" href="/manifest.json" crossorigin="anonymous">
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="csrf-param" content="authenticity_token">
+    <meta name="csrf-token" content="{{ context.authenticity_token }}">
+
+    {% render 'modules/community/migrated/meta/favicon' %}
+
+    {%- capture meta_description -%}{%- yield meta_description -%}{%- endcapture -%}
+    {%- capture meta_image -%}{%- yield meta_image -%}{%- endcapture -%}
+    {% liquid
+      assign default_description = 'modules/community/seo.meta_description' | t: default: ''
+      function social_sharing_image = 'modules/community/queries/photos/search', photo_type: 'social_sharing_image', object_uuid: null, limit: null
+      # platformos-check-disable MissingAsset
+      assign default_share_image = 'modules/community/images/share.png' | asset_url
+      # platformos-check-enable MissingAsset
+      assign share_image = meta_image | default: social_sharing_image.results.first.photo.versions.md | default: default_share_image
+    %}
+
+    {% if meta == blank %}
+      <title>{{ 'app.title' | t }}</title>
+
+      <meta property="og:title" content="{{ 'app.title' | t | strip_html }}">
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="{{ context.location.url }}">
+      <meta property="og:image" content="{{ share_image }}">
+      <meta property="og:locale" content="{{ context.language }}">
+      <meta property="og:description" content="{{ meta_description | default: default_description | strip_html }}">
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="{{ 'app.title' | t | strip_html }}">
+      <meta name="twitter:description" content="{{ meta_description | default: default_description | strip_html }}">
+      <meta name="twitter:image" content="{{ share_image }}">
+    {% else %}
+      {% print meta %}
+    {% endif %}
+
+    {% comment %} legacy styles {% endcomment %}
+    <link rel="stylesheet" href="{{ 'modules/community/style/pos-community-config-tailwind.css' | asset_url }}">
+    {% render 'modules/community/layout/assets_styles' %}
+
+    {% render 'modules/community/migrated/meta/init' %}
+
+    {% comment %} move this to user module {% endcomment %}
+    {% if context.exports.current_profile.id %}
+      <script>
+        if(!pos.user){
+          pos.user = {};
+          pos.user.id = {{ context.exports.current_profile.id }};
+          pos.user.uuid = '{{ context.exports.current_profile.uuid }}';
+        }
+      </script>
+    {% endif %}
+
+    {% comment %} legacy js {% endcomment %}
+    {% render 'modules/community/layout/js_global_variables', current_profile: context.exports.current_profile %}
+
+    {% render 'modules/push_notifications/init' %}
+
+  </head>
+
+  <body{% unless context.exports.current_profile.user_id %} class="pos-community-layout-signedoff"{% endunless %}>
+
+    {% render 'modules/community/migrated/layout/header', profile: context.exports.current_profile, params: null %}
+    
+    {% if context.exports.current_profile.user_id %}
+
+      {% parse_json featured_groups %}
+        {% cache 'featured_groups', expire: 3600 %}
+          {% function featured_groups = 'modules/community/queries/groups/search', featured: true, limit: 5 %}
+          {{- featured_groups -}}
+        {% endcache %}
+      {% endparse_json %}
+
+      {% render 'modules/community/migrated/layout/navigation', featured_groups: featured_groups %}
+    {% endif %}
+
+    <main class="pos-community-content">
+      {{ content_for_layout }}
+    </main>
+
+    {% liquid
+      function flash = 'modules/core/commands/session/get', key: 'sflash', clear: null
+      if context.location.pathname != flash.from or flash.force_clear
+        function _ = 'modules/core/commands/session/clear', key: 'sflash'
+      endif
+      # platformos-check-disable PartialCallArguments,UnrecognizedRenderPartialArguments
+      render 'modules/common-styling/toasts', message: flash.message, severity: flash.severity, autohide: flash.autohide, delay: flash.delay, params: null
+      # platformos-check-enable PartialCallArguments,UnrecognizedRenderPartialArguments
+    %}
+
+    {% comment %} legacy js {% endcomment %}
+    {% render 'modules/community/layout/assets_scripts' %}
+    {% yield 'custom_scripts' %}
+
+  </body>
+</html>

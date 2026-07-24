@@ -1,0 +1,55 @@
+{% comment %}
+  This function generates hashtags by post content and post images.
+  Uses OpenAI's GPT-4o-mini model to generate hashtags based on the post content.
+
+  Params:
+    - content: string
+    - post_photos: string[]
+
+  Returns:
+    - array of strings
+{% endcomment %}
+
+{%- parse_json response_format_schema_json -%}
+{
+  "tags": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  }
+}
+{%- endparse_json -%}
+
+{%- liquid
+  function system_hashtags = 'modules/community/queries/tags/search', limit: 100, page: null, not_ids: null, sort: null, name: null, names: null, query: null, status: null, with_creator: null
+  assign system_hashtags = system_hashtags.results | map: 'name' | join: ', '
+-%}
+
+{%- capture user_message -%}
+Based on post content and attached images (if available) create hashtags for this post. I'll give you some example hashtags that You can use if some of them fits. Pick only tags that fits content directly. If there's no hashtags that fits, propose new. Always add hash sign (#) to tag, even for example tags. Please use no more than 3-4 hashtags.
+
+Example hashtags: {{ system_hashtags }}.
+Post content: {{ content }}.
+{%- endcapture -%}
+
+{%- parse_json request_object -%}
+{
+  "system_message": "You are helpful professional copywriter. You help tagging content of posts.",
+  "user_message": "{{ user_message }}",
+  "user_images": {{ post_photos | default: '[]' | parse_json }},
+  "response_format_schema_json": {{ response_format_schema_json }},
+  "model": "gpt-4o-mini"
+}
+{%- endparse_json -%}
+
+
+{%- liquid
+  function response_object = 'modules/openai/commands/openai/responses/create', object: request_object
+
+  if response_object != blank
+    return response_object.tags | default: '[]' | parse_json
+  else
+    return null
+  endif
+-%}

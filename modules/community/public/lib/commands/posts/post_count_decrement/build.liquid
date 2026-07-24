@@ -1,0 +1,5 @@
+{% liquid
+  assign post_count = object.post_count | plus: 0
+  assign object = {"id": object.id, "post_count": post_count}
+  return object
+%}

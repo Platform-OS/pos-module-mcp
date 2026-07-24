@@ -1,0 +1,14 @@
+{% render 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "1", at: null %}
+
+{% liquid
+  function audience = 'modules/community/commands/audience/build'
+
+  hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | add_to_array: event.target.id
+
+  assign notification_title = 'modules/community/push_notifications.new_follower.title' | t
+  assign notification_body = 'modules/community/push_notifications.new_follower.body' | t: actor: event.actor.name
+  function url = 'modules/community/helpers/link_to_url', object: event.actor, type: 'profile', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  function publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+%}

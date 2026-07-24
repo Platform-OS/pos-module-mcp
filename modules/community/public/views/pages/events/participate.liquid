@@ -1,0 +1,29 @@
+---
+slug: events/:id/participate
+method: post
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function event = 'modules/community/queries/events/find', id: context.params.id, with_owner: true, current_profile: current_profile
+  function can_join_event = 'modules/user/helpers/can_do', requester: current_profile, do: 'join', entity: event, access_callback: 'modules/community/can/events'
+
+  if event and can_join_event
+    assign object = null | hash_merge: id: event.id, name: context.params.type
+    function object = 'modules/community/commands/events/participate', object: object, profile: current_profile
+  endif
+
+  if object.valid
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: context.params.redirect_to, notice: context.params.notice_key
+    # platformos-check-enable DeprecatedTag
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: context.params.redirect_to, error: context.params.error_key
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

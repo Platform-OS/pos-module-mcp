@@ -1,0 +1,30 @@
+{% liquid
+  assign active_class = 'pos-community-space-navigation-active'
+%}
+
+
+<nav class="pos-app pos-community-space-navigation">
+  <ul>
+    <li>
+      <a href="{{ url }}" class="{% if tab == 'feed' or context.location.pathname == url %}{{ active_class }}{% endif %}">
+        {% if tab == 'feed' or context.location.pathname == url %}<h3>{% endif %}
+          {{ 'modules/community/groups.nav.activity' | t }}
+        {% if tab == 'feed' or context.location.pathname == url %}</h3>{% endif %}
+      </a>
+    </li>
+    <li>
+      <a href="/groups/{{ id }}/members" class="{% if tab == 'members' %}{{ active_class }}{% endif %}">
+        {% if tab == 'members' %}<h3>{% endif %}
+          {{ 'modules/community/groups.nav.members' | t }}
+        {% if tab == 'members' %}</h3>{% endif %}
+      </a>
+    </li>
+    <li>
+      <a href="/groups/{{ id }}/about" class="{% if tab == 'about' %}{{ active_class }}{% endif %}">
+        {% if tab == 'about' %}<h3>{% endif %}
+          {{ 'modules/community/groups.nav.about' | t }}
+        {% if tab == 'about' %}</h3>{% endif %}
+      </a>
+    </li>
+  </ul>
+</nav>

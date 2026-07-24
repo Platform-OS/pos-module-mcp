@@ -1,0 +1,24 @@
+<div
+  class="pos-card pos-community-peopletofollow"
+>
+  <h3 class="pos-heading-3 pos-community-informative-heading">
+    <small>{{ 'modules/community/people_to_follow.recommended' | t }}</small>
+    {{ 'modules/community/people_to_follow.title' | t }}
+  </h3>
+  <ul>
+    {% for person in list.results %}
+      <li>
+        {% function profile_url = 'modules/community/helpers/link_to', object: person, type: 'profile' %}
+        <a href="{{ profile_url }}">
+          {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+          {% render 'modules/common-styling/user/avatar', size: 'md', name: person.name, params: null %}
+          {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+          {{ person.name }}
+        </a>
+        {% if current_profile.id != person.id %}
+          {% render 'modules/community/migrated/profiles/follow_toggle' profile: person, small: true, show_label: false, show_icon: null %}
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</div>

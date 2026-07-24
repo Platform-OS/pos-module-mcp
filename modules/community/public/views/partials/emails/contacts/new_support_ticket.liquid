@@ -1,0 +1,31 @@
+<h1 class="title">
+  {{ 'modules/community/emails.contact-us.subject' | t: host: data.host }}
+</h1>
+
+<table cellspacing="0">
+  <tr>
+    <td>
+      <b>{{ 'modules/community/contacts.form.email' | t }}:</b>
+    </td>
+    <td style="width: 10px;"></td>
+    <td>
+      {{ data.object.email }}
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <b>{{ 'modules/community/contacts.form.reason' | t }}:</b>
+    </td>
+    <td style="width: 10px;"></td>
+    <td>{{ data.object.reason }}</td>
+  </tr>
+  <tr>
+    <td>
+      <b>{{ 'modules/community/contacts.form.message' | t }}:</b>
+    </td>
+    <td style="width: 10px;"></td>
+    <td>
+      {{ data.object.message | markdown }}
+    </td>
+  </tr>
+</table>

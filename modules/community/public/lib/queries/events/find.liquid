@@ -1,0 +1,16 @@
+{% liquid
+  if id == blank
+    log 'Something went wrong when finding event. Required fields: id', type: 'ERROR'
+    return null
+  endif
+  assign relationships = relationships | default: null
+  assign with_owner = with_owner | default: null
+  assign name = name | default: null
+
+  assign default_status = '["published", "unpublished", "pending", "cancelled"]' | parse_json
+  assign status = status | default: default_status
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r  = 'modules/community/events/search', id: id, name: name, limit: 1, with_owner: with_owner, relationships: relationships, status: status, profile_table: profile_table
+  function events = 'modules/community/queries/events/add_current_profile_role_info', events: r.events, current_profile: current_profile
+  return events.results.first
+%}

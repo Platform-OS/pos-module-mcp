@@ -1,0 +1,13 @@
+query count {
+  groups: records(
+    per_page: 1
+    filter: {
+      table: { value: "modules/community/group" }
+      properties: [
+        { name: "group_type", not_value: "profile_group" }
+      ]
+    }
+  ){
+    total_entries
+  }
+}

@@ -1,0 +1,10 @@
+{% liquid
+  assign actor = '{"id": "1000", "roles": [], "relationships": {"owner": [], "membership": []}}' | parse_json
+
+  assign ownership = '{"id": "2000", "type":"relationship", "name": "owner", "r_id": "5", "l_id": "1000", "r": { "id": "5", "type": "group" }, "l_accepted_at": "now", "r_accepted_at": "now", "valid": true}' | parse_json
+  hash_assign actor['relationships']['owner'] = actor['relationships']['owner'] | add_to_array: ownership
+
+  assign join_request = '{"id": "2001", "type":"relationship", "name": "membership","r_id": "5", "l_id": "1000", "r": { "id": "5", "type": "group" }, "l_accepted_at": "now"}' | parse_json
+  function can = 'modules/user/helpers/can_do', requester: actor, do: 'accept', entity: join_request, access_callback: 'modules/community/can/relationships'
+  # function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: true, field_name: 'accept'
+%}

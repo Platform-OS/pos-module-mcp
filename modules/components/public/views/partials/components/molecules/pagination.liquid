@@ -1,0 +1,86 @@
+---
+metadata:
+  name: Pagination
+  params:
+    count: 10
+    maxCount: 5
+    active: 3
+    url: ''
+  styleguide:
+    - count: 10
+      maxCount: 5
+      active: 2
+      url: 'something?page='
+    - count: 10
+      maxCount: 5
+      active: 4
+    - count: 10
+      maxCount: 5
+      active: 9
+    - count: 10
+      active: 9
+---
+{% liquid
+  assign count = count | default: params.count | default: 10
+  assign maxCount = maxCount | default: params.maxCount | default: count
+  assign active = active | default: params.active
+  assign url = url | default: params.url | default: '?page='
+
+  if count > maxCount
+    assign limit = maxCount | divided_by: 2 | round
+    assign startPage = active | minus: limit
+    assign endPage = active | plus: limit
+  endif
+
+  if count <= maxCount
+    assign startPage = 1
+    assign endPage = count
+  endif
+
+  if startPage < 1
+    assign startPage = 1
+    assign endPage = maxCount
+  endif
+
+  if endPage > count
+    assign startPage = count | minus: maxCount | plus: 1
+    assign endPage = count
+  endif
+
+  assign leftArrow = startPage | minus: 1
+  assign rightArrow = endPage | plus: 1
+
+  assign classes = "pos-pagination__link h-8 min-w-8 p-2 leading-5 flex items-center justify-center text-interactive-text hover:border-button-secondary-hover hover:text-button-secondary-foreground-hover "
+  assign arrowClasses = "pos-pagination__link h-8 min-w-8 p-2 flex items-center justify-center text-interactive-graphic hover:text-button-secondary-foreground-hover "
+%}
+<nav role="navigation" aria-label="Pagination Navigation">
+  <ul class="flex">
+    {% if startPage > 1 %}
+      <li>
+        <a class="{{arrowClasses}}" href="{{url}}{{leftArrow}}" aria-label="Goto Page {{leftArrow}}">
+          {% assign icon_params = null | hash_merge: name: 'dashLeft' %}
+          {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+        </a>
+      </li>
+    {% endif %}
+    {% for i in (1..count) %}
+      {% if i >= startPage and i <= endPage %}
+        <li>
+          {% if active == i %}
+            <a href="{{url}}{{i}}" class="{{classes}} rounded-surface border border-button-secondary-stroke" aria-label="Current Page, Page {{i}}" aria-current="true">{{i}}</a>
+          {% else %}
+            <a href="{{url}}{{i}}" class="{{classes}}" aria-label="Goto Page {{i}}">{{i}}</a>
+          {% endif %}
+        </li>
+      {% endif %}
+    {% endfor %}
+    {% if count > endPage %}
+      <li>
+        <a class="{{arrowClasses}}" href="{{url}}{{rightArrow}}" aria-label="Goto Page {{rightArrow}}">
+          {% assign icon_params = null | hash_merge: name: 'dashRight' %}
+          {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>

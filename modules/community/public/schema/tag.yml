@@ -1,0 +1,14 @@
+name: tag
+properties:
+  - name: name
+    type: string
+  - name: status
+    type: string
+  - name: post_count
+    type: integer
+  - name: follower_count
+    type: integer
+  - name: disabled_at
+    type: datetime
+  - name: creator_id
+    type: string

@@ -1,0 +1,19 @@
+{% liquid
+    function profile = 'modules/community/test/fixtures/profile', user_id: null
+    function group = 'modules/community/test/fixtures/group', owner_id: profile.id, contract: contract
+  
+    hash_assign group['id'] = group.id
+    function object = 'modules/community/commands/groups/feature', object: group
+
+    function contract = 'modules/tests/assertions/valid_object', contract: contract, object: object, field_name: 'object'
+    # platformos-check-disable DeprecatedTag
+    include 'modules/tests/assertions/true', contract: contract, field_name: 'featured_at', object: null, value: null
+    # platformos-check-enable DeprecatedTag
+
+    function object = 'modules/community/commands/groups/feature', object: group
+    function contract = 'modules/tests/assertions/valid_object', contract: contract, object: object, field_name: 'object'
+    # platformos-check-disable DeprecatedTag
+    include 'modules/tests/assertions/not_true', contract: contract, field_name: 'featured_at', object: null, value: null
+    # platformos-check-enable DeprecatedTag
+  %}
+  

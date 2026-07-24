@@ -1,0 +1,20 @@
+---
+metadata:
+  name: Group leave button
+  params:
+    group: {}
+---
+<form action="/groups/{{ group.id }}/leave" method="post">
+  {% function url = 'modules/community/helpers/link_to', object: group %}
+  <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token  }}">
+  <input type="hidden" name="_method" value="delete" />
+  <input type="hidden" name="return_to" value="{{ url }}">
+  <input type="hidden" name="notice_key" value="modules/community/groups.left">
+
+  {% liquid
+    assign button_label = 'modules/community/groups.leave' | t
+  %}
+  <button class="block w-full py-3 px-7 text-normal hover:bg-interactive-graphic hover:text-inverted text-start transition-colors" type="submit">
+    {{ button_label  }}
+  </button>
+</form>

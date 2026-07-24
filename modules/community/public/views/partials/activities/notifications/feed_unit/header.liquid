@@ -1,0 +1,69 @@
+{% liquid
+  assign profile = payload.actor
+  function actor = 'modules/community/commands/activities/header', profile: profile
+%}
+
+<header class="mb-3 last:mb-0 flex items-center gap-4">
+  {% if actor.url %}
+    <a href="{{ actor.url }}" class="flex-shrink-0">
+  {% endif %}
+  {% theme_render_rc 'components/atoms/avatar', size: 'l', name: actor.name, imageSrc: actor.avatar.photo.versions.sm %}
+  {% if actor.url %}
+    </a>
+  {% endif %}
+
+  <div>
+    {% if actor.url %}
+      {%- capture info -%}[{{ payload.type }}] [{{ payload.actor.type }}#{{ payload.actor.id }}][{{ payload.object.type }}#{{ payload.object.id }}][{{ payload.target.type }}#{{ payload.target.id }}]{%- endcapture -%}
+      <a href="{{ actor.url }}" title="{{ info | escape }}" class="font-semibold text-content">{{ actor.name }}</a>
+    {% else %}
+      {{ actor.name }}
+    {% endif %}
+
+    {% liquid
+      assign skip_link = false
+      case payload.type
+
+        when 'login_failed', 'account_locked', 'account_unlocked'
+          render 'modules/community/activities/feed_unit/type/login_failed', payload: payload
+
+        when 'item_inventory_updated'
+          # platformos-check-disable MissingPartial
+          render 'modules/community/activities/feed_unit/type/item_inventory_updated', payload: payload, namespace: namespace
+          # platformos-check-enable MissingPartial
+
+        when 'comment_created'
+          assign skip_link = true
+          render 'modules/community/activities/feed_unit/type/comment_created', payload: payload
+
+        when 'mention_created'
+          if payload.source_type == 'comment'
+            assign skip_link = true
+          endif
+          render 'modules/community/activities/feed_unit/type/mention_created', payload: payload
+
+        when 'post_created'
+          if payload.target.name == 'PROFILE_GROUP' or payload.target.name == 'PROJECT_GROUP'
+            assign internal_group = true
+          endif
+          if internal_group
+            render 'modules/community/activities/feed_unit/type/default', payload: payload, namespace: namespace, role: role, type: 'post_created_notification_internal', event: null, meta: null
+          else
+            render 'modules/community/activities/feed_unit/type/default', payload: payload, namespace: namespace, role: role, type: 'post_created_notification', event: null, meta: null
+          endif
+
+        when 'event_participation_declared'
+          if payload.new_type == 'event:not-going'
+            render 'modules/community/activities/feed_unit/type/default', payload: payload, namespace: namespace, role: role, type: 'event_left', event: null, meta: null
+          else
+            render 'modules/community/activities/feed_unit/type/default', payload: payload, namespace: namespace, role: role, type: 'event_joined', event: null, meta: null
+          endif
+
+        else
+          render 'modules/community/activities/feed_unit/type/default', payload: payload, namespace: namespace, role: role, event: null, meta: null
+      endcase
+    %}
+
+    {% render 'modules/community/activities/feed_unit/date', payload: payload, skip_link: skip_link, current_profile: null %}
+  </div>
+</header>

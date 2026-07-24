@@ -1,0 +1,92 @@
+{% liquid
+  unless event.entity_type == 'modules/community/event'
+    return true
+  endunless
+
+  function entity = 'modules/community/queries/events/find', id: event.target.id, current_profile: null
+
+  if entity.status == 'published'
+    assign entity_is_public = true
+  endif
+
+  assign notification_skip_profiles = '[]' | parse_json | add_to_array: event.actor.id
+
+  function audience = 'modules/community/commands/audience/build'
+%}
+
+{% comment %} GROUP FEED {% endcomment %}
+{% liquid
+  hash_assign audience['public']['group'] = audience['public']['group'] | add_to_array: event.target.id
+%}
+
+{% comment %} USER FOLLOWERS {% endcomment %}
+{% liquid
+  if entity_is_public
+    function actor = 'modules/community/queries/activities/users/audience', id: event.actor.id
+
+    # platformos-check-disable UnknownProperty
+    hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: actor['followers']
+    # platformos-check-enable UnknownProperty
+
+    # platformos-check-disable UnknownProperty
+    hash_assign audience['private']['profile'] = audience['private']['profile'] | concat: actor['followers']
+    # platformos-check-enable UnknownProperty
+    hash_assign audience['private']['profile'] = audience['private']['profile'] | add_to_array: event.actor.id
+
+    # platformos-check-disable UnknownProperty
+    hash_assign audience['public']['profile'] = audience['public']['profile'] | add_to_array: event.actor.id
+    # platformos-check-enable UnknownProperty
+  endif
+
+%}
+
+{% comment %} POST FOLLOWERS (community) {% endcomment %}
+{% liquid
+  function post = 'modules/community/queries/activities/posts/audience', id: event.object.id
+  hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: post.followers
+%}
+
+{% comment %} GROUP MEMBERS and OWNER{% endcomment %}
+{% liquid
+  function entity = 'modules/community/queries/activities/events/audience', id: event.target.id
+  hash_assign audience['private']['profile'] = audience['private']['profile'] | concat: entity.members
+  hash_assign audience['private']['profile'] = audience['private']['profile'] | concat: entity.owners
+
+  hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: entity.members
+%}
+
+{% comment %} TAG FEEDS AND FOLLOWERS{% endcomment %}
+{% liquid
+  if entity_is_public and event.tags.size > 0
+    function tag_audience = 'modules/community/queries/activities/tags/audience', names: event.tags, skip_followers: false, id: null
+    # platformos-check-disable UnknownProperty
+    hash_assign audience['public']['tag'] = audience['public']['tag'] | concat: tag_audience['tag']
+    # platformos-check-enable UnknownProperty
+    hash_assign audience['private']['profile'] = audience['private']['profile'] | concat: tag_audience['profile']
+
+    function hashtags = 'modules/community/queries/tags/search', names: event.tags, page: null, not_ids: null, sort: null, name: null, query: null, limit: null, status: null, with_creator: null
+    for tag in hashtags.results
+      assign post_count = tag.post_count | to_positive_integer: 0 | plus: 1
+      assign tag_object = tag | hash_merge: post_count: post_count
+      function _ = 'modules/community/commands/tags/update', object: tag_object
+    endfor
+  endif
+%}
+
+{% liquid
+  hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | subtract_array: notification_skip_profiles
+
+  assign notification_title = 'modules/community/push_notifications.new_event_post.title' | t
+  assign notification_body = 'modules/community/push_notifications.new_event_post.body' | t: actor: event.actor.name, title: event.object.name
+  function url = 'modules/community/helpers/link_to_url', object: event, type: 'activity', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  function publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+%}
+
+
+{% comment %} system:audit {% endcomment %}
+{% render 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "1", at: null %}
+
+{% comment %} system:posts {% endcomment %}
+{% render 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "6", at: null %}

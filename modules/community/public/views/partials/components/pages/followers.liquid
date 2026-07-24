@@ -1,0 +1,88 @@
+---
+metadata:
+  name: Follower users
+  params:
+    list: []
+    current_profile: {}
+    user: {}
+    self:
+      - true
+      - false
+---
+<section
+  x-data="{hasNextPage: false, spinnerFilters: false, totalPages: 0, totalEntries: 0, currentPage: 0, ...frames() }"
+>
+  {% function slug = 'modules/user/helpers/profiles/slugs/build', profile: user , current_profile: null %}
+  <form action="/profile.frame/followers/{{ slug }}" method="GET" id="my-groups-list" x-ref="form">
+    <input type="hidden" name="page" x-bind:value="currentPage+1" value="0" x-ref="page">
+  </form>
+
+  {% if self == true %}
+    <header class="pos-heading-with-action">
+      <h3 class="pos-heading-2">{{ 'modules/community/profiles.nav.followers' | t }}</h3>
+    </header>
+  {% endif %}
+
+  <div
+    x-frames-target="my-list"
+    class="{%if list.total_entries > 0 %} grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-4 {%endif%}"
+  >
+    <div
+      class="hidden"
+      x-init="currentPage++; totalEntries = {{ list.total_entries }}; hasNextPage = {{ list.has_next_page }};"
+    ></div>
+
+    {% for record in list.results %}
+      {% liquid
+        function url = 'modules/community/helpers/link_to', object: record, type: 'profile'
+        assign allow_to_follow = true
+        assign my_profile = false
+        if current_profile.id == record.id
+          assign allow_to_follow = false
+          assign my_profile = true
+        endif
+      %}
+      {% render 'modules/community/migrated/profiles/card',
+        profile: record,
+        first_name: record.first_name,
+        last_name: record.last_name,
+        job_title: record.job_title,
+        employer: record.employer,
+        location: record.location,
+        url: url,
+        allow_to_follow: allow_to_follow,
+        my_profile: my_profile
+      %}
+    {% else %}
+      <section class="pos-community-space-empty">
+        <div>
+          {% if self %}
+            <h3 class="pos-heading-2">{{ 'modules/community/app.self-no_followers_found' | t }}</h3>
+          {% else %}
+            <h3 class="pos-heading-2">{{ 'modules/community/profiles.followers.empty.title' | t }}</h3>
+            <p>{{ 'modules/community/profiles.followers.empty.desc' | t }}</p>
+          {% endif %}
+        </div>
+        {% render 'modules/common-styling/icon', icon: 'users', class: null %}
+      </section>
+    {% endfor %}
+  </div>
+
+  <div
+    x-show="hasNextPage"
+    class="container mt-8 text-center"
+  >
+    <button
+      type="button"
+      x-bind:disabled="spinner"
+      x-on:click='insert({where: "beforeEnd", target: "my-list"});'
+      class="button relative"
+    >
+      {{ 'modules/community/app.show_more' | t }}
+      <div class="card-overlay" x-cloak x-show="spinner" x-transition>
+        {% theme_render_rc 'components/atoms/spinner', classes: 'w-8 h-8' %}
+      </div>
+    </button>
+    <hr x-show="currentPage < totalPages" class="border-0 border-t -mt-0.5 relative -z-10 -top-5">
+  </div>
+</section>

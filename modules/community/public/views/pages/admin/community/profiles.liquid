@@ -1,0 +1,21 @@
+---
+layout: modules/community/admin
+metadata:
+  menu:
+    title: "User management"
+  permission: "profiles.manage.all"
+  relative_path: "/admin/community/profiles"
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable UnreachableCode
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', requester: current_profile, do: context.page.metadata.permission, entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-enable UnreachableCode
+  function filters = 'modules/community/queries/profiles/filters', params: context.params, default_sort_by: 'created_at_desc'
+  function profiles = 'modules/community/queries/profiles/search', limit: 20, page: filters.page, query: filters.keyword, sort: filters.sort, roles: filters.status, not_ids: null, ids: null, uuid: null, user_id: null, id: null, with_avatar: false, with_user: true, with_profile_cover: null
+  function roles = 'modules/user/queries/roles/custom'
+  render 'modules/community/admin_pages/profiles', profiles: profiles, filters: filters, roles: roles, current_profile: current_profile
+%}
+

@@ -1,0 +1,24 @@
+---
+slug: dashboard
+layout: 'modules/community/community'
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true, with_cover_photo: false
+  # platformos-check-disable UnreachableCode
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-enable UnreachableCode
+
+  function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+
+  function feed = 'modules/community/queries/activities/search_with_records', feed: 'user-private', feed_id: current_profile.id, limit: 9, uuid: null, page: null
+
+  function people_to_follow_filters = 'modules/community/queries/profiles/filters', params: context.params, default_sort_by: 'created_at_desc'
+  function people_to_follow = 'modules/community/queries/profiles/search', page: 1, limit: 3, query: people_to_follow_filters.keyword, sort: people_to_follow_filters.sort, uuid: null, not_ids: null, id: null, ids: null, user_id: null, roles: null, with_avatar: null, with_user: null, with_profile_cover: null
+
+  assign topics_to_follow = context.tags
+
+  render 'modules/community/migrated/dashboard/index', feed: feed, people_to_follow: people_to_follow, topics_to_follow: topics_to_follow, current_profile: current_profile, uuid: null
+%}

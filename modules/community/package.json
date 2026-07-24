@@ -1,0 +1,74 @@
+{
+  "name": "pos-module-community",
+  "version": "0.0.1",
+  "description": "Module description",
+  "scripts": {
+    "build": "npx cross-env NODE_ENV=production webpack-cli",
+    "build:dev": "npx cross-env NODE_ENV=development webpack-cli",
+    "version": "(cd ../../ && pos-cli modules version MODULE_NAME -p) && git add template-values.json && auto-changelog -p && git add CHANGELOG.md",
+    "start": "npx cross-env NODE_ENV=development webpack-cli -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Platform-OS/pos-module-MODULE_NAME.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Platform-OS/pos-module-MODULE_NAME/issues"
+  },
+  "homepage": "https://github.com/Platform-OS/pos-module-MODULE_NAME#readme"
+  ,
+  "auto-changelog": {
+    "template": "changelog-template.hbs",
+    "unreleased": true,
+    "commitLimit": false
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.3.3",
+    "@tailwindcss/typography": "^0.4.1",
+    "auto-changelog": "^2.4.0",
+    "autoprefixer": "^10.4.2",
+    "concurrently": "^7.0.0",
+    "css-loader": "^6.3.0",
+    "esbuild-loader": "^2.18.0",
+    "eslint": "^8.9.0",
+    "mini-css-extract-plugin": "^2.5.3",
+    "postcss": "^8.4.6",
+    "postcss-import": "^14.0.2",
+    "postcss-loader": "^6.2.1",
+    "rimraf": "^3.0.2",
+    "tailwindcss": "^2.2.16",
+    "tailwindcss-rtl": "^0.7.3",
+    "testcafe": "^3.5.0",
+    "testcafe-blink-diff": "^0.5.5",
+    "testcafe-reporter-html": "^1.4.6",
+    "testcafe-reporter-spec-time": "^4.0.0",
+    "webpack": "^5.69.1",
+    "webpack-cli": "^4.9.2",
+    "webpack-require-from": "^1.8.6"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.2"
+  },
+  "dependencies": {
+    "@uppy/aws-s3": "^2.0.3",
+    "@uppy/core": "^2.0.3",
+    "@uppy/dashboard": "^2.0.3",
+    "@uppy/drag-drop": "^2.0.2",
+    "@uppy/image-editor": "^1.4.1",
+    "@uppy/webcam": "^2.0.2",
+    "@yaireo/tagify": "^4.8.1",
+    "alpinejs": "^3.14.0",
+    "@alpinejs/mask": "^3.14.0",
+    "easymde": "^2.15.1-12.0",
+    "faker": "^5.5.3",
+    "highlight.js": "^11.2.0",
+    "lodash.debounce": "^4.0.8",
+    "lodash.groupby": "^4.6.0",
+    "lodash.isequal": "^4.5.0",
+    "lodash.uniqby": "^4.7.0",
+    "timeago.js": "^4.0.2",
+    "uuid": "^8.3.2"
+  }
+}

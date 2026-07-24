@@ -1,0 +1,83 @@
+/* follow/unfollow button
+============================================================================ */
+.pos-community-tag-relationship {
+  visibility: hidden;
+}
+
+.pos-community-tag-relationship-initialized {
+  visibility: visible;
+}
+
+.pos-community-tag-relationship:not(.pos-community-tag-relationship-active) .pos-community-tag-relationship-toggle-unfollow {
+  display: none;
+}
+
+.pos-community-tag-relationship-active .pos-community-tag-relationship-toggle-follow {
+  display: none;
+}
+
+
+/* tags with additional information
+============================================================================ */
+.pos-community-tag-noted {
+  min-height: 2.5rem;
+  padding-inline-end: 4px;
+  gap: 1rem;
+  overflow: hidden;
+
+  transition: background-color .1s linear;
+}
+
+.pos-community-tag-noted-note {
+  margin-block: calc(-.32rem + 5px);
+  padding-inline: .5em;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background-color: color-mix(in srgb, var(--pos-color-content-background) 80%, transparent);
+
+  line-height: 1em;
+}
+
+  .pos-tag-interactive.pos-community-tag-noted .pos-community-tag-noted-note {
+    background-color: color-mix(in srgb, var(--pos-color-interactive-active) 80%, transparent);
+  }
+
+.pos-community-tag-noted form {
+  align-self: stretch;
+  display: flex;
+}
+
+.pos-community-tag-noted button[type="submit"] {
+  margin-block: calc(-.32rem + 5px);
+  margin-inline-start: calc(-1rem + 2px);
+  padding-inline: .5em;
+
+  background-color: color-mix(in srgb, var(--pos-color-content-background) 80%, transparent);
+  border-start-end-radius: calc(var(--pos-radius-tag) - 2px);
+
+  transition: color .1s linear;
+}
+
+  .pos-community-tag-noted button[type="submit"]:hover {
+    color: var(--pos-color-interactive-hover);
+  }
+
+.pos-community-tag-noted .pos-label {
+  position: absolute;
+  inset-inline-start: -200%;
+}
+
+
+/* followed tags space
+============================================================================ */
+#pos-community-space-tags-followed li:not(:has(.pos-community-tag-relationship-active)) {
+  display: none;
+}
+
+
+#pos-community-space-tags-proposed li:has(.pos-community-tag-relationship-active) {
+  display: none;
+}

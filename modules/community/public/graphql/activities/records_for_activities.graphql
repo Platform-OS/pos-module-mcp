@@ -1,0 +1,79 @@
+query search(
+  $limit: Int = 20
+  $ids: [ID!]
+  $profile_table: [String]!
+) {
+  records(
+    per_page: $limit
+    filter: {
+      deleted_at: { exists: false }
+      id: { value_in: $ids }
+      properties: [
+        { name: "removed_at", exists: false }
+      ]
+    }
+    sort: [{ created_at: { order: DESC } }]
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      updated_at
+      type: table
+      uuid: property(name: "uuid")
+      body: property(name: "body")
+
+      # post
+      group_id: property(name: "group_id")
+      creator_id: property(name: "creator_id")
+      upvote_profile_ids: property_array(name: "upvote_profile_ids")
+      edited_at: property(name: "edited_at")
+      comments: related_records(
+        table: "modules/community/comment",
+        join_on_property: "uuid",
+        foreign_property: "commentable_uuid",
+        sort: [ { created_at: { order: ASC } } ]
+        filter: {
+          properties: [
+            { name: "removed_at", exists: false }
+          ]
+        }
+      ) {
+        ...comment
+      }
+      body: property(name: "body")
+    }
+  }
+}
+
+fragment profile on Record {
+  id
+  name: property(name: "name")
+  first_name: property(name: "first_name")
+  last_name: property(name: "last_name")
+  properties
+  avatar: related_record(
+    table: "modules/community/photo"
+    join_on_property: "uuid"
+    foreign_property: "object_uuid"
+    filter: { properties: { name: "photo_type", value: "avatar" } }
+  ) {
+    photo_width: property_int(name: "photo_width")
+    photo_height: property_int(name: "photo_height")
+    photo: property_upload(name: "photo") {
+      url
+      versions
+    }
+  }
+}
+
+fragment comment on Record {
+  id
+  created_at
+  updated_at
+  body: property(name: "body")
+  creator: related_record(table: $profile_table, join_on_property: "creator_id"){
+    ...profile
+  }
+  removed_at: property(name: "removed_at")
+}

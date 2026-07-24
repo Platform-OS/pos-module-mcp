@@ -1,0 +1,57 @@
+---
+slug: settings
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign page_title = 'modules/community/profiles.nav.settings' | t
+  theme_render_rc 'components/molecules/pagetitle', content: page_title
+  assign action = '/settings_update'
+%}
+
+<section class="container my-auto">
+  {% theme_render_rc 'components/atoms/heading', level: 4, content: 'Notifications', classes: 'py-4' %}
+
+  {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+  <form action="{{ action }}" method="post" data-settings-form>
+  {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+    {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+    {% theme_render_rc 'components/atoms/input', name: '_method', type: 'hidden', value: 'put' %}
+
+    {% capture card_content %}
+      <div class="flex flex-col md:flex-row">
+        {% liquid
+          theme_render_rc 'components/atoms/input', name: 'profile[allow_emails]', type: 'hidden', value: 'false'
+
+          if current_profile.properties.allow_emails == 'false'
+            assign checked = false
+          else
+            assign checked = true
+          endif
+
+          theme_render_rc 'components/atoms/toggle', name: 'profile[allow_emails]', checked: checked, value: true, label: 'Allow email notifications'
+        %}
+        <div class="pr-16 md:border-r-2 mb-4 md:mb-0"></div>
+        <div class="pr-16"></div>
+        {% liquid
+          theme_render_rc 'components/atoms/input', name: 'profile[allow_notifications]', type: 'hidden', value: 'false'
+
+          if current_profile.properties.allow_notifications == 'false'
+            assign checked = false
+          else
+            assign checked = true
+          endif
+
+          theme_render_rc 'components/atoms/toggle', name: 'profile[allow_notifications]', checked: checked, value: true, label: 'Allow in-app notifications'
+        %}
+      </div>
+    {% endcapture %}
+
+    {% theme_render_rc 'components/atoms/card', content: card_content, classes: 'mb-8' %}
+
+    {% theme_render_rc 'components/atoms/button', type: 'submit', classes: '', content: 'Save changes' %}
+  </form>
+</section>

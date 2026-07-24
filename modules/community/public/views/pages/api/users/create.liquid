@@ -1,0 +1,32 @@
+---
+slug: api/users
+method: post
+format: json
+---
+{% liquid
+  # platformos-check-disable DeprecatedTag,MissingPartial
+  include 'lib/anonymous_or_redirect', user: context.current_user
+  # platformos-check-enable DeprecatedTag,MissingPartial
+
+  # platformos-check-disable MissingPartial
+  function object = 'modules/community/commands/users/register_for_api', params: context.params
+  # platformos-check-enable MissingPartial
+  if object.valid
+    # platformos-check-disable MissingPartial
+    function object = 'modules/community/commands/authentication_links/create', email: context.params.user.email, host: context.location.host, valid_for: 1, expires_in: 0.02
+    # platformos-check-enable MissingPartial
+    hash_assign object['url'] = 'https://{host}/users/one-time-login?token={token}&email={email}' | expand_url_template: object
+    function existing_profiles = 'modules/user/queries/profiles/search', limit: 1, uuid: null, page: null, sort: null, not_ids: null, first_name: null, last_name: null, id: null, ids: null, user_id: null, emails: null, query: null
+    if existing_profiles.total_entries == 1
+      hash_assign object['api_token'] = context.constants.API_TOKEN
+    endif
+    response_status 201
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/json/shared/show', object: object
+    # platformos-check-enable DeprecatedTag
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/json/shared/show', object: object
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

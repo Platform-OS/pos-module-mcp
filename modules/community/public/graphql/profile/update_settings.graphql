@@ -1,0 +1,19 @@
+mutation update_settings(
+  $id: ID!
+  $allow_emails: String
+  $allow_notifications: String
+) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/user/profile"
+      properties: [
+        { name: "allow_emails", value: $allow_emails }
+        { name: "allow_notifications", value: $allow_notifications }
+      ]
+    }
+  ) {
+    id
+    properties
+  }
+}

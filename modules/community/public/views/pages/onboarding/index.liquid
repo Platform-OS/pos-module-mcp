@@ -1,0 +1,15 @@
+---
+slug: onboarding
+layout: modules/community/blank
+---
+
+{% liquid
+  function _ = 'modules/community/helpers/extend_context', tags: true, group: null
+
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  theme_render_rc 'onboarding/choose-tags', context: context
+%}

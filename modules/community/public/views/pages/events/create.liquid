@@ -1,0 +1,46 @@
+---
+slug: events
+method: post
+layout: modules/community/community
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/events/create', object: context.params.event, profile: current_profile
+
+  if context.params.event.cover.added[0]
+    assign cover_url = context.params.event.cover.added[0]
+  else
+    assign cover_url = context.params.event.cover.current[0]
+  endif
+
+  if object.valid
+    assign event_payload = null | hash_merge: actor_id: current_profile.id, object_id: object.id
+    function _ = 'modules/core/commands/events/publish', type: 'event_created', object: event_payload, delay: 0, max_attempts: null
+
+    assign now = 'now' | to_time
+    function relation = 'modules/community/commands/relationships/create', name: 'owner', l_id: current_profile.id, r_id: object.id, created_by_id: current_profile.id, l_at: now, r_at: now
+    function relation = 'modules/community/commands/relationships/create', name: 'event:going', l_id: current_profile.id, r_id: object.id, created_by_id: current_profile.id, l_at: now, r_at: now
+
+    assign cover = null | hash_merge: direct_url: cover_url, photo_type: 'event_cover', origin_url: cover_url, object_uuid: object.uuid
+    function cover = 'modules/community/commands/photos/create', object: cover, current_profile: current_profile
+
+    assign event_url = '/events/' | append: object.id
+    redirect_to event_url
+  else
+    assign cover = '[]' | parse_json
+    assign file = null | hash_merge: url: cover_url
+    assign add_to_cover = null | hash_merge: id: '1', file: file
+    assign cover = cover | array_add: add_to_cover
+    hash_assign object['cover'] = cover
+
+    function _ = 'modules/community/helpers/extend_context', photo_presign: true, group: null
+
+    # platformos-check-disable UnknownProperty
+    theme_render_rc 'components/pages/event-create', object: object, errors: object.errors, context: context, current_profile: current_profile
+    # platformos-check-enable UnknownProperty
+  endif
+%}

@@ -1,0 +1,6 @@
+{% liquid
+  assign l_accepted_at = object.l_accepted_at | default: 'now' | to_time
+  assign r_accepted_at = object.r_accepted_at | default: 'now' | to_time
+  assign object = {"id": object.id, "l_accepted_at": l_accepted_at, "r_accepted_at": r_accepted_at, "model": ["modules/user/profile", "group"]}
+  return object
+%}

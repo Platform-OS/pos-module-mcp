@@ -1,0 +1,59 @@
+---
+metadata:
+  name: Tabs
+  params:
+    id: myTabs
+    background:
+      - false
+      - true
+    tabs:
+      - title: Option 1
+        content: value1
+      - title: Option 2
+        content: value2
+  styleguide:
+    - background: false
+      tabs:
+      - title: London
+        content: London is the capital of England. It is the most populous city in the United Kingdom, with a metropolitan area of over 9 million inhabitants.
+      - title: Paris
+        content: Paris is the capital of France. The Paris area is one of the largest population centers in Europe, with more than 12 million inhabitants.
+      - title: Tokyo
+        content: Tokyo is the capital of Japan. It is the center of the Greater Tokyo Area, and the most populous metropolitan area in the world.
+    - background: true
+      tabs:
+      - title: London
+        content: London is the capital of England. It is the most populous city in the United Kingdom, with a metropolitan area of over 9 million inhabitants.
+      - title: Paris
+        content: Paris is the capital of France. The Paris area is one of the largest population centers in Europe, with more than 12 million inhabitants.
+      - title: Tokyo
+        content: Tokyo is the capital of Japan. It is the center of the Greater Tokyo Area, and the most populous metropolitan area in the world.
+---
+{% liquid
+  assign id = id | default: params.id | default: "myTabs"
+  assign background = background | default: params.background | default: false
+  assign tabs = tabs | default: params.tabs | parse_json | default: '[]' | parse_json
+
+  assign classes = 'pos-tabs '
+  if background == true
+    assign classes = classes | append: 'pos-tabs pos-tabs--background'
+  endif
+%}
+
+<div data-pos-component="tabs" class="{{classes}}">
+  <div role="tablist" class="pos-tabs__tablist">
+    {% for tab in tabs %}
+    <button class="pos-tabs__tab"
+      role="tab"
+      aria-controls="{{id}}{{forloop.index}}Panel"
+      id="{{id}}{{forloop.index}}Tab"
+      tabindex="-1">{{tab.title}}</button>
+    {% endfor %}
+  </div>
+
+  <div>
+    {% for tab in tabs %}
+    <div class="pos-tabs__panel" role="tabpanel" id="{{id}}{{forloop.index}}Panel" aria-labelledby="{{id}}{{forloop.index}}Tab">{{tab.content | html_safe}}</div>
+    {% endfor %}
+  </div>
+</div>

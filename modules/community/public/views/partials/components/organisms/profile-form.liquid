@@ -1,0 +1,127 @@
+---
+metadata:
+  name: Profile form
+  params:
+    object: {}
+    profile_fields: {}
+    action: '/profile'
+    return_to: ''
+    push_subscriptions: []
+---
+{%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+{% liquid
+  assign object = object | default: params.object
+  assign profile_fields = profile_fields | default: params.profile_fields
+  assign action = action | default: params.action | default: '/profile'
+  assign push_subscriptions = push_subscriptions | default: params.push_subscriptions
+%}
+
+<section class="pos-community-profile-banner pos-community-profile-edit-banner">
+
+  <div class="pos-community-profile-banner-heading">
+    {{ 'modules/community/profiles.edit' | t }}
+  </div>
+
+  <div class="pos-community-profile-banner-content">
+    <div>
+      <a href="{% render 'modules/community/helpers/link_to', object: object %}" class="pos-community-profile-banner-name">
+        <h2 class="pos-heading-2">{{ object.name }}</h2>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="pos-community-profile-edit">
+  
+  <div>
+
+    <form action="{{ action }}" method="POST" class="pos-card pos-form pos-form-simple pos-community-profile-edit-form">
+    
+      {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+      <input type="hidden" name="_method" value="put">
+
+      {% for field in profile_fields %}
+        {% if field.type != 'checkbox' or field.type != radio %}
+          <fieldset>
+            <label for="{{ field.name }}">{{ field.label }}</label>
+            <input type="{{ field.type }}" name="{{ field.name }}" id="{{ field.name }}" value="{{ object[field.name] | raw_escape_string }}" {% if field.required %}required{% endif %}  {% render 'modules/common-styling/forms/error_input_handler', name: field.name, errors: object.errors[field.name] %}>
+            {% render 'modules/common-styling/forms/error_list', name: field.name, errors: object.errors[field.name] %}
+          </fieldset>
+        {% else %}
+          <fieldset>
+            <input type="{{ field.type }}" name="{{ field.name }}" id="{{ field.name }}" value="{{ object[field.name] | raw_escape_string }}" {% if field.required %}required{% endif %}  {% render 'modules/common-styling/forms/error_input_handler', name: field.name, errors: object.errors[field.name] %}>
+            <label for="{{ field.name }}">{{ field.label }}</label>
+            {% render 'modules/common-styling/forms/error_list', name: field.name, errors: object.errors[field.name] %}
+          </fieldset>
+        {% endif %}
+      {% endfor %}
+
+      <fieldset>
+        {% render 'modules/user/oauth/listing' %}
+      </fieldset>
+
+      {% render 'modules/common-styling/forms/hcaptcha' %}
+
+      <fieldset class="pos-form-actions">
+        <a href="{% render 'modules/community/helpers/link_to', object: object %}" class="pos-button">{{ 'modules/community/app.cancel' | t }}</a>
+        <button type="submit" class="pos-button pos-button-primary">{{  'modules/community/profiles.save' | t }}</button>
+      </fieldset>
+
+    </form>
+
+    {% if context.constants['modules/push_notifications/VAPID_PUBLIC_KEY'] and context.constants['modules/push_notifications/VAPID_PRIVATE_KEY'] and context.constants['modules/push_notifications/VAPID_SUBJECT'] and context.constants['modules/push_notifications/PUSH_SENDER_PRIVATE_KEY_PEM'] and context.constants['modules/push_notifications/PUSH_SENDER_PUBLIC_KEY'] %}
+      <div class="pos-card pos-community-profile-edit-push">
+
+        {% render 'modules/common-styling/icon', icon: 'bell' %}
+
+        <div>
+          <h3 class="pos-heading-3">{{ 'modules/community/push_notifications.edit.push_notifications' | t }}</h3>
+          <p class="pos-supplementary">{{ 'modules/community/push_notifications.edit.description' | t }}</p>
+          <div class="pos-community-profile-edit-push-action">
+            {% render 'modules/push_notifications/register' %}
+          </div>
+          <h4 class="pos-heading-4">{{ 'modules/community/push_notifications.edit.subscriptions.title' | t }}</h4>
+          <p class="pos-supplementary">{{ 'modules/community/push_notifications.edit.subscriptions.description' | t }}</p>
+          {% render 'modules/push_notifications/subscriptions/index', subscriptions: push_subscriptions %}
+        </div>
+
+      </div>
+    {% endif %}
+  
+  </div>
+
+  <div>
+
+    <div class="pos-card pos-card-highlighted pos-community-profile-edit-form-avatar">
+      {% render 'modules/common-styling/user/avatar', size: '2xl', name: object.name, params: null %}
+      {% render 'modules/common-styling/forms/upload',
+        id: 'pos-community-profile-edit-form-avatar',
+        name: 'avatar',
+        presigned_upload: context.presigned_url,
+        image_editor_enabled: true,
+        allowed_file_types: ["image/*"],
+        files: object.avatar,
+        max_number_of_files: 1,
+        max_file_size: 2000000,
+        aspect_ratio: '1'
+      %}
+    </div>
+
+    <h4 class="pos-heading-3">Cover photo</h4>
+    <div class="pos-community-profile-edit-form-cover-photo">
+      {% render 'modules/common-styling/forms/upload',
+        id: 'pos-community-profile-edit-form-cover-photo',
+        name: 'profile_cover',
+        presigned_upload: context.presigned_url,
+        image_editor_enabled: true,
+        allowed_file_types: ["image/*"],
+        files: object.profile_cover,
+        max_number_of_files: 1,
+        max_file_size: 2000000
+      %}
+    </div>
+
+  </div>
+
+</section>
+{%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}

@@ -1,0 +1,44 @@
+---
+en:
+  activities:
+    tables:
+        modules/community/post: Post
+        modules/community/group: Group
+    types:
+      user_followed_user: started following %{target_url}
+      user_followed_you: started following you
+      user_unfollowed_user: stopped following <a href="%{url}">%{target}</a>
+      account_created: created an account.
+      authentication_link_created: requested reset password.
+      account_locked: account has been locked due to failed login attempts. <a href="#"
+        title="%{meta}">(?)</a>
+      account_unlocked: account has been unlocked <a href="#" title="%{meta}">(?)</a>
+      profile_updated: updated profile information
+      comment_created: commented %{target_url}
+      post_created: posted in %{target_url}
+      post_created_notification: posted in %{target_url} > %{object_url}
+      post_created_notification_internal: posted %{object_url}
+      post_mention_notification: mentioned you in %{content_url}
+      comment_mention_notification: mentioned you in a comment on %{content_url}
+      post_upvoted: liked %{object_url}
+      post_downvoted: downvoted %{object_url}
+      post_voted: voted on %{object_url}
+      post_answered: answered the %{target_url} in %{attributed_to_url}
+      user_joined_group: joined %{target_url}
+      user_asked_to_join_group: requested to join the %{object_url} group
+      group_created: 'created a group: %{object_url}'
+      login_failed: failed logging in. <a href="#" title="%{meta}">(?)</a>
+      group_invite_created: invited %{object_url} to %{target_url}
+      project_updated: updated the %{object_url}
+      group_join_request_accepted: accepted your request to join the %{target_url} group
+      group_join_request_rejected: rejected your request to join the %{target_url} group
+      group_deleted: deleted the %{target} group
+      event_joined: joined the %{target_url}
+      event_left: decided to not go to the %{target_url}
+      event_cancelled: cancelled the %{object_url}
+      event_deleted: has deleted your event %{target}.
+      event_approved: has approved your event<a href='%{target_url}' target='_blank'> %{target} </a>.
+      event_rejected: has rejected your event<a href='%{target_url}' target='_blank'> %{target} </a>.
+      group_join_request_rejected: rejected your request to join the %{target_url} group
+    notifications:
+      posted_an_image: an image

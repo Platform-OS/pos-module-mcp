@@ -1,0 +1,68 @@
+---
+metadata:
+  name: Feed template
+  params:
+    context: {}
+    section:
+    - 'feed'
+    - 'groups'
+    - 'projects'
+    - 'following'
+    - 'followers'
+    - 'tags'
+    - 'hashtag'
+    current_profile: {}
+    profile: {}
+    hashtag: {}
+    list: []
+    suggested: []
+    feed_type:
+      - private
+      - public
+    uuid: null
+---
+{% liquid
+  assign context = context | default: params.context
+  assign section = section | default: params.section
+  assign current_profile = current_profile | default: params.current_profile
+  assign profile = profile | default: params.profile
+  assign hashtag = hashtag | default: params.hashtag
+  assign list = list | default: params.list
+  assign suggested = suggested | default: params.suggested
+  assign feed_type = feed_type | default: params.feed_type
+  assign uuid = uuid | default: params.uuid
+
+  if current_profile.id == profile.id
+    assign self = true
+  endif
+%}
+
+{% unless self and context.params.slug != 'profile' %}
+  {% render 'modules/community/migrated/profiles/banner', profile: profile, current_profile: current_profile, params: null %}
+  {% render 'modules/community/migrated/profiles/navigation', active: section, profile: profile, tab: null, url: null %}
+{% endunless %}
+
+<section>
+  {% liquid
+    case section
+      when 'feed'
+        theme_render_rc 'components/pages/feed', list: list, feed_type: feed_type, current_profile: current_profile, user: profile, context: context, page: 1, uuid: uuid
+      when 'groups'
+        theme_render_rc 'components/pages/groups', list: list, current_profile: current_profile, context: context, profile: profile
+      when 'events'
+        theme_render_rc 'components/pages/event-list', list: list, current_profile: current_profile, context: context
+      when 'following'
+        theme_render_rc 'components/pages/following', list: list, suggested: suggested, current_profile: current_profile, self: self, user: profile
+      when 'followers'
+        theme_render_rc 'components/pages/followers', list: list, current_profile: current_profile, self: self, user: profile
+      when 'tags'
+        if self
+          render 'modules/community/tags/self', tags: list, current_profile: null
+        else
+          render 'modules/community/tags/index', tags: list, attrs: null, current_profile: null
+        endif
+      when 'hashtag'
+        theme_render_rc 'components/pages/hashtag-feed', list: list, feed_type: feed_type, current_profile: current_profile, hashtag: hashtag, context: context, page: 1
+    endcase
+  %}
+</section>

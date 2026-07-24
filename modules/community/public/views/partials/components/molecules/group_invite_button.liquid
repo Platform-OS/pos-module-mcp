@@ -1,0 +1,13 @@
+---
+metadata:
+  name: Group invite button
+  params:
+    group: {}
+    label: ""
+    can_invite: false
+---
+{% if can_invite %}
+  <a class="pos-clean block w-full py-3 px-7 text-normal hover:bg-interactive-graphic hover:text-inverted text-start transition-colors" href="{% render 'modules/community/helpers/link_to', object: group, action: 'invites' %}">
+    {{ label | t  }}
+  </a>
+{% endif %}

@@ -1,0 +1,68 @@
+<div class="container">
+  <h2 class="pb-8 font-extrabold text-3xl">Admin actions</h2>
+
+  <div class="p-6 rounded-surface shadow-card mb-6 bg-panel">
+    <form action="/admin/reports/profiles" method="post">
+      <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+      <button type="submit" class="h-11 px-4 py-2.5 leading-tight px-2 inline-flex items-center justify-center gap-3 rounded-button whitespace-nowrap transition-all disabled:opacity-30 disabled:pointer-events-none uppercase tracking-wide text-sm font-medium border border-important hover:border-important-hover bg-important hover:bg-important-hover text-button-primary-foreground hover:text-button-primary-hover-foreground">Export Profiles as CSV</button>
+    </form>
+
+    <div class="mt-6 mb-6">
+      <h1 class="text-2xl font-bold">Displaying exports for: {{ type }}</h1>
+    </div>
+
+    {% if operations.reports.results.size > 0 %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Model</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Updated At</th>
+            <th>Document</th>
+          </tr>
+        </thead>
+        <tbody>
+      {% for operation in operations.reports.results %}
+        <tr>
+          <td>{{ operation.id }}</td>
+          <td>{{ operation.operation_type }}</td>
+          <td>{{ operation.operation_model }}</td>
+          <td>{{ operation.status }}</td>
+          <td>{{ operation.created_at }}</td>
+          <td>{{ operation.updated_at }}</td>
+          <td>
+            {% if operation.files.first != blank %}
+              <a href="{{ operation.files.first.file.url }}">Download</a>
+            {% elsif operation.status == 'done' %}
+              <form action="/admin/reports/download/{{ operation.id }}" method="post">
+                <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+                <button type="submit">Download</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+        </tbody>
+      </table>
+
+      {% assign current_page = operations.reports.current_page | plus: 0 %}
+
+      {% if operations.reports.has_previous_page %}
+        {% assign previous_page = current_page | minus: 1 %}
+        <a href="/admin/reports/list?page={{ previous_page }}&type={{ type }}">&laquo; Previous Page</a>
+      {% endif %}
+
+      {% if operations.reports.has_next_page %}
+        {% assign next_page = current_page | plus: 1 %}
+        <a href="/admin/reports/list?page={{ next_page }}&type={{ type }}">Next Page &raquo;</a>
+      {% endif %}
+    {% else %}
+      <div class="p-6 rounded-surface mb-6 bg-panel mt-6">
+        <p>No operations found. You may need to export a CSV first.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>

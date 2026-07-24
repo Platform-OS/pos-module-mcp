@@ -1,0 +1,32 @@
+---
+slug: groups/:id/remove-member
+method: delete
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true
+  function group = 'modules/community/queries/groups/find', id: context.params.id, with_owner: false, current_profile: current_profile, relationships: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'remove_member', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function relations = 'modules/community/queries/relationships/search', limit: 1000, l_id: context.params.user_id, r_id: group.id
+
+  for relation in relations.results
+    assign object = '{}' | parse_json | hash_merge: id: relation.id
+    function relation = 'modules/community/commands/relationships/delete', object: object, skip_execution: null
+
+    if relation.l_accepted_at == null
+      # pending invite: the invitee never accepted, so this is a withdrawn invite, not a rejected request
+      assign event_payload = null | hash_merge: group_id: group.id, invited_profile_id: relation.l_id, actor_id: current_profile.id
+      function _ = 'modules/core/commands/events/publish', type: 'group_invite_cancelled', object: event_payload, delay: 0, max_attempts: null
+    elsif relation.r_accepted_at == null
+      assign event_payload = null | hash_merge: group_id: group.id, requester_id: relation.l_id, group_admin_id: current_profile.id
+      function _ = 'modules/core/commands/events/publish', type: 'group_join_request_rejected', object: event_payload, delay: 0, max_attempts: null
+    endif
+  endfor
+  
+  assign redirect_url = context.params.return_to | default: context.headers.HTTP_REFERER
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/redirect_to', url: redirect_url
+  # platformos-check-enable DeprecatedTag
+%}

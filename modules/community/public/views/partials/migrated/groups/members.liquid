@@ -1,0 +1,43 @@
+{% liquid
+  assign list = list | default: params.list
+  assign group = group | default: params.group
+  assign context = context | default: params.context
+  assign current_profile = current_profile | default: params.current_profile
+  assign can_see_content = can_see_content | default: params.can_see_content
+%}
+
+<section class="pos-community-space-grid">
+
+  {% if can_see_content %}
+    {% for record in list %}
+      {% liquid
+        function url = 'modules/community/helpers/link_to', object: record, type: 'profile'
+        assign allow_to_follow = true
+        assign my_profile = false
+        if current_profile.id != record.id
+          assign allow_to_follow = true
+        else
+          assign my_profile = true
+          assign allow_to_follow = false
+        endif
+      %}
+      {% theme_render_rc 'modules/community/migrated/profiles/card',
+        profile: record,
+        first_name: record.first_name,
+        last_name: record.last_name,
+        job_title: record.job_title,
+        employer: record.employer,
+        location: record.location,
+        url: url,
+        allow_to_follow: allow_to_follow,
+        my_profile: my_profile
+      %}
+    {% else %}
+      {{ 'modules/community/groups.no_members_found' | t }}
+    {% endfor %}
+  {% else %}
+    {% assign group_type = group.group_type | t: scope: 'modules/community/groups.types' | downcase %}
+    {{ 'modules/community/groups.group_is' | t: group_type: group_type }}
+  {% endif %}
+
+</section>

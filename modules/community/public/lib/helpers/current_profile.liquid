@@ -1,0 +1,18 @@
+{% liquid
+  assign followships = followships | default: null
+  assign membership = membership | default: null
+  assign with_cover_photo = with_cover_photo | default: false
+
+  function current_profile = 'modules/user/helpers/current_profile'
+  if membership
+    function relationships = 'modules/community/queries/relationships/search', l_id: current_profile.id, limit: 100
+    function current_profile = 'modules/community/queries/profiles/preload_relationships', profile: current_profile, relationships: relationships.results
+  endif
+  if with_cover_photo
+    function profile_cover = 'modules/community/queries/photos/search', photo_type: 'profile_cover', object_uuid: current_profile.uuid, limit: 1
+    hash_assign current_profile['profile_cover'] = profile_cover.results
+  endif
+
+  export current_profile
+  return current_profile
+%}

@@ -1,0 +1,156 @@
+---
+metadata:
+  name: Comment
+  params:
+    comment: {}
+    current_profile: {}
+    index: 1
+    context: {}
+    remove_endpoint: '/api/comments'
+    update_endpoint: '/api/comments'
+---
+{% liquid
+  assign comment = comment | default: params.comment
+  assign current_profile = current_profile | default: params.current_profile
+  assign index = index | default: params.index
+  assign context = context | default: params.context
+  assign remove_endpoint = remove_endpoint | default: params.remove_endpoint | default: '/comments/remove'
+  assign update_endpoint = update_endpoint | default: params.update_endpoint | default: '/api/comments'
+
+  assign new_comment = comment | parse_json
+  hash_assign new_comment['type'] = 'comment'
+
+  if current_profile
+    function can_edit = 'modules/user/helpers/can_do', requester: current_profile, do: 'edit', entity: new_comment, access_callback: 'modules/community/can/comments'
+    function can_remove = 'modules/user/helpers/can_do', requester: current_profile, do: 'remove', entity: new_comment, access_callback: 'modules/community/can/comments'
+  endif
+
+  if can_edit or can_remove
+    assign show_dropdown = true
+  endif
+
+  assign author = comment.creator
+%}
+
+<li
+  class="pos-community-post-comment"
+  {% if index > 2 %} x-show="!hidden" {% endif %}
+  id="pos-community-post-{{ post.id }}-comment-{{ comment.id }}"
+  data-post-id="{{ post.id }}"
+  data-comment-id="{{ comment.id }}"
+>
+
+  <div class="pos-community-post-comment-header">
+  
+    <a href="{% render 'modules/community/helpers/link_to', object: author %}">
+      {% liquid
+        # platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments
+        render 'modules/common-styling/user/avatar', size: 'sm', name: author.name, params: null
+        # platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments
+      %}
+    </a>
+
+    <div class="pos-community-post-comment-header-info">
+      <a href="{% render 'modules/community/helpers/link_to', object: author %}" class="pos-community-post-comment-header-author">
+        {{ author.name }}
+      </a>
+
+      <div class="pos-community-post-comment-header-date">
+        <time title="{{ comment.created_at | l: 'compact', current_profile.timezone }}" datetime="{{ comment.created_at }}" class="timeago">
+          {{ comment.created_at | l: 'compact', current_profile.timezone }}
+        </time>
+        {% if comment.updated_at and comment.created_at != comment.updated_at %}
+          &nbsp;|&nbsp; {{ 'modules/community/feed.entries.edited' | t }}: <time title="{{ comment.updated_at | l: 'compact', current_profile.timezone }}" datetime="{{ comment.updated_at }}" class="timeago">
+          {{ comment.updated_at | l: 'compact', current_profile.timezone }}
+        </time>
+        {% endif %}
+      </div>        
+    </div>
+
+    {% if show_dropdown %}
+      <div class="pos-popover pos-community-post-menu">
+        <button popovertarget="pos-community-post-{{ post.id }}-comment-{{ comment.id }}-menu" class="pos-community-post-menu-toggle">
+          {% render 'modules/common-styling/icon', icon: 'dots', class: null %}
+          <span class="pos-label">{{ 'modules/community/posts.menu.toggle' | t: post: comment.id }}</span>
+        </button>
+        <menu popover id="pos-community-post-{{ post.id }}-comment-{{ comment.id }}-menu">
+          {% if can_edit %}
+            <li>
+              <button
+                type="button"
+                popovertarget="pos-community-post-{{ post.id }}-comment-{{ comment.id }}-menu"
+                popovertargetaction="hide"
+                class="pos-community-post-comment-menu-edit"
+              >
+                {% render 'modules/common-styling/icon', icon: 'pencil', class: null %}
+                {{ 'modules/community/common.edit' | t }}
+                <span class="pos-label">{{ 'modules/community/feed.post' | t }} {{ comment.id }}</span>
+              </button>
+            </li>
+          {% endif %}
+          {% if can_remove %}
+            <li class="pos-popover-menu-item-important">
+              <button
+                type="button"
+                popovertarget="pos-community-post-{{ post.id }}-comment-{{ comment.id }}-menu"
+                popovertargetaction="hide"
+                class="pos-community-post-comment-menu-delete"
+                data-confirmation-message="{{ 'modules/community/app.confirm-delete' | t }}"
+              >
+                {% render 'modules/common-styling/icon', icon: 'x', class: null %}
+                {{ 'modules/community/common.delete' | t }}
+                <span class="pos-label">{{ 'modules/community/feed.post' | t }} {{ comment.id }}</span>
+              </button>
+            </li>
+          {% endif %}
+        </menu>
+      </div>
+    {% endif %}
+
+  </div>
+
+  {% liquid
+    assign comment_body = comment.body
+    function comment_body_formatted = 'modules/community/helpers/linkify_hashtags', input: comment_body
+    function comment_body_formatted = 'modules/community/helpers/linkify_mentions', input: comment_body
+    assign comment_body_formatted = comment_body_formatted | markdown: '{ "elements": ["b","br","strong","i","em","a","code","p","pre","img","h1", "h2", "h3", "h4", "h5", "table", "tr", "td", "th", "ul", "li", "ol"], "attributes":{ "a": ["href"], "img": ["src"] } }'
+  %}
+
+  {% if can_edit %}
+    <div
+      id="pos-community-post-{{ post.id }}-comment-{{ comment.id }}-edit"
+      class="pos-community-post-comment-edit"
+    >
+      <form action="{{ update_endpoint }}" method="put">
+        <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+        <input type="hidden" name="comment[id]" value="{{ comment.id }}">
+
+        {% liquid
+          assign editor_id = 'pos-community-post-' | append: post.id | append: '-comment-' | append: comment.id | append: '-editor'
+        %}
+        {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+        {%
+          render 'modules/common-styling/forms/markdown',
+            name: 'comment[body]',
+            id: editor_id,
+            value: comment.body,
+            presigned_upload: context.presigned_url,
+            mention_search_url: '/api/users/search.json',
+            minlength: 1
+        %}
+        {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+
+        <fieldset class="pos-form-actions">
+          <button type="button" class="pos-community-post-comment-edit-close">{{ 'modules/community/app.cancel' | t }}</button>
+          <button type="submit" class="pos-button pos-button-primary">{{ 'modules/community/static-pages.save' | t }}</button>
+        </fieldset>
+      </form>
+    </div>
+  {% endif %}
+
+  <div class="pos-community-post-comment-content pos-prose">
+    {{ comment_body_formatted }}
+  </div>
+
+
+</li>

@@ -1,0 +1,52 @@
+query {
+  atoms: admin_liquid_partials(
+    filter: {path: {contains: "components/atoms/"}}
+    per_page: 1000
+  ) {
+    results {
+      id
+      path
+      metadata
+    }
+  }
+  molecules: admin_liquid_partials(
+    filter: {path: {contains: "components/molecules/"}}
+    per_page: 1000
+  ) {
+    results {
+      id
+      path
+      metadata
+    }
+  }
+  organisms: admin_liquid_partials(
+    filter: {path: {contains: "components/organisms/"}}
+    per_page: 1000
+  ) {
+    results {
+      id
+      path
+      metadata
+    }
+  }
+  pages: admin_liquid_partials(
+    filter: {path: {contains: "components/pages/"}}
+    per_page: 1000
+  ) {
+    results {
+      id
+      path
+      metadata
+    }
+  }
+  templates: admin_liquid_partials(
+    filter: {path: {contains: "components/templates/"}}
+    per_page: 1000
+  ) {
+    results {
+      id
+      path
+      metadata
+    }
+  }
+}

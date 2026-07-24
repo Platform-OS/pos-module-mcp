@@ -1,0 +1,19 @@
+{% liquid
+  unless payload.object.target_activity_uuid
+    log 'target_activity_uuid is missing from comment payload', type: 'ERROR'
+    return
+  endunless
+
+  function activities = 'modules/community/queries/activities/one', uuid: payload.object.target_activity_uuid
+  function target_url = 'modules/community/activities/html/a', object: activities.results.first.payload, type: 'activity', class: null, namespace: null, role: null
+%}
+
+{% print payload.type | t:
+  actor: payload.actor.name,
+  target: payload.target.name,
+  target_url: target_url,
+  object_url: payload.object.url,
+  type: payload.target.type,
+  scope: 'modules/community/activities.types',
+  target_url: target_url
+%}

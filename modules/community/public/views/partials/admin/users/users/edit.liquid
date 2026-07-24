@@ -1,0 +1,151 @@
+<div class="container">
+  {% theme_render_rc 'components/atoms/heading', content: profile.name, level: 2, classes: 'pb-8' %}
+
+  {% liquid
+    assign current_status = 'ACTIVE'
+    assign button_variant = 'success'
+    assign user_roles = profile.roles
+    if user_roles contains 'rejected'
+      assign current_status = 'BLOCKED'
+      assign button_variant = 'error'
+    endif
+  %}
+
+  {% capture personal_info_card %}
+    <ul class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <li>
+        First name<br>
+        <strong>{{ profile.first_name }}</strong>
+      </li>
+      <li>
+        Last name<br>
+        <strong>{{ profile.last_name }}</strong>
+      </li>
+      <li>
+        Status<br>
+        <strong>
+          {% theme_render_rc 'components/molecules/chip', content: current_status, variant: button_variant %}
+        </strong>
+      </li>
+      <li>
+        Email<br>
+        <strong>{{ profile.email }}</strong>
+      </li>
+    </ul>
+  {% endcapture %}
+
+  {% theme_render_rc 'components/atoms/heading', content: 'Personal Info', level: 4 %}
+  {% theme_render_rc 'components/atoms/card', content: personal_info_card, classes: 'mt-2 mb-4' %}
+
+  {% capture update_status_card %}
+    <p>
+      In case of violations to the Code of Conduct (e.g. unsolicited content, offensive expressions, etc.) the user's account can be
+blocked. Blocked users will not be able to interact with the community site until you unblock the user.
+    </p>
+
+    <div class="mt-4">
+      {% unless user_roles contains 'rejected' %}
+        {% assign endpoint = '/admin/users/' | append: context.params.id | append: '/block' | append: '?noemail=1&return_to=' | append: context.location.href %}
+
+          <form action="{{ endpoint }}" method="post">
+            <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+            {% theme_render_rc 'components/atoms/button', type: 'submit', content: 'Block', weight: 'primary' %}
+          </form>
+        {% else %}
+          {% assign endpoint = '/admin/users/' | append: context.params.id | append: '/unblock' | append: '?noemail=1&return_to=' | append: context.location.href %}
+
+          <form action="{{ endpoint }}" method="post">
+            <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+            {% theme_render_rc 'components/atoms/button', type: 'submit', content: 'Unblock', weight: 'secondary' %}
+          </form>
+        {% endunless %}
+    </div>
+  {% endcapture %}
+
+  {% capture update_superadmin_card %}
+    <p>
+      Promote or demote a superadmin.
+    </p>
+
+    <div class="mt-4">
+      {% if user_roles contains 'superadmin' %}
+        {% assign endpoint = '/admin/users/' | append: profile.id | append: '/superadmin/demote' | append: '?return_to=' | append: context.location.href %}
+
+        <form action="{{ endpoint }}" method="post">
+          <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+          {% theme_render_rc 'components/atoms/button', type: 'submit', content: 'Demote', weight: 'secondary' %}
+        </form>
+      {% else %}
+        {% assign endpoint = '/admin/users/' | append: profile.id | append: '/superadmin/promote' | append: '?return_to=' | append: context.location.href %}
+
+        <form action="{{ endpoint }}" method="post">
+          <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+          {% theme_render_rc 'components/atoms/button', type: 'submit', content: 'Promote', weight: 'primary' %}
+        </form>
+      {% endif %}
+    </div>
+  {% endcapture %}
+
+  {% theme_render_rc 'components/atoms/heading', content: 'Blocking User', level: 4 %}
+  {% theme_render_rc 'components/atoms/card', content: update_status_card, classes: 'mt-2 mb-4' %}
+
+  {% theme_render_rc 'components/atoms/heading', content: 'Superadmin', level: 4 %}
+  {% theme_render_rc 'components/atoms/card', content: update_superadmin_card, classes: 'mt-2 mb-4' %}
+
+  {% liquid
+    function assignable_roles = 'modules/user/queries/roles/custom'
+    assign superadmin_roles = 'superadmin,rejected' | split: ','
+    assign assignable_roles = assignable_roles | array_subtract: superadmin_roles
+  %}
+  {% capture update_roles_card %}
+    <form action="/admin/users/{{ profile.user_id }}/update" method="post">
+      <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+      <input type="hidden" name="id" value="{{ profile.user_id }}" />
+      <input type="hidden" name="return_to" value="{{ context.location.href }}" />
+
+      {% liquid
+        for role_permission in assignable_roles
+          assign label_name = 'roles[' | append: role_permission | append: ']'
+          assign input_params = null | hash_merge: name: 'roles[]', type: 'checkbox', value: role_permission, id: label_name
+          if user_roles contains role_permission
+            hash_assign input_params['checked'] = true
+          endif
+          # platformos-check-disable UnknownProperty
+          hash_assign input_params['attributes'] = input_params['attributes'] | hash_merge: id: label_name
+          # platformos-check-enable UnknownProperty
+          assign label_params = '{}' | parse_json
+          hash_assign label_params['content'] = role_permission | humanize
+          theme_render_rc 'components/molecules/formfield', label_params: label_params, input_params: input_params, classes: "mb-6"
+        endfor
+      %}
+
+      <fieldset class="mt-5">
+        {% liquid
+          assign button_params = '{}' | parse_json | hash_merge: weight: 'primary', content: 'Update', type: 'submit'
+          theme_render_rc 'components/atoms/button', params: button_params
+        %}
+      </fieldset>
+    </form>
+  {% endcapture %}
+
+  {% theme_render_rc 'components/atoms/heading', content: 'Roles', level: 4 %}
+  {% theme_render_rc 'components/atoms/card', content: update_roles_card, classes: 'mt-2 mb-4' %}
+  {% assign logging_as_title = "Log in as " | append: profile.email %}
+
+  {% capture logging_as_card %}
+    <p>
+      You can impersonate this user to see the site from their perspective. This will allow you to see the site as they do, including any private or hidden content. You will be able to return to your own account by clicking the 'Log back' button that will be shown to indicate that you are browsing the site as another user.
+    </p>
+    <div class="mt-4">
+      {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+      <form action="/sessions/impersonations/{{ profile.user_id }}" method="post">
+      {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+        <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+        {% theme_render_rc 'components/atoms/button', type: 'submit', content: logging_as_title, weight: 'primary' %}
+      </form>
+    </div>
+  {% endcapture %}
+
+  {% theme_render_rc 'components/atoms/heading', content: logging_as_title, level: 4 %}
+  {% theme_render_rc 'components/atoms/card', content: logging_as_card, classes: 'mt-2 mb-4' %}
+</div>

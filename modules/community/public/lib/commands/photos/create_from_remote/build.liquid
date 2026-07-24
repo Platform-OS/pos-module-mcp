@@ -1,0 +1,5 @@
+{% assign object = {"remote_url": object.remote_url, "origin_url": object.remote_url, "profile_id": current_profile.id, "photo_type": object.photo_type, "photo_height": object.photo_height, "photo_width": object.photo_width, "object_uuid": object.object_uuid} %}
+
+{% liquid
+  return object
+%}

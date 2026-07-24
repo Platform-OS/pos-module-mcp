@@ -1,0 +1,14 @@
+{% liquid
+  unless id
+    log 'no id'
+    return null
+  endunless
+
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r  = 'modules/community/comments/search', id: id, limit: 1, creator_id: creator_id, profile_table: profile_table
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/handle_graphql_response', r: r, name: 'queries/comments/find'
+  # platformos-check-enable DeprecatedTag
+
+  return r.comments.results.first
+%}

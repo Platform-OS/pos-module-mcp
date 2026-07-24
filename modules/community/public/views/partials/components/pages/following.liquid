@@ -1,0 +1,157 @@
+---
+metadata:
+  name: Following users
+  params:
+    list: []
+    current_profile: {}
+    suggested: []
+    user: {}
+    self:
+      - true
+      - false
+---
+<section
+  x-data="{hasNextPage: false, spinnerFilters: false, totalPages: 0, totalEntries: 0, currentPage: 0, ...frames() }"
+>
+  {% function slug = 'modules/user/helpers/profiles/slugs/build', profile: user , current_profile: null %}
+  <form action="/profile.frame/following/{{ slug }}" method="GET" id="my-groups-list" x-ref="form">
+    <input type="hidden" name="page" x-bind:value="currentPage+1" value="0" x-ref="page">
+  </form>
+
+  {% if self == true %}
+    <header class="pos-heading-with-action">
+      <h3 class="pos-heading-2">{{ 'modules/community/profiles.nav.following' | t }}</h3>
+      {% if show != 'all' and list.total_entries > 3 %}
+        <a href="?show=all">{{ 'modules/community/app.see_all' | t }}</a>
+      {% endif %}
+    </header>
+  {% endif %}
+
+  <div
+    x-frames-target="my-list"
+    class="{%if list.total_entries > 0 %} grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-4 {%endif%}"
+  >
+    <div
+      class="hidden"
+      x-init="currentPage++; totalEntries = {{ list.total_entries }}; hasNextPage = {{ list.has_next_page }};"
+    ></div>
+
+    {% for relation in list.results %}
+      {% liquid
+        function url = 'modules/community/helpers/link_to', object: relation, type: 'profile'
+        assign allow_to_follow = true
+        assign my_profile = false
+        if current_profile.id == relation.id
+          assign allow_to_follow = false
+          assign my_profile = true
+        endif
+      %}
+      {% render 'modules/community/migrated/profiles/card',
+        profile: relation,
+        first_name: relation.first_name,
+        last_name: relation.last_name,
+        job_title: relation.job_title,
+        employer: relation.employer,
+        location: relation.location,
+        url: url,
+        allow_to_follow: allow_to_follow,
+        my_profile: my_profile
+      %}
+    {% else %}
+      <section class="pos-community-space-empty">
+        <div>
+          {% if self %}
+            <h3 class="pos-heading-2">{{ 'modules/community/app.self-no_following_found' | t }}</h3>
+          {% else %}
+            <h3 class="pos-heading-2">{{ 'modules/community/profiles.following.empty.title' | t }}</h3>
+            <p>{{ 'modules/community/profiles.following.empty.desc' | t }}</p>
+          {% endif %}
+        </div>
+        {% render 'modules/common-styling/icon', icon: 'users', class: null %}
+      </section>
+    {% endfor %}
+  </div>
+
+  <div
+    x-show="hasNextPage"
+    class="container mt-8 text-center"
+  >
+    <button
+      type="button"
+      x-bind:disabled="spinner"
+      x-on:click='insert({where: "beforeEnd", target: "my-list"});'
+      class="button relative"
+    >
+      {{ 'modules/community/app.show_more' | t }}
+      <div class="card-overlay" x-cloak x-show="spinner" x-transition>
+        {% theme_render_rc 'components/atoms/spinner', classes: 'w-8 h-8' %}
+      </div>
+    </button>
+    <hr x-show="currentPage < totalPages" class="border-0 border-t -mt-0.5 relative -z-10 -top-5">
+  </div>
+</section>
+
+{% if show != 'all' and suggested.total_entries > 0 %}
+  <section
+    x-data="{hasNextPage: false, spinnerFilters: false, totalPages: 0, totalEntries: 0, currentPage: 0, ...frames() }"
+    class="mt-8"
+  >
+    <h3 class="pos-heading-2">{{ 'modules/community/profiles.suggested_profiles' | t }}</h3>
+
+    <form
+      action="/profile.frame/suggested-following/{{ profile.slug }}"
+      method="GET"
+      id="suggested-events-list"
+      x-ref="form"
+    >
+      <input type="hidden" name="page" x-bind:value="currentPage+1" value="0" x-ref="page">
+    </form>
+
+    <div x-frames-target="suggested-list" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-4">
+      <div
+        class="hidden"
+        x-init="currentPage++; totalEntries = {{ suggested.total_entries }}; hasNextPage = {{ suggested.has_next_page }};"
+      ></div>
+
+      {% for profile in suggested.results %}
+        {% liquid
+          if current_profile.id == profile.id
+            continue
+          endif
+          function url = 'modules/community/helpers/link_to', object: profile, type: 'profile'
+        %}
+        {%- comment -%}platformos-check-disable LiquidHTMLSyntaxError{%- endcomment -%}
+        {% render 'modules/community/migrated/profiles/card',, my_profile: null
+          profile: profile,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          job_title: profile.job_title,
+          employer: profile.employer,
+          location: profile.location,
+          url: url,
+          allow_to_follow: true
+        %}
+        {%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}
+      {% endfor %}
+    </div>
+
+    <div
+      x-show="hasNextPage"
+      class="container mt-8 text-center"
+    >
+      <button
+        type="button"
+        x-bind:disabled="spinner"
+        x-on:click='insert({where: "beforeEnd", target: "suggested-list"});'
+        class="button relative"
+      >
+        {{ 'modules/community/app.show_more' | t }}
+        <div class="card-overlay" x-cloak x-show="spinner" x-transition>
+          {% theme_render_rc 'components/atoms/spinner', classes: 'w-8 h-8' %}
+        </div>
+      </button>
+
+      <hr x-show="currentPage < totalPages" class="border-0 border-t -mt-0.5 relative -z-10 -top-5">
+    </div>
+  </section>
+{% endif %}

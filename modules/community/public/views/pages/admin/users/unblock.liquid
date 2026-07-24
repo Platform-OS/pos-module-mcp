@@ -1,0 +1,17 @@
+---
+slug: admin/users/:id/unblock
+method: post
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', do: 'users.unblock', requester: current_profile, entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  assign roles = '["member"]' | parse_json
+  function result = 'modules/user/commands/profiles/roles/set', id: context.params.id, roles: roles
+
+  function _ = 'modules/core/helpers/redirect_to', url: null, error: null, info: null, notice: null, object: null, default: null, format: null
+%}

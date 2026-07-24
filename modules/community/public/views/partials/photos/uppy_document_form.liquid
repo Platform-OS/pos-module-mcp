@@ -1,0 +1,19 @@
+{% if presigned_url == blank %}
+  <small>PresignedUrlNotFoundError. Please configure uppy_document_form properly</small>
+{% endif %}
+<form action="{{ presigned_url.upload_url }}" hidden
+  id="uppy-form-{{object_id}}"
+  data-s3-uppy="document"
+  data-s3-uppy-object-uuid="{{ object_uuid }}"
+  data-s3-uppy-type="{{ type }}"
+  data-s3-uppy-note="{{ note }}"
+  data-s3-uppy-disabled="{{ disabled }}"
+  data-s3-uppy-max-number-of-files="{{ max_number_of_files }}"
+  data-s3-uppy-target="{{target | default: '#drag-drop-area'}}"
+  data-s3-uppy-documents='{{ existing_documents | json }}'
+  data-s3-uppy-media-types='*/*'
+>
+  {% for field in presigned_url.upload_url_payload %}
+    <input type="hidden" name="{{ field[0] }}" value='{{ field[1] }}'>
+  {% endfor %}
+</form>

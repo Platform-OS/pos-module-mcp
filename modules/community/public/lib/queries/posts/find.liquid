@@ -1,0 +1,11 @@
+{% liquid
+  if id == blank
+    return null
+  endif
+  assign creator_id = creator_id | default: null
+
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r  = 'modules/community/posts/search', id: id, limit: 1, creator_id: creator_id, profile_table: profile_table
+
+  return r.posts.results.first
+%}

@@ -1,0 +1,31 @@
+query search(
+  $name: String!
+) {
+  groups: records(
+    per_page: 1
+    filter: {
+      table: { value: "modules/community/group" }
+      properties: [{ name: "name", value: $name }]
+    }
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+      content_type: property(name: "content_type")
+
+      owner: related_record(
+        table: "modules/community/relationship"
+        join_on_property: "id"
+        foreign_property: "r_id"
+        filter: { properties: { name: "name" value: "owner" } }
+      ) {
+        id
+        profile: related_record(table: "modules/user/profile", join_on_property: "l_id") {
+          id
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{%- comment -%}
+  MCP `initialize` (spec §13.1). Capability negotiation + server identity.
+  Open method: no auth, no ledger (pre-auth plumbing, §9.3).
+
+  Advertises the pinned protocol revision and the capabilities this server
+  actually implements. `instructions` are house rules shown to the model on
+  connect — kept factual and short (they are model-read text, so they are
+  security-relevant, §12.3: no imperative jailbreak-bait, no secrets).
+
+  @param {object} params - the client's initialize params (protocolVersion,
+                           capabilities, clientInfo). Accepted but not required;
+                           this server pins its own revision.
+  @return {object} { protocolVersion, capabilities, serverInfo, instructions }
+{%- endcomment -%}
+{% liquid
+  function cfg = 'modules/mcp/commands/config'
+
+  assign result = '{}' | parse_json
+  hash_assign result['protocolVersion'] = cfg.protocol_version
+
+  # Capabilities: tools + resources are the Phase-1 surface. listChanged is false
+  # (no notifications until streaming lands, spec §16.2/§13.1 Phase 4).
+  assign caps = '{}' | parse_json
+  hash_assign caps['tools'] = '{"listChanged":false}' | parse_json
+  hash_assign caps['resources'] = '{"listChanged":false,"subscribe":false}' | parse_json
+  hash_assign caps['prompts'] = '{"listChanged":false}' | parse_json
+  hash_assign caps['logging'] = '{}' | parse_json
+  hash_assign result['capabilities'] = caps
+
+  assign info = '{}' | parse_json
+  hash_assign info['name'] = cfg.server_name
+  hash_assign info['version'] = cfg.server_version
+  hash_assign result['serverInfo'] = info
+
+  # Connection instructions (house rules shown to the model on connect). The app
+  # authors its own via the instructions partial (Layer 2); the engine falls back
+  # to a governance-focused default when the app has not provided one. App text is
+  # model-read and should be reviewed as security-relevant (§12.3).
+  assign instructions = null
+  try
+    function instructions = cfg.instructions_partial
+  catch e
+    assign instructions = null
+  endtry
+  if instructions == blank
+    capture instructions
+      echo 'This is a governed platformOS MCP server. Every tool call is bound to a '
+      echo 'real identity, checked against a named authorization policy, validated '
+      echo 'against a typed schema, and recorded in a tamper-evident ledger. '
+      echo 'Call tools/list to see the actions available to you; each tool description '
+      echo 'is authoritative. Pass arguments exactly as each tool schema requires — '
+      echo 'unknown or malformed arguments are rejected, not guessed. Do not retry a '
+      echo 'call that was denied or rejected as not permitted; it will not succeed, and '
+      echo 'repeated policy violations automatically suspend your access. Documentation '
+      echo 'and catalogue pages are available via resources/list.'
+    endcapture
+  endif
+  hash_assign result['instructions'] = instructions | strip
+
+  return result
+%}

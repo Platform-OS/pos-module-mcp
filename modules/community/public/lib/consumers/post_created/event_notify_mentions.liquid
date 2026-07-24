@@ -1,0 +1,35 @@
+{% liquid
+  unless event.entity_type == 'modules/community/event'
+    return true
+  endunless
+  if event.object.body == blank
+    return true
+  endif
+
+  function mentions = 'modules/community/helpers/extract_mentions', input: event.object.body
+
+  assign mentioned_ids = '[]' | parse_json
+  for mention in mentions
+    assign profile_id = mention[1]
+    unless profile_id == event.actor.id or mentioned_ids contains profile_id
+      assign mentioned_ids = mentioned_ids | add_to_array: profile_id
+    endunless
+  endfor
+
+  if mentioned_ids.size == 0
+    return true
+  endif
+
+  function post_audience = 'modules/community/queries/activities/posts/audience', id: event.object.id
+
+  function recipients = 'modules/community/commands/mentions/resolve_recipients', mentioned_ids: mentioned_ids, actor_id: event.actor.id, container_type: 'event', container_id: event.group_id, exclude_container_members: true, actor_followers_mode: 'if_public', extra_exclude_ids: post_audience.followers
+
+  if recipients.size > 0
+    function clean_body = 'modules/community/helpers/strip_mentions', input: event.object.body
+    assign clean_body = clean_body | truncate: 50, '...'
+    function content_url = 'modules/community/activities/html/a', object: event, type: 'activity', class: null, namespace: null, role: null, name: clean_body
+    function url = 'modules/community/helpers/link_to_url', object: event, type: 'activity', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+    assign payload = null | hash_merge: actor_id: event.actor.id, object_id: event.object.id, source_type: 'post', container_id: event.group_id, mentioned_profile_ids: recipients, content_url: content_url, url: url
+    function _ = 'modules/core/commands/events/publish', type: 'mention_created', object: payload, delay: 0, max_attempts: null
+  endif
+%}

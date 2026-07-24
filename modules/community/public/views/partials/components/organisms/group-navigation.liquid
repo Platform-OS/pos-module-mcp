@@ -1,0 +1,14 @@
+<nav>
+  <ul>
+    <li>
+      <a href="{{ url }}" class="{% if tab == 'feed' or context.location.pathname == url %}{{ active_class }}{% endif %}">
+        {{ 'modules/community/groups.nav.activity' | t }}
+      </a>
+    </li>
+    <li>
+      <a href="/groups/{{ id }}/members" class="{% if tab == 'members' %}{{ active_class }}{% endif %}">
+        {{ 'modules/community/groups.nav.members' | t }}
+      </a>
+    </li>
+  </ul>
+</nav>

@@ -1,0 +1,44 @@
+---
+slug: groups
+method: post
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/groups/create', object: context.params.group, owner_id: current_profile.id
+
+  if context.params.group.cover.added[0]
+    assign cover_url = context.params.group.cover.added[0]
+  else
+    assign cover_url = context.params.group.cover.current[0]
+  endif
+
+  if object.valid
+    assign now = 'now' | to_time
+    function relation = 'modules/community/commands/relationships/create', name: 'owner', l_id: current_profile.id, r_id: object.id, created_by_id: current_profile.id, l_at: now, r_at: now
+    function relation = 'modules/community/commands/relationships/create', name: 'membership', l_id: current_profile.id, r_id: object.id, created_by_id: current_profile.id, l_at: now, r_at: now
+
+    assign cover = null | hash_merge: direct_url: cover_url, photo_type: 'group_cover', origin_url: cover_url, object_uuid: object.uuid
+    function cover = 'modules/community/commands/photos/create', object: cover, current_profile: current_profile
+
+    function group_url = 'modules/community/helpers/link_to', object: object
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: group_url, notice: 'modules/community/groups.created'
+    # platformos-check-enable DeprecatedTag
+  else
+    assign cover = '[]' | parse_json
+    assign file = null | hash_merge: url: cover_url
+    assign add_to_cover = null | hash_merge: id: '1', file: file
+    assign cover = cover | array_add: add_to_cover
+    hash_assign object['cover'] = cover
+
+    function _ = 'modules/community/helpers/extend_context', group: null, post_templates: true, group_templates: true, photo_presign: true
+
+    render 'modules/community/migrated/groups/manage/create', object: object, current_profile: current_profile
+  endif
+%}

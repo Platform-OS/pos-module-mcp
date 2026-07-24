@@ -1,0 +1,33 @@
+<section>
+
+  <header class="mb-4 flex justify-between items-center">
+    <h2 class="title">{{ 'modules/community/profiles.nav.following' | t }}</h2>
+    {% if show != 'all' and list.total_entries > 3 %}
+      <a href="?show=all" class="button">{{ 'modules/community/app.see_all' | t }}</a>
+    {% endif %}
+  </header>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-4">
+    {% for relation in list.results %}
+      {% render 'modules/community/profile/user_card', user: relation.r, current_profile: current_profile, follow_toggle: false, post: null %}
+    {% else %}
+      {{ 'modules/community/app.no_following_found' | t }}
+    {% endfor %}
+  </div>
+
+</section>
+
+
+{% if show != 'all' and suggested.total_entries > 0 %}
+  <section class="mt-8">
+
+    <h2 class="title !mb-4">{{ 'modules/community/profiles.suggested_profiles' | t }}</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-4">
+      {% for profile in suggested.results %}
+        {% render 'modules/community/profile/user_card', user: profile, current_profile: current_profile, post: null, follow_toggle: null %}
+      {% endfor %}
+    </div>
+
+  </section>
+{% endif %}

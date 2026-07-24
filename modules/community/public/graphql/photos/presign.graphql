@@ -1,0 +1,6 @@
+mutation presign {
+  presigned: property_upload_presigned_url(model_schema_name: "modules/community/photo", property_name: "photo", include_content_type: true) {
+    upload_url
+    upload_url_payload
+  }
+}

@@ -1,0 +1,146 @@
+/*
+  general table styling
+  custom table looks
+*/
+
+
+
+/* general table styling
+============================================================================ */
+table {
+  @apply w-full my-4;
+}
+
+table th,
+table td {
+  @apply p-3 align-middle border-b border-gray-200;
+}
+
+table thead th {
+  @apply text-left align-bottom border-b-2 border-gray-300;
+}
+
+
+/* custom table looks
+============================================================================ */
+.table {
+  @apply
+    w-full
+    block
+    lg:table
+    leading-loose
+    lg:leading-normal;
+}
+
+.table header {
+  @apply
+    hidden
+    uppercase
+    lg:table-row
+    sidenote
+    text-supplementary
+    tracking-widest;
+}
+
+.table header > * {
+  @apply
+    lg:ps-6
+    lg:pb-2
+    lg:table-cell
+    lg:align-bottom;
+}
+
+.table header > *:first-child {
+  @apply
+    lg:ps-0;
+}
+
+.table header > *:last-child {
+  @apply
+    lg:pe-0
+}
+
+.table .table-content {
+  @apply
+    card
+    lg:table-row-group;
+}
+
+.table .table-content-simple {
+  @apply
+    lg:table-row-group
+}
+
+.table .table-content > ul,
+.table .table-content-simple > ul {
+  @apply
+    mt-4
+    lg:mt-0
+    pt-4
+    lg:pt-0
+    lg:table-row
+    border-t;
+}
+
+.table .table-content > ul:first-child,
+.table .table-content-simple > ul:first-child {
+  @apply
+    mt-0
+    pt-0
+    border-0;
+}
+
+.table .table-content > ul > li,
+.table .table-content-simple > ul > li {
+  @apply
+    align-middle
+    lg:ps-6
+    lg:py-4
+    lg:table-cell
+    lg:border-t;
+}
+
+.table .table-content > ul:first-child > li {
+  @apply
+    lg:border-0;
+}
+
+.table .table-content > ul > li:first-child {
+  @apply
+    lg:ps-4;
+}
+
+.table .table-content-simple > ul > li:first-child {
+  @apply
+    lg:ps-0;
+}
+
+.table .table-content > ul > li:last-child {
+  @apply
+    lg:pe-4;
+}
+
+.table .table-content-simple > ul > li:last-child {
+  @apply
+    lg:pe-0;
+}
+
+.table .table-content > ul:first-child > li:first-child {
+  @apply
+    rounded-ts;
+}
+
+.table .table-content > ul:first-child > li:last-child {
+  @apply
+    rounded-te;
+}
+
+.table .table-content > ul:last-child > li:first-child {
+  @apply
+    rounded-bs;
+}
+
+.table .table-content > ul:last-child > li:last-child {
+  @apply
+    rounded-be;
+}

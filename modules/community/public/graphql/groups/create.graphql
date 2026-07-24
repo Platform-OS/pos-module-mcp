@@ -1,0 +1,65 @@
+mutation create_group(
+  $name: String!
+  $description: String
+  $summary: String
+  $code_of_conduct: String
+  $uuid: String!
+  $group_type: String
+  $ask_to_join: String
+  $meta_visible: String
+  $content_visible: String
+  $approve_request: String
+  $post_content: String
+  $add_comments: String
+  $invite_member: String
+  $content_type: String
+  $content_types: [String!]
+  $c__members_count: Int = 1
+) {
+  record: record_create(
+    record: {
+      table: "modules/community/group"
+      properties: [
+        { name: "uuid", value: $uuid }
+        { name: "name", value: $name }
+        { name: "summary", value: $summary }
+        { name: "description", value: $description }
+        { name: "code_of_conduct", value: $code_of_conduct }
+        { name: "group_type", value: $group_type }
+        { name: "ask_to_join", value: $ask_to_join }
+        { name: "meta_visible", value: $meta_visible }
+        { name: "content_visible", value: $content_visible }
+        { name: "approve_request", value: $approve_request }
+        { name: "post_content", value: $post_content }
+        { name: "add_comments", value: $add_comments }
+        { name: "invite_member", value: $invite_member }
+        { name: "content_types", value_array: $content_types }
+        { name: "content_type", value: $content_type }
+        { name: "c__members_count", value_int: $c__members_count }
+        { name: "featured_at", value: null }
+      ]
+    }
+  ) {
+    id
+    type: table
+
+    uuid: property(name: "uuid")
+    name: property(name: "name")
+    summary: property(name: "summary")
+    description: property(name: "description")
+    code_of_conduct: property(name: "code_of_conduct")
+    content_type: property(name: "content_type")
+    content_types: property_array(name: "content_types")
+    group_type: property(name: "group_type")
+    ask_to_join: property(name: "ask_to_join")
+    meta_visible: property(name: "meta_visible")
+    content_visible: property(name: "content_visible")
+    approve_request: property(name: "approve_request")
+    post_content: property(name: "post_content")
+    add_comments: property(name: "add_comments")
+    invite_member: property(name: "invite_member")
+    c__members_count: property_int(name: "c__members_count")
+    c__posts_count: property_int(name: "c__posts_count")
+    featured_at: property(name: "featured_at")
+  }
+}

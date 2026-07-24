@@ -1,0 +1,33 @@
+---
+metadata:
+  name: Header profile
+  params:
+    imageSrc: ""
+    name: "John Doe"
+  styleguide:
+    - imageSrc: "https://i.pravatar.cc/150?img=13"
+      name: "John Doe"
+    - imageSrc: "https://i.pravatar.cc/150?img=5"
+      name: "Jane Doe"
+    - name: "Harrison Ford"
+      size: "md"
+---
+{% liquid
+  assign size = size | default: params.size | default: 'md'
+  assign name = name | default: params.name
+  assign imageSrc = imageSrc | default: params.imageSrc
+
+  assign classes = 'px-3 py-1 leading-5 rounded-surface flex items-center align-center h-8 bg-base cursor-default'
+
+  assign avatar_params = null | hash_merge: size: 's', name: name, imageSrc: imageSrc
+  assign names = name | split: " "
+%}
+<div class="inline-block">
+  <div class="{{classes}}">
+    <div class="hidden sm:block pr-2">
+      {{names[0]}}
+    </div>
+    {% theme_render_rc 'components/atoms/avatar', params: avatar_params %}
+  </div>
+</div>
+

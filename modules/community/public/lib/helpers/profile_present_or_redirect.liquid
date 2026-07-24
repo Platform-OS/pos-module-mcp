@@ -1,0 +1,28 @@
+{% liquid
+  assign return_to = return_to | default: nil
+  assign allow_anonymous = allow_anonymous | default: false
+  assign allow_uncompleted = allow_uncompleted | default: false
+
+  if return_to
+    session return_to = return_to
+  endif
+
+  if allow_anonymous
+    return true
+  elsif profile.user_id == blank
+    unless return_to
+      session return_to = context.location.href
+    endunless
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: '/sessions/new', error: 'modules/community/errors.unauthenticated'
+    # platformos-check-enable DeprecatedTag
+  endif
+
+  if allow_uncompleted
+    return true
+  elsif profile.slug == blank
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: "/profile/edit", notice: 'modules/community/profiles.incomplete'
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

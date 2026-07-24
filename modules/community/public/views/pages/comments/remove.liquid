@@ -1,0 +1,29 @@
+---
+slug: comments/remove
+method: delete
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function comment = 'modules/community/queries/comments/find', id: context.params.id, creator_id: null
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property:  comment.id
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: comment, do: 'remove', requester: current_profile, access_callback: 'modules/community/can/comments', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/comments/remove', object: comment
+  if object.valid
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: context.params.return_to
+    # platformos-check-enable DeprecatedTag
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/comments/edit', object: object
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

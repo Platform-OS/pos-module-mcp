@@ -1,0 +1,15 @@
+{% liquid
+  assign data = '{}' | parse_json
+  hash_assign data['id'] = object.id
+  if object.c__members_count
+    hash_assign data['c__members_count'] = object.c__members_count | plus: 0
+  endif
+  if object.c__posts_count
+    hash_assign data['c__posts_count'] = object.c__posts_count | plus: 0
+  endif
+  if object.c__full_members_count
+    hash_assign data['c__full_members_count'] = object.c__full_members_count | plus: 0
+  endif
+  
+  return object
+%}

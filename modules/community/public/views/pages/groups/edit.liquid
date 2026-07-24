@@ -1,0 +1,25 @@
+---
+slug: groups/:id/edit
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign group_id = context.params.id | split: '-' | last
+  function group = 'modules/community/queries/groups/find', id: group_id, with_owner: true, current_profile: current_profile
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function _ = 'modules/community/helpers/extend_context', group: group, tags: true, post_templates: true, group_templates: true, photo_presign: true
+
+  function cover = 'modules/community/queries/photos/search', object_uuid: group.uuid, limit: 1, photo_type: null
+  hash_assign group['cover'] = cover.results
+
+  render 'modules/community/migrated/groups/edit', current_profile: current_profile, object: group
+%}

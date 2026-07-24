@@ -1,0 +1,44 @@
+{% liquid
+  function admin_pages = 'modules/admin/queries/pages/search'
+  #assign query_path = '/' | append: context.params.slug | append: '/' | append: context.params.path
+  assign query_path = context.location.pathname
+  assign admin_menu_items = '[]' | parse_json
+
+  for admin_page in admin_pages
+    assign page = admin_page.metadata
+    function can = 'modules/user/helpers/can_do', requester: current_user, do: page.permission, access_callback: page.access_callback, entity: null
+    if can
+      assign menu_item_active = false
+
+      assign path_partial_match_regex = '^' | append: page.relative_path
+      assign is_path_partial_match = query_path | matches: path_partial_match_regex
+
+      assign path_exact_match_regex = '^' | append: page.relative_path | append: '$'
+      assign is_path_exact_match = query_path | matches: path_exact_match_regex
+
+      # exact match always have higher priority
+      if page.relative_path != blank and is_path_exact_match
+        assign current_page = page.partial | default: nil
+        assign menu_item_active = true
+      elsif page.relative_path != blank and is_path_partial_match and current_page == nil
+        assign current_page = page.partial | default: nil
+        assign menu_item_active = true
+      endif
+      if page.menu != blank
+        assign menu_item = page.menu
+        hash_assign menu_item['active'] = menu_item_active
+        # platformos-check-disable UnknownProperty
+        if menu_item.link_attributes.href == blank
+          assign default_link_attributes = '{}' | parse_json
+          assign link_attributes = menu_item.link_attributes | default: default_link_attributes
+          # platformos-check-enable UnknownProperty
+          hash_assign link_attributes['href'] = page.relative_path
+          hash_assign menu_item['link_attributes'] = link_attributes
+        endif
+        assign admin_menu_items = admin_menu_items | add_to_array: menu_item
+      endif
+    endif
+  endfor
+
+  return admin_menu_items
+%}

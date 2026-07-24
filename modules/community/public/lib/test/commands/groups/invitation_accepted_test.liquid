@@ -1,0 +1,63 @@
+{% assign min = 100 %}
+{% assign max = 100000 %}
+{% assign diff = max | minus: min %}
+{% assign random_id_1 = "now" | date: "%N" | modulo: diff | plus: min %}
+{% assign random_id_2 = "now" | date: "%N" | modulo: diff | plus: min %}
+
+{% assign invited_data = {"user_id": random_id_1, "first_name": "Invited User", "last_name": "Test", "email": "invited@server.com", "terms_and_conditions": true, "code_of_conduct": true} %}
+{% assign admin_data = {"user_id": random_id_2, "first_name": "Group Admin", "last_name": "Test", "email": "admin@server.com", "terms_and_conditions": true, "code_of_conduct": true} %}
+{% liquid
+#
+# Given
+#
+function invited_profile = 'modules/user/queries/profiles/find', user_id: invited_data.user_id, id: null, uuid: null, first_name: null, last_name: null
+if invited_profile != empty
+  function _ = 'modules/user/commands/profiles/delete', object: invited_profile
+endif
+function invited_profile = 'modules/user/commands/profiles/create', object: invited_data
+
+function admin_profile = 'modules/user/queries/profiles/find', user_id: admin_data.user_id, id: null, uuid: uuid, first_name: null, last_name: null
+if admin_profile != empty
+  function _ = 'modules/user/commands/profiles/delete', object: admin_profile
+endif
+function admin_profile = 'modules/user/commands/profiles/create', object: admin_data
+
+assign uuid = '' | uuid
+
+assign group = '{"id": "123", "uuid": "%{uuid}", "name": "Test Group", "summary": "Generated group", "description": "Description generated from test", "content_type": "", "content_types": ["post"]}' | replace: '%{uuid}', uuid | parse_json
+
+function group = 'modules/community/commands/groups/find_or_create_for_profile', profile: admin_profile
+
+assign group_membership = '{"name": "membership", "l_id": "%{invited_profile_id}", "r_id": "%{group_id}", "l_accepted_at": "", "r_accepted_at": "2023-04-27T15:05:54.413Z", "created_by_id": "%{admin_profile_id}"}' | replace: '%{group_id}', group.id | replace: '%{invited_profile_id}', invited_profile.id | replace: '%{admin_profile_id}', admin_profile.id | parse_json
+function relation = 'modules/community/commands/relationships/create', name: group_membership.name, l_id: group_membership.l_id, r_id: group_membership.r_id, l_at: group_membership.l_accepted_at, r_at: group_membership.r_accepted_at, created_by_id: group_membership.created_by_id
+
+function initial_notifications = 'modules/community/queries/activities/search', feed: 'user-notifications', feed_id: admin_profile.id, limit: 10, page: null
+
+assign data = null | hash_merge: id: relation.id, r_accepted_at: '2023-04-27T15:05:54.413Z'
+
+#
+# When
+#
+function group_membership = 'modules/community/commands/groups/accept_invite', object: data, relation: relation, current_profile: invited_profile
+
+#
+# Then
+#
+# platformos-check-disable DeprecatedTag
+include 'modules/tests/assertions/valid_object', contract: contract, object: group_membership, field_name: 'group_membership'
+# platformos-check-enable DeprecatedTag
+
+# assert that administrator has received a notification
+function notifications = 'modules/community/queries/activities/search', feed: 'user-notifications', feed_id: admin_profile.id, limit: 10, page: null
+assign expected_notifications = initial_notifications.total_entries | plus: 1
+# platformos-check-disable DeprecatedTag
+include 'modules/tests/assertions/equal', contract: contract, given: notifications.total_entries, expected: expected_notifications, field_name: 'notifications.total_entries'
+# platformos-check-enable DeprecatedTag
+
+# assert that administrator has not received any notification
+function notifications = 'modules/community/queries/activities/search', feed: 'user-notifications', feed_id: invited_profile.id, limit: 10, page: null
+# platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+include 'modules/tests/assertions/equal', contract: contract, given: notifications.total_entries, expected: 0, field_name: 'notifications.total_entries'
+# platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+
+%}

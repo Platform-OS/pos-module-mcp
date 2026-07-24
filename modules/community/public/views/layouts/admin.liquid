@@ -1,0 +1,84 @@
+{% liquid
+  function direction = 'modules/community/helpers/text_direction', lang: context.language
+  if context.current_user
+    response_headers '{ "Cache-Control": "no-store", "Pragma": "no-cache" }'
+  endif
+
+  assign current_profile = context.exports.current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  include 'modules/user/helpers/can_do_or_redirect', requester: current_profile, do: 'admin_pages.view', entity: null, access_callback: null, return_url: '/'
+  # platformos-check-enable DeprecatedTag
+
+  assign page_metadata = context.page.metadata
+  function can = 'modules/user/helpers/can_do', requester: current_profile, do: page_metadata.permission, entity: null, access_callback: null
+  function admin_menu_items = 'modules/admin/queries/menu_items', current_user: current_profile
+%}
+
+<!DOCTYPE html>
+
+<html dir="{{ direction }}" lang="{{ context.language }}">
+  <head>
+
+    {% render 'modules/community/migrated/meta/importmap' %}
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="csrf-param" content="authenticity_token">
+    <meta name="csrf-token" content="{{ context.authenticity_token }}">
+
+    {% render 'modules/community/migrated/meta/favicon' %}
+
+    {% comment %} admin pages are auth-gated; a plain title is enough (no social/OG meta) {% endcomment %}
+    <title>{{ 'app.title' | t }}</title>
+
+    {% comment %} legacy styles {% endcomment %}
+    <link rel="stylesheet" href="{{ 'modules/community/style/pos-community-config-tailwind.css' | asset_url }}">
+    {% render 'modules/community/layout/assets_styles' %}
+
+    {% comment %} new community styles {% endcomment %}
+    {% render 'modules/community/migrated/meta/init' %}
+
+    {% comment %} move this to user module {% endcomment %}
+    {% if context.exports.current_profile.id %}
+      <script>
+        if(!pos.user){
+          pos.user = {};
+          pos.user.id = {{ context.exports.current_profile.id }};
+          pos.user.uuid = '{{ context.exports.current_profile.uuid }}';
+        }
+      </script>
+    {% endif %}
+
+    {% comment %} legacy js {% endcomment %}
+    {% render 'modules/community/layout/js_global_variables', current_profile: context.exports.current_profile %}
+
+  </head>
+
+  <body{% unless current_profile.user_id %} class="pos-community-layout-signedoff"{% endunless %}>
+
+    {% render 'modules/community/migrated/layout/header', profile: current_profile, context: context %}
+
+    {% render 'modules/community/migrated/layout/admin_navigation', admin_menu_items: admin_menu_items %}
+
+    <main class="pos-community-content">
+      {% if can %}
+        {{ content_for_layout }}
+      {% endif %}
+    </main>
+
+    {% liquid
+      function flash = 'modules/core/commands/session/get', key: 'sflash', clear: null
+      if context.location.pathname != flash.from or flash.force_clear
+        function _ = 'modules/core/commands/session/clear', key: 'sflash'
+      endif
+      render 'modules/common-styling/toasts', message: flash.message, severity: flash.severity, autohide: flash.autohide, delay: flash.delay
+    %}
+
+    {% comment %} legacy js {% endcomment %}
+    {% render 'modules/community/layout/assets_scripts' %}
+    {% yield 'custom_scripts' %}
+
+  </body>
+</html>

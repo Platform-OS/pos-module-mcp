@@ -1,0 +1,15 @@
+{% liquid
+  assign new_url_format = from | matches: 'https...directory-uploads.uploads'
+  if new_url_format
+    return from | replace: 'directory-uploads.uploads', 'files'
+  endif
+
+  assign url_components = from | url_decode | split: '/'
+  assign file_name_index = url_components | size | minus: 1
+  # platformos-check-disable InvalidHashAssignTarget
+  hash_assign url_components[file_name_index] = url_components[file_name_index] | url_encode
+  # platformos-check-enable InvalidHashAssignTarget
+  assign url_params = url_components | join: '/' | extract_url_params: 'https://{host}/{bucket}/property_uploads/{instance_id}/{+params}'
+
+  return 'https://{bucket}/instances/{instance_id}/property_uploads/{+params}' | expand_url_template: url_params
+%}

@@ -1,0 +1,15 @@
+---
+slug: comments/edit/:id
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/queries/comments/find', id: context.params.id, creator_id: current_profile.id
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/comments/edit', object: object
+  # platformos-check-enable DeprecatedTag
+%}

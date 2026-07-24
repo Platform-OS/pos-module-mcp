@@ -1,0 +1,21 @@
+{% comment %}before{% endcomment %}
+{% liquid
+  assign profile = '{"id":"1000", "roles": [], "type": "profile", "user": {"email": "seller@example.com"}, "organizations": [{"id": "3000"}]}' | parse_json
+
+  function can = 'modules/user/helpers/can_do', requester: profile, do: 'required_2fa', entity: profile, access_callback: 'modules/community/can/profiles'
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: false, field_name: 'required_2fa disabled'
+%}
+
+{% liquid
+  assign profile = '{"id":"1000", "roles": [], "type": "profile", "otp_configured": true }' | parse_json
+
+  function can = 'modules/user/helpers/can_do', requester: profile, do: 'required_2fa', entity: profile, access_callback: 'modules/community/can/profiles'
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: false, field_name: 'required_2fa disabled otp configured'
+%}
+
+{% liquid
+  assign profile = '{"id":"1000", "type": "profile", "user": {"email": "admin3@example.com"}, "roles": ["member", "superadmin"] }' | parse_json
+
+  function can = 'modules/user/helpers/can_do', requester: profile, do: 'admin_pages.view', entity: null, access_callback: null
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: true, field_name: 'superadmin_should_has_permission'
+%}

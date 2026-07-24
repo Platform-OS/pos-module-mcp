@@ -1,0 +1,13 @@
+---
+metadata:
+  event:
+    profile_id
+---
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'profile_id', key: 'modules/core/validation.blank'
+
+  function _ = 'modules/community/commands/activities/enhance_event', event: event, actor_id: event.profile_id
+
+  return c
+%}

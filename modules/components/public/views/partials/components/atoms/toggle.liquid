@@ -1,0 +1,60 @@
+---
+metadata:
+  name: Toggle
+  params:
+    name: 'myToggle'
+    value: ''
+    label: ''
+    checked:
+      - false
+      - true
+    id: 'myToggle'
+    disabled:
+      - false
+      - true
+    ariaLabel: 'myToggle'
+  styleguide:
+    - name: 'myToggleChecked'
+      value: 'toggle1'
+      checked: true
+    - name: 'myToggleUnchecked'
+      value: 'toggle2'
+      checked: false
+    - name: 'myToggleWithLabel'
+      value: 'toggle3'
+      checked: true
+      label: 'Toggle'
+    - name: 'myToggleWithAriaLabel'
+      value: 'toggle4'
+      checked: true
+      ariaLabel: 'Toggle label'
+---
+{% liquid
+  assign checked = checked | default: params.checked | default: false
+  assign id = id | default: params.id
+  assign name = name | default: params.name
+  assign label = label | default: params.label
+  assign ariaLabel = ariaLabel | default: params.ariaLabel | default: label
+  assign value = value | default: params.value
+
+%}
+<label>
+  <div class="flex">
+    {% if label != blank %}
+    <div class="mr-2">{{label}}</div>
+    {% endif %}
+    <div class="relative inline-block w-12 h-6">
+      <input
+      type="checkbox"
+      class="w-0 h-0 opacity-0"
+      id="{{id}}"
+      name="{{name}}"
+      {% if value %}value="{{value}}"{% endif %}
+      {% if checked %}checked{% endif %}
+      {% if ariaLabel %}aria-label="{{ariaLabel}}"{% endif %}
+      />
+      <span class="pos-toggle__slider absolute cursor-pointer inset-0 bg-graphic rounded-full duration-500"></span>
+    </div>
+  </div>
+</label>
+

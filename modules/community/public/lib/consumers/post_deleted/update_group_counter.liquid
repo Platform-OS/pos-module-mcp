@@ -1,0 +1,12 @@
+{% liquid
+  if event.object.group_id != blank
+    assign group_id = event.object.group_id
+
+    assign object = '{}' | parse_json
+    hash_assign object['id'] = group_id
+    function res = 'modules/community/commands/groups/post_count_decrement', object: object
+    if res.valid != true
+      log res, type: 'ERROR: post_deleted/update_group_counter'
+    endif
+  endif
+%}

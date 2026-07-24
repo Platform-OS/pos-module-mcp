@@ -1,0 +1,39 @@
+{% comment %}
+  actor:public
+  actor:audience
+  target:private
+  system:audit
+{% endcomment %}
+{% render 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "1", at: null %}
+
+{% liquid
+    function post = 'modules/community/queries/posts/find', id: event.post_id
+    assign post_group_id = post.group_id
+    unless post.creator_id == event.actor.id
+      function audience = 'modules/community/commands/audience/build'
+
+      function actor = 'modules/community/queries/activities/users/audience', id: event.actor.id
+      hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: actor['followers']
+
+      function post = 'modules/community/queries/activities/posts/audience', id: event.object.id
+      hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: post['author']
+
+      assign notification_title = 'modules/community/push_notifications.post_upvoted.title' | t
+      assign notification_body = 'modules/community/push_notifications.post_upvoted.body' | t: actor: event.actor.name, title: event.object.name
+
+      assign url = null
+      function post_group = 'modules/community/queries/groups/find', id: post_group_id, current_profile: null
+      if post_group
+        function url = 'modules/community/helpers/link_to_url', object: post_group, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+      else
+        function post_event = 'modules/community/queries/events/find', id: post_group_id, current_profile: null
+        if post_event
+          function url = 'modules/community/helpers/link_to_url', object: post_event, type: 'event', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+        endif
+      endif
+
+      assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+      function publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+    endunless
+%}

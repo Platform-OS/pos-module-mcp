@@ -1,0 +1,71 @@
+---
+metadata:
+  name: Group relationships page
+  params:
+    members: {}
+    owners: {}
+    group: {}
+    context: {}
+    current_profile: {}
+  styleguide:
+    group:
+      name: "Developers group"
+      id: 123
+    members:
+      total_entries: 3
+      results:
+        - l:
+            first_name: "Thomas"
+            last_name: "May"
+            job_title: "Bank Auditor"
+            employer: "Citigroup"
+    owners:
+      results:
+          - l:
+              first_name: "Leo"
+              last_name: "K"
+              job_title: "Bank teller"
+              employer: "JPMorgan Chase"
+---
+{% liquid
+  assign members = members | default: params.members
+  assign owners = owners | default: params.owners
+  assign group = group | default: params.group
+  assign context = context | default: params.context
+  if owners.total_entries > 1
+    assign show_remove_admin = true
+    assign show_remove_group = true
+  endif
+%}
+{% theme_render_rc 'components/molecules/group-manage-header', groupname: group.name, id: group.id, tab: context.page.slug %}
+
+<div class="container flex justify-end pb-4">
+  <form action="" name="group-search" method="get">
+    {% liquid
+      assign search_placeholder = 'modules/community/quick_search.name' | t
+      assign input_params = null | hash_merge: name: 'keyword', placeholder: search_placeholder
+      assign button_params = null | hash_merge: type: 'submit', icon: 'search', weight: 'primary'
+      theme_render_rc 'components/molecules/search-field', input_params: input_params, button: true, button_params: button_params, classes: "w-80"
+    %}
+  </form>
+</div>
+
+<div class="container">
+
+  {% capture card_content %}
+    <div class="w-full flex justify-between border-b mb-4 pb-2">
+      {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+      <div class="md:w-1/3">{{ 'modules/community/groups.relationships.members_count' | t: count: members.total_entries  }}</div>
+      {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+      <div class="md:w-1/3 hidden md:block">TITLE</div>
+      <div class="md:w-1/3"></div>
+    </div>
+    {% assign owners_title = 'modules/community/groups.relationships.admins' | t %}
+    {% assign members_title = 'modules/community/groups.relationships.general_members' | t %}
+    {% theme_render_rc 'components/organisms/group-relationships-list', group: group, list: owners, title: owners_title, context: context, show_remove_admin: show_remove_admin, show_remove_group: show_remove_group, current_profile: current_profile %}
+    {% theme_render_rc 'components/organisms/group-relationships-list', group: group, list: members, title: members_title, context: context, show_make_admin: true, show_remove_group: true, current_profile: current_profile %}
+  {% endcapture %}
+
+  {% theme_render_rc 'components/atoms/card', content: card_content %}
+
+</div>

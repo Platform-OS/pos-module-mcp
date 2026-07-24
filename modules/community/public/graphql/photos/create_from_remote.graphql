@@ -1,0 +1,24 @@
+mutation create_from_remote($profile_id: String $remote_url: String! $origin_url: String $object_uuid: String!, $photo_type: String!, $photo_height: Int, $photo_width: Int) {
+  record: record_create(record: {
+    table: "modules/community/photo"
+    properties: [
+        { name: "profile_id" value: $profile_id }
+        { name: "photo" value_upload: { type: image acl: public remote_url: $remote_url }}
+        { name: "photo_type" value: $photo_type }
+        { name: "object_uuid" value: $object_uuid }
+        { name: "photo_width" value_int: $photo_width }
+        { name: "photo_height" value_int: $photo_height }
+        { name: "origin_url" value: $origin_url }
+      ]
+  }) {
+    id
+    photo_type: property(name: "photo_type")
+    photo_width: property_int(name: "photo_width")
+    photo_height: property_int(name: "photo_height")
+    photo: property_upload(name: "photo") {
+      file_name
+      url
+      versions
+    }
+  }
+}

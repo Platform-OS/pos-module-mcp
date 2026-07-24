@@ -1,0 +1,28 @@
+query search(
+  $id: ID
+  $limit: Int = 20
+  $commentable_tables: [String]!
+) {
+  comments: records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/comment" }
+    }
+  ){
+    total_entries
+    results {
+      id
+      type: table
+      creator_id: property(name: "creator_id")
+      properties
+
+      commentable: related_record(table: $commentable_tables, join_on_property: "commentable_uuid", foreign_property: "uuid") {
+        type: table
+        id
+        name: property(name: "name")
+      }
+    }
+  }
+}
+

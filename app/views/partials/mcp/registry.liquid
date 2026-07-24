@@ -1,0 +1,34 @@
+{%- comment -%}
+  Layer-2 tool registry (app-owned; spec §8.2) — the EXPLICIT registration list
+  for this instance's MCP tools. Returns an array of { name, path } entries. Each
+  `path` points at a tool directory under app/views/partials/mcp/tools/<name>/
+  containing `manifest` (the declaration) and `call` (the handler), co-located per
+  spec §5.2. A tool exists to agents ONLY if it appears here — dropping a tool
+  directory is not enough, registration is a deliberate, reviewed one-line edit
+  (the tool-poisoning mitigation as a structural property, §4.2).
+
+  The engine loads each entry's manifest, validates it against the meta-schema,
+  and serves only the valid ones; the registered `name` must match the manifest's
+  own name (identity guard).
+{%- endcomment -%}
+{% liquid
+  assign tools = '[]' | parse_json
+
+  assign e1 = '{}' | parse_json
+  hash_assign e1['name'] = 'search_events'
+  hash_assign e1['path'] = 'mcp/tools/search_events'
+  assign tools = tools | array_add: e1
+
+  assign e2 = '{}' | parse_json
+  hash_assign e2['name'] = 'create_event'
+  hash_assign e2['path'] = 'mcp/tools/create_event'
+  assign tools = tools | array_add: e2
+
+  assign e3 = '{}' | parse_json
+  hash_assign e3['name'] = 'broadcast_event'
+  hash_assign e3['path'] = 'mcp/tools/broadcast_event'
+  assign tools = tools | array_add: e3
+
+
+  return tools
+%}

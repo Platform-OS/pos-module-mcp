@@ -1,0 +1,34 @@
+{% comment %}
+  expect presigned_url as photo_presigned_url
+{% endcomment %}
+
+{% liquid
+  if max_number_of_files < existing_photos.size
+    assign existing_photos = existing_photos | limit: max_number_of_files
+  endif
+%}
+
+<form action="{{ presigned_url.upload_url }}" hidden
+  id="uppy-form-{{object_id}}"
+  data-s3-uppy-photo="{{ type | default: 'form' }}"
+  data-s3-uppy-object-uuid="{{ object_uuid }}"
+  data-s3-uppy-photo-type="{{ photo_type }}"
+  data-s3-uppy-note="{{ note }}"
+  data-s3-uppy-disabled="{{ disabled }}"
+  data-s3-uppy-max-number-of-files="{{ max_number_of_files }}"
+  data-s3-uppy-photos='{{ existing_photos | json }}'
+  data-s3-uppy-target="{{target | default: '#drag-drop-area'}}"
+  data-s3-uppy-editor-enabled="{{ editor_enabled }}"
+  data-s3-uppy-crop-ratio="{{ crop_ratio | default: '' }}"
+  {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+  data-s3-uppy-locales='{{ 'modules/community/photo_uploads' | t | to_json | html_safe }}'
+  {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+>
+
+      <script>
+      console.log({{ presigned_url.upload_url_payload }})
+    </script>
+  {% for field in presigned_url.upload_url_payload %}
+    <input type="hidden" name="{{ field[0] }}" value='{{ field[1] }}'>
+  {% endfor %}
+</form>

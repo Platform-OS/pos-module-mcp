@@ -1,0 +1,156 @@
+{%- comment -%}
+  JSON-RPC 2.0 dispatch (spec §9.2 steps 1–2, §13). The single entry point behind
+  the POST /mcp page. Pure orchestration: validate the envelope, enforce the
+  transport-level size cap, route the method to its rpc/* handler, and return an
+  transport-agnostic outcome the page turns into an HTTP response.
+
+  Protocol revision 2025-06-18 removed JSON-RPC batching, so a single request
+  object is expected (no batch arrays). Notifications (method `notifications/*`,
+  no response expected) are acknowledged with 202 and no body.
+
+  Phase 1 routes: initialize, ping (open); tools/list, tools/call, resources/list,
+  resources/read arrive in later tasks (1.4/1.8) and currently return -32601 so
+  the surface never lies about what it implements.
+
+  @param {object} params  - context.params (parsed JSON body merged with query)
+  @param {object} headers - context.headers (for auth in the tools/call path)
+  @return {object} { http_status:int, headers?:object, body?:object }
+                   body is a JSON-RPC envelope (or omitted for notifications).
+{%- endcomment -%}
+{% liquid
+  function cfg = 'modules/mcp/commands/config'
+
+  assign method = params.method
+  assign id = params.id
+  assign out = '{}' | parse_json
+
+  # ---- Transport size cap (spec §12.4). Reject before doing any real work. ----
+  assign input_bytes = params | json | size
+  if input_bytes > cfg.defaults.max_input_bytes
+    function body = 'modules/mcp/commands/rpc/error', id: id, code: -32600, message: 'Request too large'
+    hash_assign out['http_status'] = 413
+    hash_assign out['body'] = body
+    return out
+  endif
+
+  # ---- Envelope validation (§13.2). ----
+  # jsonrpc must be exactly "2.0" when present; a missing method is Invalid Request.
+  if params.jsonrpc != blank and params.jsonrpc != '2.0'
+    function body = 'modules/mcp/commands/rpc/error', id: id, code: -32600, message: 'Invalid Request'
+    hash_assign out['http_status'] = 400
+    hash_assign out['body'] = body
+    return out
+  endif
+
+  if method == blank
+    function body = 'modules/mcp/commands/rpc/error', id: id, code: -32600, message: 'Invalid Request'
+    hash_assign out['http_status'] = 400
+    hash_assign out['body'] = body
+    return out
+  endif
+
+  # ---- Notifications: acknowledge, no response body (JSON-RPC notification). ----
+  if method contains 'notifications/'
+    hash_assign out['http_status'] = 202
+    return out
+  endif
+
+  # ---- Authenticated methods return a full outcome (status/headers/body). ----
+  if method == 'tools/call'
+    function oc = 'modules/mcp/commands/rpc/tools_call', params: params, headers: headers, id: id
+    return oc
+  endif
+
+  # ---- Open result-style methods (wrapped in a success envelope). ----
+  assign result = null
+  assign handled = false
+  case method
+    when 'initialize'
+      function result = 'modules/mcp/commands/rpc/initialize', params: params.params
+      assign handled = true
+    when 'ping'
+      function result = 'modules/mcp/commands/rpc/ping'
+      assign handled = true
+    when 'tools/list'
+      function result = 'modules/mcp/commands/rpc/tools_list', params: params.params
+      assign handled = true
+    when 'resources/list'
+      function result = 'modules/mcp/commands/rpc/resources_list', params: params.params
+      assign handled = true
+    when 'resources/templates/list'
+      # No parameterized resource templates yet — return an empty set (§13.1).
+      assign result = '{"resourceTemplates":[]}' | parse_json
+      assign handled = true
+    when 'prompts/list'
+      function result = 'modules/mcp/commands/rpc/prompts_list', params: params.params
+      assign handled = true
+    when 'logging/setLevel'
+      # The module logs server-side via `log` with no per-session sink to tune, so a
+      # VALID level is an acknowledged no-op (empty result) per spec. But we still
+      # validate the `level` param against the RFC 5424 / MCP set: an unknown or
+      # missing level is a protocol error (-32602), never a silent success — a
+      # control method must not return {} for garbage input. This method is
+      # intentionally open (like discovery); it changes nothing. If real
+      # per-principal log routing is ever added, it MUST move behind the
+      # authenticated tools/call path (see identity/resolve_principal).
+      assign lvl = params.params.level
+      assign valid_levels = 'debug,info,notice,warning,error,critical,alert,emergency' | split: ','
+      assign lvl_ok = false
+      if lvl != blank
+        if valid_levels contains lvl
+          assign lvl_ok = true
+        endif
+      endif
+      if lvl_ok
+        assign result = '{}' | parse_json
+        assign handled = true
+      else
+        function body = 'modules/mcp/commands/rpc/error', id: id, code: -32602, message: 'Invalid params: unknown logging level'
+        hash_assign out['http_status'] = 400
+        hash_assign out['body'] = body
+        return out
+      endif
+  endcase
+
+  # Methods that return a result OR a structured _error (unknown resource/prompt).
+  if method == 'resources/read'
+    function rr = 'modules/mcp/commands/rpc/resources_read', params: params.params
+    unless rr._error == blank
+      function body = 'modules/mcp/commands/rpc/error', id: id, code: rr._error.code, message: rr._error.message
+      hash_assign out['http_status'] = 200
+      hash_assign out['body'] = body
+      return out
+    endunless
+    function body = 'modules/mcp/commands/rpc/success', id: id, result: rr
+    hash_assign out['http_status'] = 200
+    hash_assign out['body'] = body
+    return out
+  endif
+
+  if method == 'prompts/get'
+    function pr = 'modules/mcp/commands/rpc/prompts_get', params: params.params
+    unless pr._error == blank
+      function body = 'modules/mcp/commands/rpc/error', id: id, code: pr._error.code, message: pr._error.message
+      hash_assign out['http_status'] = 400
+      hash_assign out['body'] = body
+      return out
+    endunless
+    function body = 'modules/mcp/commands/rpc/success', id: id, result: pr
+    hash_assign out['http_status'] = 200
+    hash_assign out['body'] = body
+    return out
+  endif
+
+  if handled
+    function body = 'modules/mcp/commands/rpc/success', id: id, result: result
+    hash_assign out['http_status'] = 200
+    hash_assign out['body'] = body
+    return out
+  endif
+
+  # ---- Unknown / not-yet-implemented method (§13.2). ----
+  function body = 'modules/mcp/commands/rpc/error', id: id, code: -32601, message: 'Method not found'
+  hash_assign out['http_status'] = 400
+  hash_assign out['body'] = body
+  return out
+%}

@@ -1,0 +1,31 @@
+input:enabled:checked[type=checkbox]:not(.pos-clean) ~ .pos-checkmark {
+  @apply bg-interactive-graphic
+}
+
+input:disabled:checked[type=checkbox]:not(.pos-clean) ~ .pos-checkmark {
+  @apply bg-interactive-disabled;
+}
+
+input:disabled[type=checkbox]:not(.pos-clean) ~ .pos-checkmark {
+  @apply border-interactive-disabled;
+}
+
+input:checked[type=checkbox]:not(.pos-clean) ~ .pos-checkmark:after {
+  @apply border-input;
+  content: "";
+  position: absolute;
+  display: block;
+  left: 5px;
+  top: 0px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input:focus[type=checkbox]:not(.pos-clean) ~ .pos-checkmark {
+  @apply border-prominent border-2 rounded;
+}
+
+

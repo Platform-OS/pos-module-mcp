@@ -1,0 +1,33 @@
+{% doc %}
+  @param {array} admin_menu_items - Items from modules/admin/queries/menu_items,
+    each with `title`, `active`, and `link_attributes.href`. Rendered as the admin
+    sidebar in the new community design (pos-community-navigation), mirroring the
+    main-site navigation styling.
+{% enddoc %}
+<nav class="pos-community-navigation pos-app">
+  <menu>
+    {% for item in admin_menu_items %}
+      {% liquid
+        assign href = item.link_attributes.href
+        assign icon = 'cog'
+        if href contains '/groups'
+          assign icon = 'groups'
+        elsif href contains '/profiles' or href contains '/users'
+          assign icon = 'users'
+        elsif href contains '/events'
+          assign icon = 'calendar'
+        elsif href contains '/hashtags'
+          assign icon = 'hierarchy'
+        elsif href contains '/reports'
+          assign icon = 'bookmarksDocument'
+        endif
+      %}
+      <li>
+        <a href="{{ href }}" data-pos-preload="hover"{% if item.active %} class="pos-community-navigation-active"{% endif %}>
+          {% render 'modules/common-styling/icon', icon: icon, class: null %}
+          {{ item.title }}
+        </a>
+      </li>
+    {% endfor %}
+  </menu>
+</nav>

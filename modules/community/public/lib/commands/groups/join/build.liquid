@@ -1,0 +1,11 @@
+{% assign now = 'now' | to_time | strftime: '%Y-%m-%dT%H:%M:%S.%L%z' %}
+
+{% assign object = {"l_id": profile.id, "r_id": group.id, "created_by_id": profile.id, "l_accepted_at": now, "name": "membership", "type": "relationship"} %}
+
+{% liquid
+  if group.approve_request == 'anonymous'
+    hash_assign object['r_accepted_at'] = now
+  endif
+%}
+
+{% return object %}

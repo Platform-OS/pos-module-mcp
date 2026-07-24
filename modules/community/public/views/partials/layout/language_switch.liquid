@@ -1,0 +1,60 @@
+{% capture language_switch_destination %}{% yield 'language_switch_destination' %}{% endcapture %}
+
+{% liquid
+  function available_languages = 'modules/core/queries/variable/find', name: "AVAILABLE_LANGUAGES", type: "array", default: null
+  assign default_switch_destination = context.location.pathname | url_encode
+  assign language_switch_destination = language_switch_destination | default: default_switch_destination | strip
+%}
+
+
+{% if available_languages.size > 1 %}
+
+  <div class="ms-4 flex items-center">
+
+    {% theme_render_rc 'components/atoms/icon', name: 'globe' %}
+
+    <ul class="flex items-center">
+
+      {% for lang in available_languages %}
+        {% assign language_switch_url = '/language/update/' | append: lang | append: '?return_to=' %}
+        {% assign destination = language_switch_destination | replace: '{LANG}', lang %}
+
+        <li class="border-e last:border-0">
+
+          {% if lang == context.session.language %}
+            {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+            <span class="p-2">{{ 'lang' | t: locale: lang }}</span>
+            {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+          {% else %}
+            <a
+              data-tc="language-switch"
+              x-data="{ url: '{{ language_switch_url }}{{ destination }}' }"
+              href="{{ language_switch_url }}{{ destination }}"
+              x-bind:href="url"
+              x-on:click.prevent="
+                url = '{{ language_switch_url }}' + encodeURIComponent('{{destination}}') + encodeURIComponent(document.location.search);
+                document.location = url;
+              "
+              class="p-2 opacity-50 hover:opacity-100 transition-opacity"
+            >{%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}{{ 'lang' | t: locale: lang }}{%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}</a>
+          {% endif %}
+
+        </li>
+
+      {% endfor %}
+
+    </ul>
+
+  </div>
+
+{% else %}
+
+  {% liquid
+    unless available_languages.first == context.session.language
+    assign destination = language_switch_destination | url_encode
+    assign switch = '/language/update/' | append: available_languages.first | append: '?return_to=' | append: destination
+      redirect_to switch
+    endunless
+  %}
+
+{% endif %}

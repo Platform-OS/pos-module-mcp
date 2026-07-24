@@ -1,0 +1,14 @@
+{% liquid
+  assign description = object.description | default: ""
+  assign data = {"id": object.id, "uuid": object.uuid, "name": object.name, "short_description": object.short_description, "description": description, "link": object.link, "venue": object.venue, "commentable": false}
+  assign start_date = object.start_date | to_time: profile.timezone | to_time: 'UTC' | strftime: "%Y-%m-%dT%H:%M:%S%Z"
+
+  if object.end_date != blank
+    assign end_date = object.end_date | to_time: profile.timezone | to_time: 'UTC' | strftime: "%Y-%m-%dT%H:%M:%S%Z"
+  endif
+
+  hash_assign data['start_date'] = start_date
+  hash_assign data['end_date'] = end_date
+
+  return data
+%}

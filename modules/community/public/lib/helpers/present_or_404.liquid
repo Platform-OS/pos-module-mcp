@@ -1,0 +1,6 @@
+{%- liquid
+  if property == blank or property contains "translation missing:"
+    render 'modules/community/404', status: 404
+    break
+  endif
+-%}

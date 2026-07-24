@@ -1,0 +1,40 @@
+<section class="container">
+
+  <header class="card -mt-28 mb-6 relative text-center">
+    {%- comment -%}platformos-check-disable MissingPartial{%- endcomment -%}
+    {% render 'modules/community/profile/card', user: user, current_profile: current_profile %}
+    {%- comment -%}platformos-check-enable MissingPartial{%- endcomment -%}
+  </header>
+
+  <div class="flex flex-col md:flex-row gap-6">
+
+    {% liquid
+      assign sections_path = 'profile/' | append: user.slug | append: '/'
+    %}
+
+    {% theme_render_rc 'components/organisms/feed-navigation', tab: section, user: user, path: sections_path, tags: tags, current_profile: current_profile %}
+
+    <section class="flex-1">
+      {% liquid
+        if section == 'feed'
+          # platformos-check-disable MissingPartial
+          theme_render_rc 'components/organisms/feed', list: list, current_profile: current_profile, context: context
+          # platformos-check-enable MissingPartial
+        elsif section == 'groups'
+        elsif section == 'projects'
+          render 'modules/community/profile/sections/projects', list: list, current_profile: current_profile, skip_empty: true
+        elsif section == 'following'
+          render 'modules/community/profile/sections/following', list: list, current_profile: current_profile, show: null, suggested: null
+        elsif section == 'followers'
+          render 'modules/community/profile/sections/followers', list: list, current_profile: current_profile
+        elsif section == 'products'
+          # platformos-check-disable MissingPartial
+          render 'modules/community/profile/sections/products', list: list, current_profile: current_profile, skip_empty: true
+          # platformos-check-enable MissingPartial
+        endif
+      %}
+    </section>
+
+  </div>
+
+</section>

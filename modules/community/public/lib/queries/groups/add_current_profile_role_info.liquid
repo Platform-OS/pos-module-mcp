@@ -1,0 +1,17 @@
+{% liquid
+  if current_profile
+    for g in groups.results
+      assign group = g
+
+      assign member = current_profile.relationships.membership | detect: r_id: group.id
+      hash_assign group['member'] = member
+
+      # platformos-check-disable UnknownProperty
+      assign owner = current_profile.relationships.owner | detect: r_id: group.id
+      # platformos-check-enable UnknownProperty
+      hash_assign group['rel_owner'] = owner
+    endfor
+  endif
+
+  return groups
+%}

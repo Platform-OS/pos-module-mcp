@@ -1,0 +1,5 @@
+{% assign object = {"direct_url": object.direct_url, "user_id": current_profile.id, "profile_id": current_profile.id, "photo_type": object.photo_type, "photo_height": object.photo_height, "photo_width": object.photo_width, "origin_url": object.origin_url, "object_uuid": object.object_uuid} %}
+
+{% liquid
+  return object
+%}

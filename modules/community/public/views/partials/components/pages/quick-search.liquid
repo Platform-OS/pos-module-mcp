@@ -1,0 +1,127 @@
+---
+metadata:
+  name: Quick Search page
+  params:
+    list: {}
+    current_profile: {}
+    context: {}
+    pager: {}
+    filters: {}
+---
+{% liquid
+  assign list = list | default: params.list
+  assign current_profile = current_profile | default: params.current_profile
+  assign context = context | default: params.context
+  assign pager = pager | default: params.pager
+  assign filters = filters | default: params.filters
+
+  assign results_num = list.events.total_entries | plus: list.groups.total_entries | plus: list.profiles.total_entries
+%}
+
+<header class="pos-app pos-community-space-header">
+
+  <div class="pos-community-space-detail-header-title">
+    <h2 class="pos-heading-2">
+      {{ 'modules/community/quick_search.results' | t }}
+      <small>{{ results_num }} results for <strong>{{ filters.keyword }}</strong></small>
+    </h2>
+  </div>
+
+</header>
+
+
+{% if list.events.total_entries > 0 %}
+  <section>
+
+    <heading class="pos-heading-with-action">
+      <h2 class="pos-heading-2">
+        {{ 'modules/community/quick_search.type.events' | t }}
+        <small>{{ list.events.total_entries }} results</small>
+      </h2>
+      {% if list.events.has_next_page %}
+        <a href="/events?keyword={{ filters.keyword }}" class="pos-button">{{ 'modules/community/quick_search.show_more' | t }}</a>
+      {% endif %}
+    </heading>
+
+    <div class="pos-community-space-grid">
+      {% for event in list.events.results %}
+        {% liquid
+          assign event_type = 'online'
+          if event.venue and event.link == blank
+            assign event_type = 'local'
+          endif
+          assign url = '/events/' | append: event.id
+          assign owner = event.owner.profile
+          assign members = event.c__going | plus: event.c__maybe
+        %}
+        {% render 'modules/community/migrated/events/card',
+          owner: owner,
+          title: event.name,
+          url: url,
+          location: event.venue,
+          date: event.start_date,
+          type: event_type,
+          summary: event.description,
+          members: members,
+          image: event.photo.photo
+          current_profile: current_profile
+        %}
+      {% endfor %}
+    </div>
+
+  </section>
+{% endif %}
+
+{% if list.groups.total_entries > 0 %}
+  <section class="pos-mt-section-section">
+
+    <heading class="pos-heading-with-action">
+      <h2 class="pos-heading-2">
+        {{ 'modules/community/quick_search.type.groups' | t }}
+        <small>{{ list.groups.total_entries }} results</small>
+      </h2>
+      {% if list.groups.has_next_page %}
+        <a href="/groups?keyword={{ filters.keyword }}" class="pos-button">{{ 'modules/community/quick_search.show_more' | t }}</a>
+      {% endif %}
+    </heading>
+
+    <div class="pos-community-space-grid">
+      {% for record in list.groups.results %}
+        {% render 'modules/community/migrated/groups/card', group: record, pending_acceptance: null %}
+      {% endfor %}
+    </div>
+
+  </section>
+{% endif %}
+
+{% if list.profiles.total_entries > 0 %}
+
+  <section class="pos-mt-section-section">
+
+    <heading class="pos-heading-with-action">
+      <h2 class="pos-heading-2">
+        {{ 'modules/community/quick_search.type.people' | t }}
+        <small>{{ list.profiles.total_entries }} results</small>
+      </h2>
+      {% if list.profiles.has_next_page %}
+        <a href="/profiles?keyword={{ filters.keyword }}" class="pos-button">{{ 'modules/community/quick_search.show_more' | t }}</a>
+      {% endif %}
+    </heading>
+
+    <div class="pos-community-space-grid">
+      {% liquid
+        for profile in list.profiles.results
+          function url = 'modules/community/helpers/link_to', object: profile, type: 'profile'
+          assign allow_to_follow = true
+          assign my_profile = false
+          if current_profile.id == profile.id
+            assign allow_to_follow = false
+            assign my_profile = true
+          endif
+          render 'modules/community/migrated/profiles/card', profile: profile, first_name: profile.first_name, last_name: profile.last_name, job_title: profile.job_title, employer: profile.employer, location: profile.location, url: url, allow_to_follow: allow_to_follow, my_profile: my_profile
+        endfor
+      %}
+    </div>
+
+  </section>
+{% endif %}

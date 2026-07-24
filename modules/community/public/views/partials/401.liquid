@@ -1,0 +1,8 @@
+<div class="container flex-wrap items-center my-10 text-center">
+  {% theme_render_rc 'components/atoms/icon', name: 'warningCloud', class: 'w-32 mx-auto text-danger' %}
+
+  {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+  <h3 class="mt-5 title">{{ 'modules/community/unauthorized_action' | t }}</h3>
+  {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+  <button class="button" onclick='javascript:history.back();return false;'>Back</button>
+</div>

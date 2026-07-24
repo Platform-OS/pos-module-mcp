@@ -1,0 +1,20 @@
+---
+slug: profiles
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', do: 'profiles.list', requester: current_profile, entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function filters = 'modules/community/queries/profiles/filters', params: context.params, default_sort_by: null
+  function profiles = 'modules/community/queries/profiles/search', page: filters.page, limit: 20, query: filters.keyword, sort: filters.sort, uuid: null, not_ids: null, id: null, ids: null, user_id: null, roles: null, with_avatar: null, with_user: null, with_profile_cover: null
+
+  render 'modules/community/migrated/profiles/search', list: profiles, current_profile: current_profile, params: null
+%}

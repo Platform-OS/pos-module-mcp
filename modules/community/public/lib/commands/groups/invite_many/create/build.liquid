@@ -1,0 +1,19 @@
+{% liquid
+  assign now = 'now' | to_time
+  assign list = '[]' | parse_json
+
+  for profile in profiles
+
+    assign invite = '{}' | parse_json
+    hash_assign invite['name'] = 'membership'
+    hash_assign invite['created_by_id'] = inviting_profile.id
+    hash_assign invite['l_id'] = profile.id
+    hash_assign invite['r_id'] = group_id
+    hash_assign invite['l_accepted_at'] = null
+    hash_assign invite['r_accepted_at'] = now
+
+    assign list = list | add_to_array: invite
+  endfor
+
+  return list
+%}

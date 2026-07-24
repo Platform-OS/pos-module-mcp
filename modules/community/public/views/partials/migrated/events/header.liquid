@@ -1,0 +1,128 @@
+<header class="pos-app pos-community-space-header pos-community-space-detail-header pos-community-event-header pos-increaseLegibility" {% if event.photo.photo %}style="background-image: url('{{ event.photo.photo.versions.lg }}')"{% endif %}>
+
+  {% liquid
+    if event.venue and event.link == blank
+      assign icon = 'location'
+      assign type = 'local'
+    else
+      assign icon = 'globe'
+      assign type = 'online'
+    endif
+  %}
+  <span class="pos-tag pos-community-event-card-type pos-community-event-card-type-{{ type }}">
+    {% render 'modules/common-styling/icon', icon: icon, class: null %}
+    {{ type }}
+  </span>
+
+  <div class="pos-community-space-detail-header-title">
+
+    <div>
+      {% if event.owner.profile != blank %}
+        <div class="pos-community-event-header-owner">
+          {% function url = 'modules/community/helpers/link_to', object: event.owner.profile, type: 'profile' %}
+          created by <a href="{{ url }}"> {{ event.owner.profile.name }} </a>
+        </div>
+      {% endif %}
+
+      <time datetime="event.start_date">{{ event.start_date | localize: 'long', current_profile.timezone }}</time>
+      {% if event.end_date != blank %}
+        &mdash;
+        {% liquid
+          assign end_date = event.end_date | localize: 'long', current_profile.timezone
+          assign start_day = event.start_date | to_date
+          assign end_day = event.end_date | to_date
+          if start_day == end_day
+            assign end_date = event.end_date | strftime: '%H:%M', current_profile.timezone
+          endif
+        %}
+        <time datetime="event.end_date">{{ end_date }}</time>
+        {{ 'now' | to_time: current_profile.timezone | strftime: '(%Z)' }}
+      {% endif %}
+
+      <h2 class="pos-heading-2">{{ event.name }}</h2>
+    </div>
+  </div>
+
+  <nav class="pos-community-space-detail-header-nav">
+    <button type="button" class="pos-button" title="{{ 'modules/community/events.add_to_calendar' | t }}" onclick="addToCalendar()">
+      {% render 'modules/common-styling/icon', icon: 'calendar', class: null %}
+      <span class="pos-label">{{ 'modules/community/events.add_to_calendar' | t }}</span>
+    </button>
+
+    {% if current_user_can_edit %}
+      <div class="pos-popover">
+        <button popovertarget="pos-event-header-options" class="pos-button pos-button-primary">
+          {% render 'modules/common-styling/icon', icon: 'dots', class: null %}
+          <span class="pos-label">{{ 'modules/community/app.more_options' | t }}</span>
+        </button>
+        <menu popover id="pos-event-header-options">
+            <li>
+              <a href="/events/{{ event.id }}/edit">
+                {% render 'modules/common-styling/icon', icon: 'pencil', class: null %}
+                {{ 'modules/community/events.edit' | t }}
+              </a>
+            </li>
+            {% unless event.status == 'cancelled' %}
+              <li class="pos-popover-menu-item-important">
+                <form action="/events/{{ event.id }}/cancel" method="post" onSubmit="if(!confirm('{{ 'modules/community/app.confirm-cancel' | t }}')) { return false; }">
+                  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+                  <input type="hidden" name="_method" value="put">
+                  <button type="submit">
+                    {% render 'modules/common-styling/icon', icon: 'x', class: null %}
+                    {{ 'modules/community/events.cancel' | t }}
+                  </button>
+                </form>
+              </li>
+            {% endunless %}
+          </menu>
+        </div>
+    {% endif %}
+  </nav>
+
+  <script>
+    function addToCalendar() {
+      var icsContent = "BEGIN:VCALENDAR\r\n" +
+        "PRODID:-//pOS Community Solution//Event Calendar//EN\r\n" +
+        "VERSION:2.0\r\n" +
+        "METHOD:PUBLISH\r\n" +
+        "X-MS-OLK-FORCEINSPECTOROPEN:TRUE\r\n" +
+        "BEGIN:VEVENT\r\n" +
+        "CLASS:PUBLIC\r\n" +
+        "DESCRIPTION:{{ event.short_description | truncate: 75 }}\r\n" +
+        "DTSTAMP:{{ "now" | strftime: "%Y%m%dT%H%M%S%Z", current_profile.timezone }}\r\n" +
+        {% if event.end_date != blank %}"DTEND:{{ event.end_date | strftime: "%Y%m%dT%H%M%S%Z", current_profile.timezone }}\r\n" +{% endif %}
+        "DTSTART:{{ event.start_date | strftime: "%Y%m%dT%H%M%S%Z", current_profile.timezone }}\r\n" +
+        "LOCATION:{{ event.link | default: event.venue }}\r\n" +
+        "PRIORITY:5\r\n" +
+        "SEQUENCE:0\r\n" +
+        "SUMMARY;LANGUAGE=en-us:{{ event.name }}\r\n" +
+        "TRANSP:OPAQUE\r\n" +
+        "UID:{{ event.event_uuid }}\r\n" +
+        "X-MICROSOFT-CDO-BUSYSTATUS:BUSY\r\n" +
+        "X-MICROSOFT-CDO-IMPORTANCE:1\r\n" +
+        "X-MICROSOFT-DISALLOW-COUNTER:FALSE\r\n" +
+        "X-MS-OLK-ALLOWEXTERNCHECK:TRUE\r\n" +
+        "X-MS-OLK-AUTOFILLLOCATION:FALSE\r\n" +
+        "X-MS-OLK-CONFTYPE:0\r\n" +
+        "BEGIN:VALARM\r\n" +
+        "TRIGGER:-PT1440M\r\n" +
+        "ACTION:DISPLAY\r\n" +
+        "DESCRIPTION:Reminder\r\n" +
+        "END:VALARM\r\n" +
+        "END:VEVENT\r\n" +
+        "END:VCALENDAR";
+      var icsLink = document.createElement("a");
+      icsLink.setAttribute(
+        "href",
+        "data:text/calendar;charset=utf-8," + encodeURIComponent(icsContent)
+      );
+      icsLink.setAttribute("download", "{{ event.name | slugify }}.ics");
+      icsLink.setAttribute("target", "_blank");
+      icsLink.style.display = "none";
+      document.body.appendChild(icsLink);
+      icsLink.click();
+      document.body.removeChild(icsLink);
+    }
+  </script>
+
+</header>

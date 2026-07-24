@@ -1,0 +1,14 @@
+{% liquid
+  assign site_name = 'modules/community/app.title' | t
+  assign from_email = 'modules/community/app.from_email' | t
+  assign subject = 'modules/community/emails.groups.invite.subject' | t: site_name: site_name, group_name: object.group.name, member: object.member.name
+  assign to_email = object.profile.email | default: object.profile.user.email
+  assign object = {"to": to_email, "from": from_email, "subject": subject, "partial": "modules/community/emails/groups/invite", "layout": "mailer", "allow_emails": object.profile.allow_emails, "data": {"url": object.url, "group_name": object.group.name, "member": object.member.name}}
+  function can_receive_emails = 'modules/community/commands/profile/profile_can_receive_emails', object: object
+  if can_receive_emails
+    function object = 'modules/core/commands/email/send', object: object
+    return object
+  else
+    return nil
+  endif
+%}

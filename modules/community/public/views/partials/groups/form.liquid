@@ -1,0 +1,127 @@
+{% liquid
+  if object.id
+    assign method = 'put'
+    function form_url = 'modules/community/helpers/link_to', object: object
+  else
+    assign method = 'post'
+    assign form_url = '/groups'
+  endif
+  assign uuid = '' | uuid
+  assign group_uuid = object.uuid | default: uuid
+%}
+
+
+<div class="container">
+  <div class="w-full lg:w-2/3">
+    <h2 class="title">
+      {{ 'modules/community/groups.form.group_edit' | t }}
+    </h2>
+    <p>
+      {{ 'modules/community/groups.form.group_edit_subtitle' | t }}
+    </p>
+  </div>
+</div>
+
+<div class="container mt-8 flex flex-wrap">
+  <form action="{{ form_url }}" method="post" class="w-full md:w-2/3" data-photo-upload-base>
+
+    {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+    <input type="hidden" name="_method" value="{{ method }}">
+    {% if object.id %}
+      <input type="hidden" name="id" value="{{ object.id }}">
+      <input type="hidden" name="group[id]" value="{{ object.id }}">
+    {% endif %}
+    <input type="hidden" name="group[uuid]" value="{{ group_uuid }}">
+    {% if context.params.return_to %}
+      <input type="hidden" name="return_to" value="{{ context.params.return_to }}">
+    {% endif %}
+
+    <fieldset class="lg:w-2/3" x-data="charCounter()">
+      <label class="mb-1 cursor-pointer flex justify-between" for="name">
+        {{ 'modules/community/groups.form.name' | t }} ({{ 'modules/community/app.required' | t }})
+        <span><span x-text="charsLeft"></span> {{ 'modules/community/groups.form.chars' | t }}</span>
+      </label>
+      <input class="w-full" type="text" id="name" name="group[name]" value="{{ object.name }}" autofocus required maxlength="25" x-ref="content" x-bind="input">
+      {% render 'modules/community/field_error', errors: object.errors.name %}
+    </fieldset>
+
+    <fieldset class="mt-6">
+      <label class="mb-1 block cursor-pointer" for="groupType">{{ 'modules/community/groups.form.privacy' | t }} ({{ 'modules/community/app.required' | t }})</label>
+      <ul class="p-4 flex flex-col md:grid grid-cols-3 !grid-cols-{{ context.group_templates.size }} gap-8 rounded bg-panel-highlight">
+        {% for gt in context.group_templates %}
+          <li class="flex gap-2">
+            {% liquid
+              assign group_type = gt[0]
+            %}
+            <input type="radio" name="group[group_type]" id="group[group_type][{{ group_type }}]" value="{{ group_type }}" {% if object.group_type == group_type %}checked{% endif %} required class="mt-1">
+            <div>
+              {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+              <label for="group[group_type][{{ group_type }}]" class="cursor-pointer">{{ 'modules/community/groups.types.' | append: group_type | t }}</label>
+              <div class="sidenote text-content-sidenote">{{ 'modules/community/groups.types.' | append: group_type | append: '_desc' | t }}</div>
+              {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+
+    <fieldset class="mt-6">
+      <div class="mb-1">{{ 'modules/community/groups.form.photo' | t }}</div>
+      <div class="mb-2 sidenote text-content-sidenote">{{ 'modules/community/groups.form.photo_desc' | t }}</div>
+      {% render 'modules/community/photos/uppy_area', class: null %}
+    </fieldset>
+
+    <fieldset class="mt-6" x-data="charCounter()">
+      <label class="mb-1 cursor-pointer flex justify-between" for="summary">
+        {{ 'modules/community/groups.form.summary' | t }} ({{ 'modules/community/app.required' | t }})
+        <span><span x-text="charsLeft"></span> {{ 'modules/community/groups.form.chars' | t }}</span>
+      </label>
+      <input type="text" name="group[summary]" value="{{ object.summary }}" id="summary" required maxlength="100" x-ref="content" x-bind="input" class="w-full">
+
+      {% render 'modules/community/field_error', errors: object.errors.summary %}
+      {% theme_render_rc 'components/atoms/sidenote', content_key: 'modules/community/groups.form.summary_tip' %}
+    </fieldset>
+
+    <fieldset class="mt-6" x-data="charCounter()">
+      <label class="mb-1 block cursor-pointer" for="description">{{ 'modules/community/groups.form.description' | t }}</label>
+      <textarea name="group[description]" rows="2" x-ref="content" x-bind="input" id="description" data-markdown-editor class="w-full">{{ object.description }}</textarea>
+
+      {% render 'modules/community/field_error', errors: object.errors.description %}
+      {% theme_render_rc 'components/atoms/sidenote', content_key: 'modules/community/groups.form.description_tip' %}
+    </fieldset>
+
+    <input type="hidden" id="group_content_type_post" name="group[content_types][]" value="post">
+
+    <div class="mt-6">
+      <label class="mb-1 block cursor-pointer" for="tags">{{ 'modules/community/groups.form.tags' | t }}</label>
+      <input class="w-full uppercase" type="text" id="tags" name="group[tags]" value="{{ object.tags | join: ',' }}" data-tags-allowlist-input data-tags-whitelist="{{ context.tag_names | join: ',' }}">
+      {% render 'modules/community/field_error', errors: object.errors.tags %}
+      {% theme_render_rc 'components/atoms/sidenote', content_key: 'modules/community/groups.form.tags_help' %}
+    </div>
+
+    <button type="submit" class="mt-12 button">
+      {% if object.id %}
+        {{ 'modules/community/groups.form.update' | t }}
+      {% else %}
+        {{ 'modules/community/groups.form.submit' | t }}
+      {% endif %}
+    </button>
+  </form>
+</div>
+
+{% liquid
+  assign photo = photos[0] | default: object.main_photo
+  assign photos = '[]' | parse_json
+  assign photos = photos | add_to_array: photo | compact
+%}
+{%- comment -%}platformos-check-disable LiquidHTMLSyntaxError{%- endcomment -%}
+{% render 'modules/community/photos/uppy_form',, object_id: null, disabled: null, editor_enabled: null
+  object_uuid: group_uuid,
+  presigned_url: context.presigned_url,
+  user_id: user.id,
+  photo_type: 'main',
+  note: 'Image up to 2MB',
+  max_number_of_files: 1,
+  existing_photos: photos
+%}
+{%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}

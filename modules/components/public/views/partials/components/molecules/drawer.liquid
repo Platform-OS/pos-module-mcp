@@ -1,0 +1,64 @@
+---
+metadata:
+  name: Drawer
+  params:
+    label: 'LabelElement'
+    content: 'DrawerContent'
+    classes: ''
+    drawer_classes: ''
+    label_classes: ''
+    label_attributes: []
+    drawer_attributes: []
+  styleguide:
+    - label: >
+        <div class="inline-block">
+          Left
+        </div>
+      content: >
+        <ul>
+          <li class="p-2"><a href='#' class='text-normal'>Lorem ipsum dolor</a></li>
+          <li class="p-2"><a href='#' class='text-normal'>Lorem ipsum dolor</a></li>
+          <li class="p-2"><a href='#' class='text-normal'>Lorem ipsum dolor</a></li>
+          <li class="p-2"><a href='#' class='text-normal'>Lorem ipsum dolor</a></li>
+        </ul>
+      classes: 'w-64'
+      drawer_classes: ''
+      label_classes: ''
+---
+{% liquid
+  assign label = label | default: params.label
+  assign content = content | default: params.content
+  assign classes = classes | default: params.classes
+  assign drawer_classes = drawer_classes | default: params.drawer_classes
+  assign label_classes = label_classes | default: params.label_classes
+  assign label_attributes = label_attributes | default: params.label_attributes
+  assign drawer_attributes = drawer_attributes | default: params.drawer_attributes
+  assign drawer_classes = "hidden bg-panel fixed top-0 left-0 z-40 h-screen p-4 overflow-y-auto transition-transform -translate-x-full changes-transform shadow-card " | append: drawer_classes | strip
+  assign arrow = arrow | default: params.arrow
+  if arrow == null
+    assign arrow = true
+  endif
+%}
+
+<div
+  x-data="{}"
+  data-pos-component="dropdown"
+  class="inline-block"
+>
+  <button
+    class="{{label_classes}}"
+    {% for attribute in label_attributes %}
+      {{ attribute[0] | html_safe }}="{{ attribute[1] | html_safe }}"
+    {% endfor %}
+    data-dropdown-trigger
+  >
+    {% print label %}
+  </button>
+  <div
+    data-dropdown-content="drawer"
+    class="{{drawer_classes}}"
+    aria-hidden="true"
+  >
+    {{ content | html_safe }}
+  </div>
+</div>

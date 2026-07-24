@@ -1,0 +1,15 @@
+{% liquid
+  assign object_ids = activities.results | map: 'payload' | map: 'object' | map: 'id' | compact
+  assign target_ids = activities.results | map: 'payload' | map: 'target' | map: 'id' | compact
+
+  assign ids = object_ids | concat: target_ids | compact | uniq
+
+  if ids.size > 0
+    function profile_table = 'modules/user/helpers/table_name'
+    graphql r = 'modules/community/activities/records_for_activities', limit: ids.size, ids: ids, profile_table: profile_table
+    return r.records.results
+  else
+    assign empty_array = '[]' | parse_json
+    return empty_array
+  endif
+%}

@@ -1,0 +1,12 @@
+{% liquid
+  if password != blank
+    assign chosen_password = password
+  else
+    assign chosen_password = 12 | random_string | append: 'Az3!/'
+  endif
+  assign uuid = '' | uuid
+  assign first_name = email | split: '@' | first
+  assign language = language | default: 'en'
+  assign object = {"email": email, "password": chosen_password, "uuid": uuid, "first_name": first_name, "last_name": first_name, "language": language}
+  return object
+%}

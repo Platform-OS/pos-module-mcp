@@ -1,0 +1,21 @@
+<h1>Sent mails</h1>
+<section class="table mt-5">
+  <header>
+    <div>Subject</div>
+    <div>To</div>
+    <div>Sent at</div>
+    <div></div>
+  </header>
+  <div class="table-content">
+  {% for mail in mails.results %}
+    <ul>
+      <li>{{ mail.options.subject }}</li>
+      <li>{{ mail.options.to | join: ',' }}</li>
+      <li>{{ mail.created_at | l }}</li>
+      {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+      <li><a href="/tests/sent_mails/{{mail.id}}">Show</a></li>
+      {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+    </ul>
+  {% endfor %}
+  </div>
+</section>

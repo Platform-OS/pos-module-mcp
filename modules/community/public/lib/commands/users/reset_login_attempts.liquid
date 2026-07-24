@@ -1,0 +1,10 @@
+{% liquid
+  function object = 'modules/community/commands/users/reset_login_attempts/build', object: object, default_login_attempts: default_login_attempts
+  function object = 'modules/community/commands/users/reset_login_attempts/check', object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', object: object, mutation_name: 'modules/community/users/reset_login_attempts', selection: 'user_update'
+  endif
+
+  return object
+%}

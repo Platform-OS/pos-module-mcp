@@ -1,0 +1,105 @@
+{% comment %}
+  Renders a sidebar navigation from the components.
+
+  Params:
+    - component_groups Object
+      Object of component groups where the object keys are "atoms", "molecules" and "organisms".
+{% endcomment %}
+
+<aside class="flex-shrink-0 w-64 bg-white border-r md:block">
+  <div class="flex flex-col h-full fixed">
+    <nav aria-label="Main" class="flex-1 px-2 py-4 space-y-2 overflow-y-hidden hover:overflow-y-auto">
+      <a href="/styleguide/"
+        class="pos-clean flex items-center p-2 text-gray-500 transition-colors rounded-md hover:bg-blue-200"
+        role="button" aria-haspopup="true">
+        <span aria-hidden="true">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        </span>
+        <span class="ml-2 text-sm"> Home </span>
+      </a>
+      <div>
+        <span class="flex items-center p-2 text-gray-500 font-bold">
+          <span aria-hidden="true">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8.75" y="8.75" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+          </span>
+          <span class="ml-2 text-sm"> Design tokens </span>
+        </span>
+        <div class="mt-2 space-y-2 px-7" role="menu" arial-label="Colors">
+          <a href="/styleguide/tokens/colors" role="menuitem"
+            class="pos-clean block p-2 text-sm text-gray-400 transition-colors duration-200 rounded-md hover:text-gray-700 hover:bg-blue-100">
+            Colors
+          </a>
+        </div>
+      </div>
+      {% for component_group in component_groups %}
+      <div>
+        <span
+          class="flex items-center p-2 text-gray-500 font-bold">
+          <span aria-hidden="true">
+          {% case component_group[0] %}
+            {% when 'atoms' %}
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8.75" y="8.75" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+            {% when 'molecules' %}
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g clip-path="url(#clip0_8259_129326)">
+                  <rect x="8.75" y="0.75" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="8.75" y="15.8357" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="8.75" y="8.29285" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+                </g>
+                <defs>
+                  <clipPath id="clip0_8259_129326">
+                    <rect width="24" height="24" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            {% when 'organisms' %}
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g clip-path="url(#clip0_8259_129327)">
+                  <rect x="8.29297" y="0.75" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="8.29297" y="15.8357" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="0.75" y="8.29285" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="8.29297" y="8.29285" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="15.8357" y="8.29285" width="7.41429" height="7.41429" stroke="currentColor" stroke-width="1.5"/>
+                </g>
+                <defs>
+                  <clipPath id="clip0_8259_129327">
+                    <rect width="24" height="24" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            {% when 'templates' or 'pages' %}
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 11L1 5.99999V18L12 23V11V11Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 11L23 5.99999V18L12 23V11V11Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M23 6L12 1L1 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          {% endcase %}
+          </span>
+          <span class="ml-2 text-sm"> {{ component_group[0] | humanize }} </span>
+
+        </span>
+        <div class="mt-2 space-y-2 px-7" role="menu" arial-label="Components">
+          {% for component in component_group[1].results %}
+            {% liquid
+              assign generated_name = component.path | split: '/' | last | prepend: '⚠️ '
+              assign name = component.metadata.name | default: generated_name | truncate: 30
+            %}
+            <a href="/styleguide/{{ component.id }}" role="menuitem"
+              class="pos-clean block px-2 text-sm text-gray-400 transition-colors duration-200 rounded-md hover:text-gray-700 hover:bg-blue-100">
+              {{name | humanize }}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </nav>
+  </div>
+</aside>

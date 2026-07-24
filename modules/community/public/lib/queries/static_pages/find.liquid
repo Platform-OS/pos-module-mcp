@@ -1,0 +1,9 @@
+{% liquid
+  if id == blank and name == blank and slug == blank
+    return null
+  endif
+
+  graphql r = 'modules/community/static_pages/search', id: id, name: name, slug: slug, limit: 1, page: 1
+
+  return r.static_pages.results.first
+%}

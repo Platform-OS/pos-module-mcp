@@ -1,0 +1,119 @@
+{% liquid
+  assign placeholder_img = 'modules/community/images/Placeholder_image.png' | asset_url
+%}
+<div class="container">
+
+  {% theme_render_rc 'components/atoms/heading', content: 'Group management', level: 2, classes: 'pb-8' %}
+
+  {% capture card_content %}
+    <form action="/admin/community/groups" method="GET" id="groups-list" x-ref="form">
+      <div class="flex flex-col md:flex-row items-center gap-4 justify-between">
+        <div class="flex gap-4 w-full md:w-auto">
+          {% liquid
+            assign search_placeholder = 'modules/community/groups.filters.search' | t
+            assign input_params = null | hash_merge: name: 'keyword', placeholder: search_placeholder, value: filters.keyword
+            assign button_params = null | hash_merge: type: 'submit', icon: 'search', weight: 'primary'
+            theme_render_rc 'components/molecules/search-field', input_params: input_params, button_params: button_params, button: true, classes: 'w-full'
+          %}
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+          {% liquid
+            assign time_desc_label = 'modules/community/groups.filters.time_desc' | t
+            assign time_asc_label = 'modules/community/groups.filters.time_asc' | t
+            assign select_options = [{"label": time_desc_label, "value": "created_at_desc"}, {"label": time_asc_label, "value": "created_at_asc"}]
+            assign select_attributes = '{}' | parse_json
+            hash_assign select_attributes['onchange'] = "submit()"
+            theme_render_rc 'components/molecules/select', name: 'sort_by', value: filters.sort_by, id: 'filter_sort', options: select_options, attributes: select_attributes, classes: 'rounded-none w-full'
+          %}
+
+          {% assign add_text = 'modules/community/groups.add' | t %}
+          {% theme_render_rc 'components/molecules/iconbutton',
+            icon: 'plus',
+            href: '/groups/new',
+            content: add_text,
+            weight: "primary"
+            alignment: 'left'
+          %}
+        </div>
+      </div>
+    </form>
+  {% endcapture %}
+  {% theme_render_rc 'components/atoms/card', content: card_content, classes: 'mb-6' %}
+
+  {% capture content %}
+  <table class="w-full">
+    <thead class="hidden md:block">
+      <tr class="uppercase text-sm flex flex-row">
+        <th class="flex-1"></th>
+        <th class="flex-1 font-normal">title</th>
+        <th class="w-16 min-w-[4rem] font-normal">ID</th>
+        <th class="flex-1 font-normal">created by</th>
+        <th class="flex-1 font-normal">created at</th>
+        <th class="flex-1 font-normal">joined members</th>
+        <th class="flex-1 font-normal">modify</th>
+        <th class="flex-1 font-normal">feature</th>
+        <th class="flex-1 font-normal">delete</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for group in groups.results %}
+      {% function url = 'modules/community/helpers/link_to', object: group %}
+      <tr class="flex flex-col md:flex-row mb-4 bg-highlighted md:bg-panel rounded">
+        <td class="flex-1">
+          {% assign photo = group.main_photo.photo.versions.sm | default: placeholder_img %}
+          <img src="{{ photo }}" class="w-20 h-12 object-cover" width="80" height="48" />
+        </td>
+        <td class="flex-1 break-all"><a href="{{ url }}" target="_blank">{{ group.name }}</a></td>
+        <td class="w-16 min-w-[4rem]">{{ group.id }}</td>
+        <td class="flex-1 break-all">{{ group.owner.first.profile.name }}</td>
+        <td class="flex-1 break-all">{{ group.created_at | l: 'long', current_profile.timezone }}</td>
+        <td class="flex-1">{{ group.c__members_count }}</td>
+        <td class="flex-1">
+          {% liquid
+            assign edit_url = '/groups/' | append: group.id | append: '/edit'
+            assign attributes = null | hash_merge: target: 'blank'
+            theme_render_rc 'components/molecules/iconbutton', icon: 'pencil', weight: 'primary', classes: 'w-11', attributes: attributes, href: edit_url , gap: 0
+          %}
+        </td>
+        <td class="flex-1">
+          {% liquid
+            assign feature_variant = 'secondary'
+            if group.featured_at != null
+              assign feature_variant = 'primary'
+            endif
+          %}
+          <form action="/admin/groups/{{ group.id }}/toggle_featured" method="post">
+            <input type="hidden" name="_method" value="patch" />
+            <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+            <input type="hidden" name="return_to" value="/admin/community/groups">
+            {% theme_render_rc 'components/molecules/iconbutton', icon: 'star', weight: feature_variant, variant: 'normal', classes: 'w-11 ', attributes: attributes, gap: 0, type: 'submit' %}
+          </form>
+       </td>
+        <td class="flex-1">
+          <form action="/groups/{{ group.id }}" method="post" data-confirm="delete">
+            <input type="hidden" name="_method" value="delete" />
+            <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+            <input type="hidden" name="route" value="/admin/community/groups">
+            {% theme_render_rc 'components/molecules/iconbutton', icon: 'trash', weight: 'primary', variant: 'important' classes: 'w-11 ', attributes: attributes, gap: 0, type: 'submit' %}
+          </form>
+       </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endcapture %}
+
+  {% theme_render_rc 'components/atoms/card', content: content %}
+</div>
+
+<div class="container pt-5 flex flex-row-reverse">
+  {% liquid
+    if groups.total_pages > 1
+      assign pager_template = "{?keyword,sort_by}"
+      assign pager_url = pager_template | expand_url_template: filters
+      assign pager_url = pager_url | append: "&page="
+      theme_render_rc 'components/molecules/pagination', count: groups.total_pages, active: filters.page, url: pager_url
+    endif
+ %}
+</div>

@@ -1,0 +1,74 @@
+query search(
+  $id: ID,
+  $limit: Int = 20,
+  $page: Int = 1
+  $member_id: String
+  $not_ids: [ID!]
+) {
+  groups: records(
+    per_page: $limit
+    page: $page
+    filter: {
+      id: { value: $id, not_value_in: $not_ids }
+      table: { value: "modules/community/group" }
+      related_records: {
+        join: { join_on_property: "id", foreign_property: "r_id"}
+        filter: {
+          table: { value: "modules/community/relationship" },
+          properties: [
+            { name: "l_id", value: $member_id }
+            { name: "name", value_in: ["membership", "invite"] }
+          ]
+        }
+      }
+    }
+    sort: [
+      { created_at: { order: DESC }}
+    ]
+  ){
+    total_entries
+    total_pages
+    current_page
+    has_previous_page
+    has_next_page
+    results {
+      ...group
+    }
+  }
+}
+
+fragment group on Record {
+  id
+  created_at
+  type: table
+
+  uuid: property(name: "uuid")
+  name: property(name: "name")
+  summary: property(name: "summary")
+  description: property(name: "description")
+  code_of_conduct: property(name: "code_of_conduct")
+  content_type: property(name: "content_type")
+  content_types: property_array(name: "content_types")
+  group_type: property(name: "group_type")
+  ask_to_join: property(name: "ask_to_join")
+  meta_visible: property(name: "meta_visible")
+  content_visible: property(name: "content_visible")
+  approve_request: property(name: "approve_request")
+  post_content: property(name: "post_content")
+  add_comments: property(name: "add_comments")
+  invite_member: property(name: "invite_member")
+  tags: property_array(name: "tags")
+  c__members_count: property_int(name: "c__members_count")
+  c__full_members_count: property_int(name: "c__full_members_count")
+  c__posts_count: property_int(name: "c__posts_count")
+
+  main_photo: related_record(table: "modules/community/photo", join_on_property: "uuid", foreign_property: "object_uuid") {
+    id
+    photo_width: property_int(name: "photo_width")
+    photo_height: property_int(name: "photo_height")
+    photo: property_upload(name: "photo") {
+      url
+      versions
+    }
+  }
+}

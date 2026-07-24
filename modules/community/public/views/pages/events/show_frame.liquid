@@ -1,0 +1,24 @@
+---
+slug: events/:id/frame
+layout: ''
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign event_id = context.params.id | split: '-' | last
+  assign page = context.params.page | to_positive_integer: 1
+
+  function event = 'modules/community/queries/events/find', id: event_id, with_owner: true, current_profile: null
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: event.id
+  # platformos-check-enable DeprecatedTag
+
+  # Todo (possible tech debt)
+  # shouldn't it be "event-public" instead of "group-public"?
+  function list = 'modules/community/queries/activities/search_with_records', feed: 'group-public', feed_id: event_id, limit: 20, page: page, uuid: null
+
+  theme_render_rc 'components/organisms/event-feed-frame', event: event, current_profile: current_profile, page: page, list: list, context: context
+%}

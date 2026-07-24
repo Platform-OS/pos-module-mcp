@@ -1,0 +1,65 @@
+{% liquid
+  graphql components = 'modules/components/components/get_all'
+
+
+  comment
+    check if there is a theme_search_paths provided in the app config
+    we should display a warning in the admin if theme_search_paths is missing
+  endcomment
+  if context.search_paths == blank or context.search_paths.size == 0
+    return components
+  endif
+
+  assign results = '{}' | parse_json
+
+  for component_group in components
+    assign component_group_name = component_group[0]
+    hash_assign results[component_group_name] = '{ "results": [] }' | parse_json
+
+    for component in component_group[1].results
+      comment
+        array filters can only check first-level object properties, so we need some workaround here
+      endcomment
+      hash_assign component['name'] = component.metadata.name
+    endfor
+
+    assign found_overrides = '[]' | parse_json
+
+    for component in component_group[1].results
+
+      if found_overrides contains component.name
+        continue
+      endif
+
+      assign has_override = false
+      assign components_with_same_name = component_group[1].results | array_select: name: component.name
+      if components_with_same_name.size > 1
+        assign has_override = true
+      endif
+
+      if has_override
+        for search_path in context.search_paths
+          assign regex = '^' | append: search_path | append: '/components'
+          assign override_found = false
+          for possible_override in components_with_same_name
+            assign starts_with = possible_override.path | matches: regex
+            if starts_with
+              assign found_overrides = found_overrides | add_to_array: possible_override.name
+              hash_assign results[component_group_name]['results'] = results[component_group_name]['results'] | add_to_array: possible_override
+              assign override_found = true
+              break
+            endif
+          endfor
+          if override_found
+            break
+          endif
+        endfor
+      else
+        hash_assign results[component_group_name]['results'] = results[component_group_name]['results'] | add_to_array: component
+      endif
+
+    endfor
+  endfor
+
+  return results
+%}

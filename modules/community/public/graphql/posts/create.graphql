@@ -1,0 +1,104 @@
+mutation create_post(
+  $uuid: String!
+  $parent_id: String
+  $group_id: String
+  $creator_id: String!
+  $title: String
+  $body: String!
+  $tags: [String]
+  $embeded_media: JSONPayload
+  $upvote_profile_ids: [String]
+  $downvote_profile_ids: [String]
+  $accepted_post_id: String
+  $c__score: Int
+  $commentable: Boolean
+  $replyable: Boolean
+  $votable: Boolean
+  $followable: Boolean
+  $featurable: Boolean
+  $removed_at: String
+) {
+  record: record_create(
+    record: {
+      table: "modules/community/post"
+      properties: [
+        { name: "uuid" value: $uuid }
+        { name: "parent_id", value: $parent_id }
+        { name: "group_id", value: $group_id }
+        { name: "creator_id", value: $creator_id }
+        { name: "title", value: $title }
+        { name: "body", value: $body }
+        { name: "tags", value_array: $tags }
+        { name: "embeded_media", value_json: $embeded_media }
+        { name: "upvote_profile_ids", value_array: $upvote_profile_ids }
+        { name: "downvote_profile_ids", value_array: $downvote_profile_ids }
+        { name: "accepted_post_id", value: $accepted_post_id }
+        { name: "c__score", value_int: $c__score }
+        { name: "removed_at" value: $removed_at }
+
+        { name: "commentable", value_boolean: $commentable }
+        { name: "replyable", value_boolean: $replyable }
+        { name: "votable", value_boolean: $votable }
+        { name: "followable", value_boolean: $followable }
+        { name: "featurable", value_boolean: $featurable }
+      ]
+    }
+  ) {
+    id
+    created_at
+    deleted_at
+
+    type: table
+
+    uuid: property(name: "uuid")
+    parent_id: property(name: "parent_id")
+    group_id: property(name: "group_id")
+    creator_id: property(name: "creator_id")
+    title: property(name: "title")
+    body: property(name: "body")
+    tags: property_array(name: "tags")
+    embeded_media: property(name: "embeded_media")
+    upvote_profile_ids: property_array(name: "upvote_profile_ids")
+    downvote_profile_ids: property_array(name: "downvote_profile_ids")
+    accepted_post_id: property(name: "accepted_post_id")
+    c__score: property_int(name: "c__score")
+    slug: property(name: "slug")
+    removed_at: property(name: "removed_at")
+
+    group: related_record(
+      table: "modules/community/group"
+      join_on_property: "group_id"
+      foreign_property: "id"
+    ) {
+      id
+      type: table
+      name: property(name: "name")
+    }
+
+    event: related_record(
+      table: "modules/community/event"
+      join_on_property: "group_id"
+      foreign_property: "id"
+    ) {
+      id
+      type: table
+      name: property(name: "name")
+    }
+
+    photos: related_records(
+      table: "modules/community/photo"
+      join_on_property: "uuid"
+      foreign_property: "object_uuid"
+    ) {
+      id
+      type: table
+      photo_width: property_int(name: "photo_width")
+      photo_height: property_int(name: "photo_height")
+      url: property_upload(name: "photo") {
+        file_name
+        url
+        versions
+      }
+    }
+  }
+}

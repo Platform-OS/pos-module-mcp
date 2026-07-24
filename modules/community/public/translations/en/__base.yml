@@ -1,0 +1,87 @@
+en:
+  app:
+    title: Community Solution
+    from_email: noreply@platformos.com
+    page_not_found: Page not found.
+    page_server_error: Ooops! Server error. We are on it!
+    unauthorized_action: You are not authorized to do this action!
+    self-no_following_found: You are not following anyone
+    self-no_followers_found: No one is following you yet
+    no_following_found: Not following anyone
+    no_followers_found: No one is following %{name}
+    community: Community
+    created_at: Created at
+    status: Status
+    name: Name
+    cancel: Cancel
+    number: Number
+    required: required
+    see_all: See all
+    show_more: Show more
+    more_options: More options
+    create: Create
+    at: at
+    id: ID
+    date: Date
+    add: Add
+    select: Select
+    select_all: Select all
+    filter_list: Type to filter the list
+    filter_empty: There are no items for given filter, please rephrase.
+    confirm-delete: Are you sure you want to proceed with the deletion?
+    confirm-cancel: Are you sure you want to proceed with cancellation?
+    delete: Delete
+    remove: Remove
+    toggle: Toggle
+    admin: Admin
+    close_search: Clear search bar
+    toggle_menu: Toggle menu
+    form_errors_notice: Couldn’t save your changes, please check the form for errors.
+    models:
+      comments:
+        new: New comment
+        add: Add comment
+        edit: Edit comment
+        empty_state: You haven't added any comments yet. <br> Add your first one
+        read_more: Read more
+        post: Post
+        comment: Comment
+        create_failed: Creation failed
+        placeholder: Have something to post?
+        write_comment: Write a comment…
+        removed_comment: Removed comment
+        form:
+          creator_id: creator_id
+          body: Body
+          body_help:
+            "You can use formatting: [link](https://example.com) _italic_
+            **bold** `code`"
+          title: Title
+          uuid: uuid
+          commentable_id: commentable_id
+          commentable_type: commentable_type
+      contacts:
+        blank_reason: Select subject
+        reasons:
+          challenges: Challenges
+          groups: Groups
+          support: Support
+          partner: Become a Partner
+          other: Other
+        contact-us: Contact Us
+        message_sent: Message sent. We will contact you shortly.
+        message-explain: Experiencing a problem? Or just wanting to say hi? Share your message with us.
+        form:
+          email: Email
+          message: Message
+          message_placeholder: Your message
+          message_tip: Experiencing a problem? Or just wanting to say hi? Share your message with us.
+          reason: Subject
+          submit: Submit
+      shared:
+        submit: Save
+        delete: Delete
+        delete_failed: Delete failed
+        deleted: Deleted
+        updated: Updated
+        edit: Edit

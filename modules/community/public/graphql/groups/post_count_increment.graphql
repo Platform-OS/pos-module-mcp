@@ -1,0 +1,19 @@
+mutation groups_post_count_increment(
+  $id: ID!
+) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/community/group"
+      properties: [
+        { name: "c__posts_count", increment: 1 }
+      ]
+    }
+  ) {
+    id
+    created_at
+    type: table
+
+    post_count: property_int(name: "c__posts_count")
+  }
+}

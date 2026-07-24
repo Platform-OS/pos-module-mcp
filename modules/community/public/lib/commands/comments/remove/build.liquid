@@ -1,0 +1,5 @@
+{% liquid
+  hash_assign object['removed_at'] = 'now' | to_time | json
+
+  return object
+%}

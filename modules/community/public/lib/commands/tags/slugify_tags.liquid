@@ -1,0 +1,12 @@
+{% liquid
+  assign tags = tags | downcase | split: ',' | uniq
+  assign slugged_tags = '' | split: ','
+
+  for tag in tags
+    assign slugged_tag = tag | slugify
+    assign slugged_tags = slugged_tags | add_to_array: slugged_tag
+  endfor
+
+  assign slugged_tags = slugged_tags | uniq
+  return slugged_tags
+%}

@@ -1,0 +1,131 @@
+---
+slug: mcp-tools
+layout: ''
+---
+{%- comment -%}
+  MCP token console (operator UX, part of the module so it travels with the
+  standalone repo). A logged-in member mints a PER-USER bearer token bound to
+  their identity, sees the exact client-connect command once, and can revoke.
+
+  Login-gated via context.current_user. The raw token is shown ONCE (passed via a
+  one-shot session flash after minting) — only its digest is stored.
+{%- endcomment -%}
+{%- liquid
+  assign uid = context.current_user.id | append: ''
+  assign host = context.location.host
+  assign endpoint = 'https://' | append: host | append: '/mcp'
+  # Client-side connection alias for `claude mcp add`. Defaults to the configured
+  # server_name (MCP_CONFIG.server_name, default 'pos-module-mcp') so operators can
+  # brand it; falls back to the host if that is somehow blank.
+  function cfg = 'modules/mcp/commands/config'
+  assign server_name = cfg.server_name | default: host
+  # Access is approval-gated: only members with level admin|user may mint tokens.
+  function acc = 'modules/mcp/commands/access/level'
+  assign level = acc.level
+  assign can_mint = false
+  if level == 'admin' or level == 'user'
+    assign can_mint = true
+  endif
+  if can_mint
+    graphql toks = 'modules/mcp/tokens/for_user', user_id: uid
+    assign rows = toks.records.results
+    assign flash = context.session.mcp_flash_token
+    session mcp_flash_token = null
+  endif
+-%}
+{%- if uid == blank -%}
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sign in</title></head>
+<body style="font-family:system-ui;max-width:40rem;margin:4rem auto;padding:0 1rem">
+  <h1>MCP tokens</h1>
+  <p>Please <a href="/sessions/new">sign in</a> to generate a token for connecting an MCP client to this community.</p>
+</body></html>
+{%- elsif can_mint == false -%}
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MCP access</title></head>
+<body style="font-family:system-ui;max-width:40rem;margin:4rem auto;padding:0 1rem;background:#0b0e14;color:#e6e6e6">
+  <h1 style="font-size:1.25rem">MCP access</h1>
+  {%- if level == 'requested' -%}
+    <p>Your request for MCP access is <b style="color:#ffcf7e">pending operator approval</b>. You’ll be able to generate a connection token here once an operator approves it.</p>
+  {%- else -%}
+    <p>Connecting an MCP client to this community requires operator approval. Request access and an operator will review it.</p>
+    <form method="post" action="/mcp-tools/request" style="margin-top:1rem">
+      <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+      <button type="submit" style="font:inherit;border:1px solid #2f7;background:#123a2a;color:#7ee2b8;border-radius:.4rem;padding:.5rem .9rem;cursor:pointer">Request access</button>
+    </form>
+  {%- endif -%}
+</body></html>
+{%- else -%}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your MCP tokens</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #0b0e14; color: #e6e6e6; }
+  .wrap { max-width: 48rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  h1 { font-size: 1.25rem; } h2 { font-size: 1rem; color: #b7c0d0; margin-top: 2rem; }
+  .card { background: #141a24; border: 1px solid #232b38; border-radius: .6rem; padding: 1rem 1.15rem; margin: 1rem 0; }
+  code, pre { font-family: ui-monospace, monospace; }
+  pre { background: #0b0e14; border: 1px solid #232b38; border-radius: .4rem; padding: .8rem; overflow-x: auto; font-size: .8rem; }
+  .token { color: #7ee2b8; word-break: break-all; }
+  .warn { color: #ffcf7e; font-size: .85rem; }
+  button { font: inherit; padding: .5rem .9rem; border-radius: .4rem; border: 1px solid #2f7; background: #123a2a; color: #7ee2b8; cursor: pointer; }
+  .revoke { border-color: #a33; background: #2a1113; color: #ffb4b4; padding: .25rem .6rem; font-size: .78rem; }
+  input[type=text] { font: inherit; padding: .5rem; border-radius: .4rem; border: 1px solid #232b38; background: #0b0e14; color: #e6e6e6; width: 16rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  td, th { text-align: left; padding: .45rem .4rem; border-bottom: 1px solid #232b38; }
+  .revoked { color: #8a94a6; text-decoration: line-through; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Your MCP connection tokens</h1>
+  <p style="color:#b7c0d0">Generate a bearer token to connect an MCP client (e.g. Claude Code) to this community as <b>you</b>. Every call it makes is authorized as your identity and recorded.</p>
+
+  {%- if flash != blank -%}
+  <div class="card">
+    <h2 style="margin-top:0;color:#7ee2b8">✓ New token — copy it now, it will not be shown again</h2>
+    <p class="token"><code>{{ flash }}</code></p>
+    <p>Add it to Claude Code:</p>
+    <pre>claude mcp add --transport http {{ server_name }} {{ endpoint }} --header "Authorization: Bearer {{ flash }}"</pre>
+    <p class="warn">Only the token’s fingerprint is stored — we cannot recover this value. If you lose it, revoke it and mint a new one.</p>
+  </div>
+  {%- endif -%}
+
+  <div class="card">
+    <form method="post" action="/mcp-tools/mint">
+      <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+      <label>Label <input type="text" name="label" placeholder="my laptop" maxlength="40"></label>
+      <button type="submit">Generate token</button>
+    </form>
+  </div>
+
+  <h2>Existing tokens</h2>
+  <table>
+    <thead><tr><th>label</th><th>status</th><th>created</th><th></th></tr></thead>
+    <tbody>
+    {%- for t in rows -%}
+      <tr>
+        <td class="{% if t.status != 'active' %}revoked{% endif %}">{{ t.label }}</td>
+        <td>{{ t.status }}</td>
+        <td>{{ t.created_at | date: '%Y-%m-%d' }}</td>
+        <td>
+          {%- if t.status == 'active' -%}
+          <form method="post" action="/mcp-tools/revoke" onsubmit="return confirm('Revoke this token? Clients using it stop working immediately.')">
+            <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+            <input type="hidden" name="id" value="{{ t.id }}">
+            <button type="submit" class="revoke">Revoke</button>
+          </form>
+          {%- endif -%}
+        </td>
+      </tr>
+    {%- endfor -%}
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
+{%- endif -%}

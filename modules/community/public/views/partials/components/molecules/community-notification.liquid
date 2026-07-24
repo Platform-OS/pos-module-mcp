@@ -1,0 +1,85 @@
+---
+metadata:
+  name: Community notification component
+  params:
+    payload: {}
+    size:
+      - normal
+      - small
+---
+{% assign icons = {"comment_created": "messages", "post_upvoted": "heart", "user_followed_user": "plus"} %}
+{% liquid
+  assign size = size | default: params.size | default: 'normal'
+  assign actor = payload.actor
+  assign actor_url = "/profile/" | append: actor.slug
+  assign icon = icons[payload.type] | default: 'user'
+%}
+
+{% liquid
+  assign skip_link = false
+  case payload.type
+
+  when 'login_failed', 'account_locked', 'account_unlocked'
+    function message = 'modules/community/activities/feed_unit/type/login_failed', payload: payload
+
+  when 'comment_created'
+    assign skip_link = true
+    function message = 'modules/community/helpers/notifications/comment_created', payload: payload
+  when 'mention_created'
+    if payload.source_type == 'comment'
+      assign skip_link = true
+    endif
+    function message = 'modules/community/helpers/notifications/mention_created', payload: payload
+  when 'event_deleted'
+    assign skip_link = true
+    function message = 'modules/community/helpers/notifications/event_deleted', payload: payload
+  when 'event_approved'
+    assign skip_link = true
+    function message = 'modules/community/helpers/notifications/event_approved', payload: payload
+  when 'event_rejected'
+    assign skip_link = true
+    function message = 'modules/community/helpers/notifications/event_rejected', payload: payload
+  when 'group_created'
+    assign skip_link = true
+    function message = 'modules/community/helpers/notifications/group_created', payload: payload
+  when 'group_deleted'
+    assign skip_link = true
+    function message = 'modules/community/helpers/notifications/group_deleted', payload: payload
+  when 'post_created'
+    if payload.target.name == 'PROFILE_GROUP' or payload.target.name == 'PROJECT_GROUP'
+      assign internal_group = true
+    endif
+    if internal_group
+      function message = 'modules/community/helpers/notifications/default', payload: payload, namespace: namespace, role: role, type: 'post_created_notification_internal', event: null, meta: null
+    else
+      function message = 'modules/community/helpers/notifications/default', payload: payload, namespace: namespace, role: role, type: 'post_created_notification', event: null, meta: null
+    endif
+
+  when 'user_followed_user'
+    if current_profile.id == payload.followed_profile_id
+      function message = 'modules/community/helpers/notifications/default', payload: payload, namespace: namespace, role: role, type: 'user_followed_you', event: null, meta: null
+    else
+      function message = 'modules/community/helpers/notifications/default', payload: payload, namespace: namespace, role: role, event: null, meta: null
+    endif
+
+  when 'event_participation_declared'
+    if payload.new_type == 'event:not-going'
+      function message = 'modules/community/helpers/notifications/default', payload: payload, namespace: namespace, role: role, type: 'event_left', event: null, meta: null
+    else
+      function message = 'modules/community/helpers/notifications/default', payload: payload, namespace: namespace, role: role, type: 'event_joined', event: null, meta: null
+    endif
+
+  else
+    function message = 'modules/community/helpers/notifications/default', payload: payload, namespace: namespace, role: role, event: null, meta: null
+
+  endcase
+
+  function date = 'modules/community/helpers/notifications/date', payload: payload, skip_link: skip_link, timezone: current_profile.timezone
+
+  if message != blank
+    function actor_url = 'modules/community/helpers/link_to', object: actor, type: 'profile'
+    # platformos-check-disable PartialCallArguments
+    render 'modules/community/migrated/notifications/notification', name: actor.name, img_src: actor.avatar.photo.versions.sm, actor_url: actor_url , icon: icon, message: message, date: date, params: null
+    # platformos-check-enable PartialCallArguments
+  endif
+%}

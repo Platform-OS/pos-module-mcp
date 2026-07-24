@@ -1,0 +1,2 @@
+{%- liquid assign current_profile = context.exports.current_profile | default: null -%}
+{% render 'modules/community/404', current_profile: current_profile %}

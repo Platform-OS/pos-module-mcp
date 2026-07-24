@@ -1,0 +1,13 @@
+---
+method: post
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/groups/membership/toggle', user_id: context.current_user.id, group_id: context.params.group_id, action_name: context.params.action_name
+
+  render 'modules/community/json/shared/show', object: object
+%}

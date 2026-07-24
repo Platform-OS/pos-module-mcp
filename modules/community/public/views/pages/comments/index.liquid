@@ -1,0 +1,11 @@
+---
+slug: comments
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  function comment = 'modules/community/queries/comments/find', id: context.params.slug2, creator_id: null
+  function url = 'modules/community/helpers/link_to', object: comment.commentable
+
+  assign url = url | append: '#' | append: comment.uuid
+  redirect_to url
+%}

@@ -1,0 +1,25 @@
+.prose {
+  @apply text-normal;
+}
+.prose a {
+  @apply
+    text-interactive-text
+    transition-colors;
+}
+
+.prose a:hover {
+  @apply
+    text-interactive-hover;
+}
+
+.prose h1, .prose .bigtitle {
+  @apply bigtitle;
+}
+
+.prose h2, .prose .title {
+  @apply title;
+}
+
+.prose h3, .prose .subtitle {
+  @apply subtitle;
+}

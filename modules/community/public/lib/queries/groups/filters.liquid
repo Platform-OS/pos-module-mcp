@@ -1,0 +1,13 @@
+{% assign sort_options = {"created_at_desc": [{"properties": [{"name": "featured_at", "order": "DESC"}]}, {"created_at": {"order": "DESC"}}], "created_at_asc": [{"properties": [{"name": "featured_at", "order": "DESC"}]}, {"created_at": {"order": "ASC"}}]} %}
+{% liquid
+  assign filters = '{}' | parse_json
+  hash_assign filters['page'] = params.page | to_positive_integer: 1
+  hash_assign filters['sort_by'] = params.sort_by | default: 'created_at_desc'
+  hash_assign filters['sort'] = sort_options[filters.sort_by]
+  hash_assign filters['keyword'] = params.keyword | default: '' | strip
+
+ 
+
+
+  return filters
+%}

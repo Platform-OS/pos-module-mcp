@@ -1,0 +1,14 @@
+query countPosts($page: Int = 1, $limit: Int = 20, $creator_id: String) {
+  records(
+    page: $page
+    per_page: $limit
+    filter: {
+      table: { value: "modules/community/post" }
+      properties: [
+        { name: "creator_id", value: $creator_id }
+      ]
+    }
+  ) {
+    total_entries
+  }
+}

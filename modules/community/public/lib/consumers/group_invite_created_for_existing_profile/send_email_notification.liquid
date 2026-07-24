@@ -1,0 +1,17 @@
+{% liquid
+  assign object = '{}' | parse_json
+
+  function profile = 'modules/user/queries/profiles/find', id: event.invited_profile_id, user_id: null, uuid: null, first_name: null, last_name: null
+  hash_assign object['profile'] = profile
+
+  function group = 'modules/community/queries/groups/find', id: event.group_id, current_profile: null
+  hash_assign object['group'] = group
+
+  function member = 'modules/user/queries/profiles/find', id: event.inviting_profile_id, user_id: null, uuid: null, first_name: null, last_name: null
+  hash_assign object['member'] = member
+
+  assign url = 'https://' | append: event.host | append: '/groups/' | append: event.group_id | append: '/invites/' | append: event.relationship_id | append: '/accept'
+  hash_assign object['url'] = url
+
+  function _email = 'modules/community/commands/emails/group_invite_for_existing_user', object: object
+%}

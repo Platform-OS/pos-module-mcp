@@ -1,0 +1,14 @@
+---
+slug: admin/users/:id/edit
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', do: 'users.update', requester: current_profile, entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function profile = 'modules/user/queries/profiles/find', id: context.params.id, uuid: null, user_id: null, first_name: null, last_name: null
+  theme_render_rc 'admin/users/users/edit', profile: profile
+%}

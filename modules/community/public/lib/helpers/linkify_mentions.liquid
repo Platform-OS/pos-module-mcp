@@ -1,0 +1,15 @@
+{% liquid
+  function mentions = 'modules/community/helpers/extract_mentions', input: input
+  assign output = input
+
+  for mention in mentions
+    assign slugified_username = mention[0] | slugify
+    assign escaped_name = mention[0] | escape
+    assign regex_safe_name = mention[0] | replace: '\', '\\' | replace: '.', '\.' | replace: '*', '\*' | replace: '+', '\+' | replace: '?', '\?' | replace: '(', '\(' | replace: ')', '\)' | replace: '[', '\[' | replace: ']', '\]' | replace: '{', '\{' | replace: '}', '\}' | replace: '|', '\|' | replace: '^', '\^' | replace: '$', '\$'
+    assign pattern = '@\[' | append: regex_safe_name | append: '\]\((\d+)\)'
+    assign replace_with = '<a href="/profile/' | append: slugified_username | append: '-' | append: mention[1] | append: '">@' | append: escaped_name | append: '</a>'
+    assign output = output | replace_regex: pattern, replace_with
+  endfor
+
+  return output
+%}

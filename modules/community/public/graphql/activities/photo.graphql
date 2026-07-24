@@ -1,0 +1,17 @@
+query record($uuid: String!) {
+  records(per_page: 3
+    filter: {
+      properties: [
+        { name: "object_uuid" value: $uuid }
+      ]
+      table: { value: "modules/community/photo"}
+    } ){
+    results {
+      photo_width: property_int(name: "photo_width")
+      photo_height: property_int(name: "photo_height")
+      url: property_upload(name: "photo") {
+        versions
+      }
+    }
+  }
+}

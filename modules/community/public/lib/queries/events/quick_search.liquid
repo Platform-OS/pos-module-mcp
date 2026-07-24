@@ -1,0 +1,8 @@
+{% liquid
+  assign page = page | to_positive_integer: 1
+
+  assign from = 'now' | to_time | strftime: '%Y-%m-%dT%H:%M:%S.%LZ'
+  graphql r = 'modules/community/events/quick_search', limit: limit, page: page, keyword: keyword, with_relationships: with_relationships, with_owner: true, from: from, status: status, sort: sort
+  function events = 'modules/community/queries/events/add_current_profile_role_info', events: r.events, current_profile: current_profile
+  return events
+%}

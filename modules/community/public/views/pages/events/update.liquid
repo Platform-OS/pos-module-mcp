@@ -1,0 +1,44 @@
+---
+slug: events/:id
+method: put
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign event_id = context.params.id
+  function event = 'modules/community/queries/events/find', id: event_id, with_owner: true, current_profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: event, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/events', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  if context.params.event.cover.added[0]
+    assign cover_url = context.params.event.cover.added[0]
+  else
+    assign cover_url = context.params.event.cover.current[0]
+  endif
+
+  function object = 'modules/community/commands/events/update', object: context.params.event, profile: current_profile
+
+  if object.valid
+    assign cover = null | hash_merge: direct_url: cover_url, photo_type: 'group_cover', origin_url: cover_url, object_uuid: object.uuid
+    function cover = 'modules/community/commands/photos/create', object: cover, current_profile: current_profile
+    assign url = '/events/' | append: event_id
+    redirect_to url
+  else
+    assign cover = '[]' | parse_json
+    assign file = null | hash_merge: url: cover_url
+    assign add_to_cover = null | hash_merge: id: '1', file: file
+    assign cover = cover | array_add: add_to_cover
+    hash_assign object['cover'] = cover
+
+    function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+    # platformos-check-disable UnknownProperty
+    theme_render_rc 'components/pages/event-edit', object: object, errors: object.errors, context: context, current_profile: current_profile, photos: null
+    # platformos-check-enable UnknownProperty
+  endif
+%}

@@ -1,0 +1,8 @@
+en:
+  onboard:
+    welcome: Welcome to the Community!
+    desc: For an enhanced experience, choose hashtags to follow. The hashtags you select will determine the recommendations that will appear in your feed.
+    select_interests: Select your interests
+    select_timezone: Select your timezone
+    submit: Continue
+    skip: Skip

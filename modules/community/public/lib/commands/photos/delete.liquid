@@ -1,0 +1,8 @@
+{% liquid
+  function object = 'modules/community/commands/photos/delete/check', object: object
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/photos/delete', object: object, selection: 'record'
+  endif
+
+  return object
+%}

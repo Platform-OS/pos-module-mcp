@@ -1,0 +1,21 @@
+---
+slug: api/photos
+method: delete
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function photo = 'modules/community/queries/photos/find', id: context.params.photo.id, with_object: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: photo, do: 'delete', requester: current_profile, access_callback: 'modules/community/can/photos', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  assign photo_object = context.params.photo | hash_merge: type: 'photo'
+  function object = 'modules/community/commands/photos/delete', object: photo_object
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/json/shared/show', object: object
+  # platformos-check-enable DeprecatedTag
+%}

@@ -1,0 +1,13 @@
+{% if payload.date %}
+  {% unless skip_link == true %}<a href="{% render 'modules/community/helpers/link_to', object: payload, type: 'activity' %}" class="pos-community-post-header-date">{% endunless %}
+
+    <time title="{{ payload.date | l: 'long', current_profile.timezone }}" datetime="{{ payload.date }}" class="timeago">{{ payload.date | l: 'compact', current_profile.timezone }}</time>
+
+    {% if payload['modules/community/post'].edited_at != blank %}
+      {% assign edited_at = payload['modules/community/post'].edited_at | to_time: current_profile.timezone %}
+      &nbsp;|&nbsp; {{ 'modules/community/feed.entries.edited' | t }}: <time title="{{ edited_at | l: 'compact', current_profile.timezone }}" datetime="{{ edited_at }}" class="timeago">
+        {{ edited_at | l: 'compact', current_profile.timezone }}
+      </time>
+    {% endif %}
+  {% unless skip_link == true %}</a>{% endunless %}
+{% endif %}

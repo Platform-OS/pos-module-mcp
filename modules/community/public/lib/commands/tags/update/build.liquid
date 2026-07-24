@@ -1,0 +1,5 @@
+{% assign object = {"id": object.id, "name": object.name, "post_count": object.post_count, "follower_count": object.follower_count, "status": object.status, "creator_id": object.creator_id, "disabled_at": object.disabled_at} %}
+
+{% liquid
+  return object
+%}

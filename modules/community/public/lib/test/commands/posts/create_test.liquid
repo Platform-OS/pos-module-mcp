@@ -1,0 +1,18 @@
+{% assign profile = {"id": "5"} %}
+
+{% liquid
+  assign params = '{"title": "ooo oo", "body":"foo ooo ooo ooo", "uuid": "12345", "group_id": "2137", "entity_type":"group" }' | parse_json
+  function post = 'modules/community/commands/posts/create', object: params, current_profile: profile
+  function pc = 'modules/tests/assertions/valid_object', contract: contract, object: post, field_name: 'post'
+
+  function contract = 'modules/tests/assertions/presence', contract: contract, object: post, field_name: 'id'
+  function contract = 'modules/tests/assertions/valid_object', contract: contract, object: post, field_name: 'id'
+%}
+
+{% liquid
+  assign params = '{"title": "ooo oo", "body":"foo ooo ooo ooo", "uuid": "12345" }' | parse_json
+  function object = 'modules/community/commands/posts/create', object: params, current_profile: profile
+
+  function contract = 'modules/tests/assertions/not_valid_object', contract: contract, object: object, field_name: 'id'
+  function contract = 'modules/tests/assertions/equal', contract: contract, field_name: 'errors', given: object.errors.group_id[0], expected: "cannot be blank"
+%}

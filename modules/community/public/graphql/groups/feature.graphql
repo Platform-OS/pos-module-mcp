@@ -1,0 +1,36 @@
+mutation feature_group(
+  $id: ID!
+  $featured_at: String = null
+) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/community/group"
+      properties: [
+        { name: "featured_at", value: $featured_at }
+      ]
+    }
+  ) {
+    id
+    created_at
+    type: table
+    uuid: property(name: "uuid")
+    name: property(name: "name")
+    summary: property(name: "summary")
+    description: property(name: "description")
+    code_of_conduct: property(name: "code_of_conduct")
+    content_type: property(name: "content_type")
+    content_types: property_array(name: "content_types")
+    group_type: property(name: "group_type")
+    ask_to_join: property(name: "ask_to_join")
+    meta_visible: property(name: "meta_visible")
+    content_visible: property(name: "content_visible")
+    approve_request: property(name: "approve_request")
+    post_content: property(name: "post_content")
+    add_comments: property(name: "add_comments")
+    invite_member: property(name: "invite_member")
+    c__members_count: property_int(name: "c__members_count")
+    c__posts_count: property_int(name: "c__posts_count")
+    featured_at: property(name: "featured_at")
+  }
+}

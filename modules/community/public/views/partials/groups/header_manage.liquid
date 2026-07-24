@@ -1,0 +1,38 @@
+{%- comment -%}platformos-check-disable MissingAsset{%- endcomment -%}
+<header class="-mt-10 bg-panel-highlight bg-no-repeat bg-right" style="background-image: url({{ 'images/manageGroup_bg.jpg' | asset_url }});">
+{%- comment -%}platformos-check-enable MissingAsset{%- endcomment -%}
+  <div class="container pt-2 pb-8">
+    <a href="{% render 'modules/community/helpers/link_to', object: group %}" class="mb-1 flex items-center gap-1 text-content-inverted hover:text-content-inverted">
+      {% theme_render_rc 'components/atoms/icon', name: 'dashLeft', class: 'w-2' %} {{ group.name }}
+    </a>
+    <h1 class="bigtitle !m-0">{{ 'modules/community/groups.relationships.manage_group' | t }}: {{ group.name }}</h1>
+  </div>
+</header>
+
+{% liquid
+  assign class = 'py-4 block text-content-sidenote'
+  assign active_class = 'border-b-2 border-interaction !text-content'
+%}
+
+<nav class="mb-10 bg-panel-highlight">
+  <div class="container">
+    <ul class="overflow-x-auto flex gap-8 !mb-0 md:subtitle md:font-semibold whitespace-nowrap">
+      <li>
+        <a href="{% render 'modules/community/helpers/link_to', object: group, action: 'relationships' %}" class="{{ class }} {% if context.page.slug contains 'relationships' %} {{ active_class }} {% endif %}">
+          {{ 'modules/community/groups.nav.user_management' | t }}
+        </a>
+      </li>
+      <li>
+        <a href="{% render 'modules/community/helpers/link_to', object: group, action: 'edit' %}" class="{{ class }} {% if context.page.slug contains 'edit' %} {{ active_class }} {% endif %}">
+          {{ 'modules/community/groups.nav.group_edit' | t }}
+        </a>
+      </li>
+
+      <li>
+        <a href="{% render 'modules/community/helpers/link_to', object: group, action: 'invites' %}" class="{{ class }} {% if context.page.slug contains 'invites' %} {{ active_class }} {% endif %}">
+          {{ 'modules/community/groups.nav.invites' | t }}
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>

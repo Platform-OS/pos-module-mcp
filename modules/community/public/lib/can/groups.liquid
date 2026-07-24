@@ -1,0 +1,156 @@
+{% liquid
+  assign can = false
+
+  assign group = entity
+
+  if group == blank
+    return false
+  endif
+
+  assign member = requester.relationships.membership | detect: r_id: group.id
+  assign owner = requester.relationships.owner | detect: r_id: group.id
+
+  function can_manage_all = 'modules/user/helpers/can_do', requester: requester, do: 'groups.manage.all', entity: null, access_callback: null
+  if can_manage_all and do != 'join'
+    return true
+  endif
+
+  if do == 'remove_admin'
+    # Do not enable to remove the last admin.
+    assign owners = group.relationships | array_select: name: 'owner'
+    if owners.size < 2
+      return false
+    endif
+
+    return owner.valid
+  endif
+
+  case do
+
+  when 'edit'
+    return owner.valid
+
+  when 'delete'
+    return owner.valid
+
+  when 'invite'
+    if owner.valid
+      return true
+    endif
+    assign can_invite = 'anonymous,member' | split: ','
+    if member.valid and can_invite contains group.invite_member
+      return true
+    endif
+
+  when 'join'
+    if member.valid or owner.valid or member.pending_acceptance or member.pending_approval
+      return false
+    else
+      if group.ask_to_join == 'yes'
+        return true
+      endif
+
+      if group.ask_to_join == 'no'
+        return false
+      endif
+    endif
+
+  when 'approve_request'
+    if owner.valid
+      return true
+    endif
+    if group.approve_request == 'anonymous'
+      return true
+    endif
+
+  when 'post'
+    if owner.valid
+      return true
+    endif
+    assign post_content = group.post_content
+    if post_content == 'anonymous'
+      return true
+    endif
+    if post_content == 'member' and member.valid
+      return true
+    endif
+
+  when 'comment'
+    if owner.valid
+      return true
+    endif
+    assign add_comments = group.add_comments
+
+    if add_comments == 'anonymous'
+      return true
+    endif
+    if add_comments == 'member' and member.valid
+      return true
+    endif
+
+  when 'vote'
+    if owner.valid
+      return true
+    endif
+    assign content_visible = group.content_visible
+
+    if content_visible == 'anonymous'
+      return true
+    endif
+    if content_visible == 'member' and member.valid
+      return true
+    endif
+
+  when 'leave'
+    if owner.valid
+      return false
+    endif
+    if member.valid or member.l_accepted_at == null
+      return true
+    endif
+
+  when 'see_meta'
+    if owner.valid
+      return true
+    endif
+    assign meta_visible = group.meta_visible
+
+    if meta_visible == 'anonymous'
+      return true
+    endif
+
+    if meta_visible == 'member' and member.valid
+      return true
+    endif
+
+    if meta_visible == 'member' and member.pending_acceptance
+      return true
+    endif
+
+    return false
+
+  when 'see_content'
+    if owner.valid
+      return true
+    endif
+    assign content_visible = group.content_visible
+    if content_visible == 'anonymous'
+      return true
+    endif
+
+    if content_visible == 'member' and member.valid
+      return true
+    endif
+
+    return false
+
+  when 'set_admin'
+    return owner.valid
+
+  when 'remove_member'
+    return owner.valid
+
+  endcase
+
+  return can
+%}

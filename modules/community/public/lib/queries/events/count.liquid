@@ -1,0 +1,7 @@
+{% comment %}
+  Counts the created events
+{% endcomment %}
+{% liquid
+  graphql count = 'modules/community/events/count'
+  return count.events.total_entries
+%}

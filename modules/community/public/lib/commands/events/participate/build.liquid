@@ -1,0 +1,5 @@
+{% assign now = 'now' | to_time | strftime: '%Y-%m-%dT%H:%M:%S.%L%z' %}
+
+{% assign object = {"l_id": profile.id, "r_id": object.id, "created_by_id": profile.id, "l_accepted_at": now, "r_accepted_at": now, "name": object.name, "type": "relationship"} %}
+
+{% return object %}

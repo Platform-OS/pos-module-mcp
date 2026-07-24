@@ -1,0 +1,10 @@
+{%  liquid
+  function object = 'modules/community/commands/groups/post_count_decrement/build', object: object
+  function object = 'modules/community/commands/groups/post_count_decrement/check', object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/groups/post_count_decrement' object: object, selection: 'record'
+  endif
+
+  return object
+%}

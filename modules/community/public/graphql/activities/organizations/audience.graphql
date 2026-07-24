@@ -1,0 +1,18 @@
+query search($id: ID, $limit: Int = 1) {
+  records(
+    per_page: $limit,
+    filter: {
+      id: {value: $id},
+      table: {value: "organization"},
+      deleted_at: { exists: false }
+    }
+  )
+  {
+    total_entries
+    results {
+      members: related_records(table: "modules/community/relationship" join_on_property: "id" foreign_property: "r_id") {
+        id: property(name: "l_id")
+      }
+    }
+  }
+}

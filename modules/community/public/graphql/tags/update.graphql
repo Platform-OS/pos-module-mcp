@@ -1,0 +1,34 @@
+mutation update_tag(
+  $id: ID!
+  $name: String
+  $post_count: Int
+  $follower_count: Int
+  $status: String
+  $disabled_at: String
+  $creator_id: String
+) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/community/tag"
+      properties: [
+        { name: "name" value: $name }
+        { name: "status" value: $status }
+        { name: "post_count" value_int: $post_count }
+        { name: "follower_count" value_int: $follower_count }
+        { name: "disabled_at" value: $disabled_at }
+        { name: "creator_id" value: $creator_id }
+      ]
+    }
+  ){
+    id
+    created_at
+    updated_at
+    name: property(name: "name")
+    status: property(name: "status")
+    post_count: property_int(name: "post_count")
+    follower_count: property_int(name: "follower_count")
+    disabled_at: property(name: "disabled_at")
+    creator_id: property(name: "creator_id")
+  }
+}

@@ -1,0 +1,91 @@
+---
+slug: posts.frame
+method: post
+layout: ''
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true, with_cover_photo: null
+
+  # platformos-check-disable UnreachableCode
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-enable UnreachableCode
+
+  assign object = context.params.post
+  assign entity_type = object.entity_type
+
+  if entity_type == 'modules/user/profile' or entity_type == 'modules/community/group'
+    if object.entity_id == current_profile.id
+      function group = 'modules/community/commands/groups/find_or_create_for_profile', profile: current_profile
+    else
+      function group = 'modules/community/queries/groups/find', id: object.entity_id, with_owner: true, current_profile: current_profile
+    endif
+    # platformos-check-disable UnreachableCode
+    # platformos-check-disable DeprecatedTag
+    include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'post', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+    # platformos-check-enable DeprecatedTag
+    # platformos-check-enable UnreachableCode
+
+    # backwards compatibility
+    hash_assign object['group_id'] = group.id
+  elsif entity_type == 'modules/community/event'
+
+    # platformos-check-disable UnknownProperty
+    function event = 'modules/community/queries/events/find', id: object.entity_id, with_owner: true, current_profile: current_profile
+    # platformos-check-enable UnknownProperty
+
+    # platformos-check-disable UnreachableCode
+    # platformos-check-disable DeprecatedTag
+    include 'modules/user/helpers/can_do_or_unauthorized', entity: event, do: 'post', requester: current_profile, access_callback: 'modules/community/can/events', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+    # platformos-check-enable DeprecatedTag
+    # platformos-check-enable UnreachableCode
+
+    # backwards compatibility
+    hash_assign object['group_id'] = event.id
+  endif
+
+  function object = 'modules/community/commands/posts/create', object: object, current_profile: current_profile
+  # platformos-check-disable UnknownProperty
+  if object.valid
+  # platformos-check-enable UnknownProperty
+    # platformos-check-disable UnknownProperty
+    if object.comments == blank
+    # platformos-check-enable UnknownProperty
+      hash_assign object['comments'] = '[]' | parse_json
+    endif
+
+    # platformos-check-disable UnknownProperty
+    function slugged_tags = 'modules/community/helpers/extract_slugged_tags', text: object.body
+    # platformos-check-enable UnknownProperty
+    function _tags = 'modules/community/commands/tags/create_missing_tags', tags: slugged_tags
+
+    # platformos-check-disable UnknownProperty
+    assign event_payload = null | hash_merge: creator_id: current_profile.id, date: context.params.post.date, post_id: object.id, group_id: object.group_id, entity_type: entity_type, tags: slugged_tags
+    # platformos-check-enable UnknownProperty
+
+    function event = 'modules/core/commands/events/publish', type: 'post_created', object: event_payload, delay: 0, max_attempts: null
+
+    assign payload = '{}' | parse_json
+    hash_assign payload['object'] = object
+    hash_assign payload['target'] = group | default: event
+    hash_assign payload['actor'] = current_profile
+    hash_assign payload['type'] = 'post_created'
+    hash_assign payload['date'] = 'now' | to_time
+    hash_assign payload['date'] = context.params.post.date | default: 'now' | to_time
+    hash_assign payload['modules/community/post'] = object
+    hash_assign payload['uuid'] = event.uuid
+    # platformos-check-disable UnknownProperty
+    hash_assign payload['post_id'] = object.id
+    # platformos-check-enable UnknownProperty
+
+    theme_render_rc 'components/organisms/feed-entry', payload: payload, current_profile: current_profile, context: context, can_comment: true
+  else
+    response_status 422
+
+    # platformos-check-disable UnknownProperty
+    assign error_message = object.errors | hash_values | join: ', '
+    # platformos-check-enable UnknownProperty
+    echo 'modules/community/posts.create.failed' | t | append: ': ' | append: error_message
+  endif
+%}

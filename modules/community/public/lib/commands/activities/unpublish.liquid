@@ -1,0 +1,16 @@
+{% comment %}
+  @params
+    record_id
+{% endcomment %}
+
+{% liquid
+  function object = 'modules/community/commands/activities/unpublish/build', record_id: record_id
+  function object = 'modules/community/commands/activities/unpublish/check', object: object
+
+  if object.valid
+    function object = 'modules/community/commands/activities/unpublish/execute', object: object
+  else
+    log object, type: 'Failed unpublishing event'
+  endif
+  return object
+%}

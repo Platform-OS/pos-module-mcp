@@ -1,0 +1,208 @@
+---
+metadata:
+  name: Home
+  params:
+    groups: []
+    posts: []
+    topics: []
+    shields: []
+    quicklinks: []
+  styleguide:
+    groups:
+      - title: Support Team
+        summary: All about UX
+        imgSrc: https://picsum.photos/500/300?random=1
+        variant: default
+        animation: false
+        classes: w-full
+        readers: 1.2K
+        comments: '600'
+        titleClasses: text-interactive-text pb-2
+      - title: Partners
+        summary: All about UX
+        imgSrc: https://picsum.photos/500/300?random=2
+        variant: default
+        animation: false
+        classes: w-full
+        readers: 1.2K
+        comments: '600'
+        titleClasses: text-interactive-text pb-2
+      - title: Innovation center
+        summary: All about UX
+        imgSrc: https://picsum.photos/500/300?random=3
+        variant: default
+        animation: false
+        classes: w-full
+        readers: 1.2K
+        comments: '600'
+        titleClasses: text-interactive-text pb-2
+    topics:
+      - title: Ideas, suggestions
+        readers: 1.2K
+        comments: '6'
+        icon: userCircle
+      - title: Documentation
+        readers: 1.2K
+        comments: '6'
+        icon: bookFlipPage
+      - title: Support
+        readers: 1.2K
+        comments: '6'
+        icon: instagram
+      - title: Become a Partner
+        readers: 1.2K
+        comments: '6'
+        icon: thumbUp
+    posts:
+      - title: Title
+        content: This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...
+        author: Jane Doe
+      - title: Title
+        content: This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...
+        author: Jane Doe
+      - title: Title
+        content: This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...
+        author: Jane Doe
+        shields:
+      - info_text1: 120k
+        info_text2: People
+        classes: w-full mr-2
+      - info_text1: 1,5k
+        info_text2: Groups
+        icon: multipleUsersNetwork
+        classes: w-full mr-2
+      - info_text1: 200
+        info_text2: Topics
+        icon: bookFlipPage
+        classes: w-full mr-2
+      - info_text1: 330k
+        info_text2: Questions
+        icon: questionCircle
+        classes: w-full mr-2
+      - info_text1: 560k Answers
+        info_text2: Tracking
+        icon: commentText
+        classes: w-full mr-2
+    quicklinks:
+      - title: Explore
+        text: topics
+        imgSrc: modules/community/images/lines_horizontal.svg
+        url: /topics
+        classes: w-full mr-2 h-52
+      - title: Join
+        text: your favourite groups
+        imgSrc: modules/community/images/lines_horizontal2.svg
+        url: /join
+        classes: w-full mr-2 h-52
+      - title: Ask
+        text: questions
+        imgSrc: modules/community/images/lines_horizontal3.svg
+        url: /questions
+        classes: w-full mr-2 h-52
+---
+{% liquid
+  assign groups = groups | default: params.groups
+  assign topics = topics | default: params.topics
+  assign posts = posts | default: params.posts
+  assign shields = shields | default: params.shields
+  assign quicklinks = quicklinks | default: params.quicklinks
+%}
+
+{% liquid
+  content_for 'metatags'
+  theme_render_rc 'home/metatags', lang: lang
+  endcontent_for
+%}
+<div class="-mt-10">
+  {% theme_render_rc 'components/organisms/hero' %}
+</div>
+
+<section class="container w-full xs:flex relative xs:-top-12 -mb-18">
+  {% for shield in shields %}
+    {% theme_render_rc 'components/organisms/shield', params: shield %}
+  {% endfor %}
+</section>
+
+<section class="container w-full xs:flex">
+  {% for quicklink in quicklinks %}
+    {% theme_render_rc 'components/organisms/quicklink', params: quicklink %}
+  {% endfor %}
+</section>
+
+<section class="container pb-8">
+  {% theme_render_rc 'components/atoms/heading', content: 'Groups to join', classes: 'py-4' %}
+  <div class="xs:flex">
+    {% for group in groups %}
+      <div class="w-full pr-2 pb-4 xs:pb-0">
+        {% theme_render_rc 'components/organisms/group-card', params: group %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="bg-supplementary p-4 xs:p-8">
+  <div class="container">
+    {% theme_render_rc 'components/atoms/heading', content: 'Popular topics', classes: 'pb-6 text-inverted' %}
+    <div class="xs:flex">
+      {% for topic in topics %}
+        <div class="w-full xs:pr-8 pb-4 xs:pb-0">
+          {% theme_render_rc 'components/organisms/topic', params: topic %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="container py-8">
+  {% theme_render_rc 'components/atoms/heading', content: 'Latest posts', classes: 'py-4' %}
+  <div class="xs:flex">
+    {% for post in posts %}
+      <div class="w-full pr-2 pb-4 xs:pb-0">
+        {% theme_render_rc 'components/organisms/post', params: post %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container">
+  <div class="xs:flex">
+    <div class="w-full xs:w-1/2">
+      {%- comment -%}platformos-check-disable MissingAsset, ImgWidthAndHeight{%- endcomment -%}
+      <img src="{{ 'modules/community/images/customerservice.png' | asset_url }}" width="600" height="400">
+      {%- comment -%}platformos-check-enable MissingAsset, ImgWidthAndHeight{%- endcomment -%}
+    </div>
+    <div class="w-full xs:w-1/2 xs:p-24">
+      {% theme_render_rc 'components/atoms/heading', content: 'Section with image', classes: 'py-4' %}
+      <div class="pb-4">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante malesuada, commodo placerat sem. Morbi felis dui, aliquam elementum nisl vitae, auctor suscipit enim.
+      </div>
+      <div>
+      Curabitur vehicula dui vitae neque venenatis, nec ornare felis ornare.
+      </div>
+    </div>
+  </div>
+</section>
+
+{%- comment -%}platformos-check-disable MissingAsset{%- endcomment -%}
+<section class="py-12 bg-colorful bg-no-repeat bg-center bg-cover text-inverted"
+  style="background-image: url({{ 'modules/community/images/cta_bg.svg' | asset_url }})">
+{%- comment -%}platformos-check-enable MissingAsset{%- endcomment -%}
+  <div class="container items-center text-center">
+
+    <header class="mb-4">
+      {% liquid
+        assign heading = null | hash_merge: content: 'CTA title', level: 2, tag: 'h2', classes: 'pb-3'
+        theme_render_rc 'components/atoms/heading', params: heading
+
+        assign description = null | hash_merge: content: 'description lorem ipsum dolor sit amet', level: 4, tag: 'p', classes: 'mb-6'
+        theme_render_rc 'components/atoms/heading', params: description
+
+        assign login = null | hash_merge: weight: 'primary', href: '/sessions/new', content: 'Log in'
+        theme_render_rc 'components/atoms/button', params: login
+      %}
+    </header>
+
+  </div>
+</section>
+
+{% theme_render_rc 'home/partners' %}

@@ -1,0 +1,48 @@
+---
+metadata:
+  name: Group details
+  params:
+    group: {}
+    list: {}
+    current_profile: {}
+    context: {}
+---
+{% liquid
+  assign group = group | default: params.group
+  assign list = list | default: params.list
+  assign current_profile = current_profile | default: params.current_profile
+  assign context = context | default: params.context
+%}
+
+{% liquid
+  function can_post = 'modules/user/helpers/can_do', requester: current_profile, do: 'post', entity: group, access_callback: 'modules/community/can/groups'
+  function can_comment = 'modules/user/helpers/can_do', requester: current_profile, do: 'comment', entity: group, access_callback: 'modules/community/can/groups'
+
+  if can_post
+    render 'modules/community/migrated/post/form', id: 'pos-community-post-new', target_entity: group, author: current_profile
+  endif
+%}
+
+<section class="pos-app" id="pos-community-feed-posts">
+  {% if list.total_entries > 0 %}
+    {% liquid
+      for activity in list.results
+        theme_render_rc 'components/organisms/feed-entry', payload: activity.payload, current_profile: current_profile, namespace: namespace, can_comment: can_comment
+      endfor
+    %}
+    {% if list.has_next_page %}
+      {% function group_url = 'modules/community/helpers/link_to', object: group, action: 'frame' %}
+      <button
+        id="pos-community-load-feed-more"
+        class="pos-button"
+        data-load-content="{{ group_url }}?page={{ page | default: 1 | plus: 1 }}"
+        data-load-where="last"
+        data-load-target="#pos-community-feed-posts"
+        disabled
+      >{{ 'modules/community/app.show_more' | t }}</button>
+    {% endif %}
+  {% else %}
+    <p class="container my-8 text-lg">{{ 'modules/community/groups.no_items' | t }}</p>
+  {% endif %}
+</section>
+

@@ -1,0 +1,20 @@
+{% liquid
+  if label
+    assign label = label
+  else
+    assign label = 'modules/community/groups.leave' | t
+  endif
+%}
+
+
+<form action="/groups/{{ group.id }}/leave" method="post">
+  {% function url = 'modules/community/helpers/link_to', object: group %}
+  <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+  <input type="hidden" name="_method" value="delete">
+  <input type="hidden" name="return_to" value="{{ url }}">
+  <input type="hidden" name="notice_key" value="modules/community/groups.left">
+
+  <button type="submit">
+    {% print label %}
+  </button>
+</form>

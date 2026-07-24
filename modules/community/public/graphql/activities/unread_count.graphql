@@ -1,0 +1,10 @@
+query ac($feed_id: ID!, $feed: String!) {
+  activities: streams(
+    feed_id: $feed_id
+    feed_type: $feed
+    per_page: 1
+    reset_last_read: false
+  ) {
+    unread_count
+  }
+}

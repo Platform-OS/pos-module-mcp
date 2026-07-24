@@ -1,0 +1,8 @@
+
+{% assign object = {"id": object.id, "name": object.name, "disabled_at": object.disabled_at} %}
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  hash_assign object['creator_id'] = current_profile.id
+  return object
+%}

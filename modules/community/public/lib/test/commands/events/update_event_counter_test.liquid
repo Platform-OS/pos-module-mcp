@@ -1,0 +1,41 @@
+{% liquid
+    function profile = 'modules/community/test/fixtures/profile', user_id: null
+    function event = 'modules/community/test/fixtures/event', profile: profile, contract: contract
+  
+    # platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+    include 'modules/tests/assertions/equal', contract: contract, given: event.c__going, expected: 1, field_name: 'event.c__going'
+    # platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+    # platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+    include 'modules/tests/assertions/equal', contract: contract, given: event.c__maybe, expected: 0, field_name: 'event.c__maybe'
+    # platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+    # platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+    include 'modules/tests/assertions/equal', contract: contract, given: event.c__not_going, expected: 0, field_name: 'event.c__not_going'
+    # platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+
+    # simulate clicking on maybe
+    assign object = '{}' | parse_json
+    hash_assign object['id'] = event.id
+    hash_assign object['going'] = -1
+    hash_assign object['maybe'] = 1
+    hash_assign object['not_going'] = 0
+    function object = 'modules/community/commands/events/update_count_cache', object: object
+  
+    function contract = 'modules/tests/assertions/valid_object', contract: contract, object: object, field_name: 'object'
+    # platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+    # platformos-check-disable UnknownProperty
+    include 'modules/tests/assertions/equal', contract: contract, given: object.c__going, expected: 0, field_name: 'event.c__going'
+    # platformos-check-enable UnknownProperty
+    # platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+    # platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+    # platformos-check-disable UnknownProperty
+    include 'modules/tests/assertions/equal', contract: contract, given: object.c__maybe, expected: 1, field_name: 'event.c__maybe'
+    # platformos-check-enable UnknownProperty
+    # platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+    # platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+    # platformos-check-disable UnknownProperty
+    include 'modules/tests/assertions/equal', contract: contract, given: object.c__not_going, expected: 0, field_name: 'event.c__not_going'
+    # platformos-check-enable UnknownProperty
+    # platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+  
+  %}
+  

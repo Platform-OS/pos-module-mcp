@@ -1,0 +1,30 @@
+---
+layout: modules/community/admin
+metadata:
+  menu:
+    title: "Hashtag management"
+  permission: "hashtags.manage"
+  relative_path: "/admin/community/hashtags"
+---
+{% assign sort_options = {"post_count_asc": {"name": "post_count", "order": "ASC"}, "post_count_desc": {"name": "post_count", "order": "DESC"}, "follower_count_asc": {"name": "follower_count", "order": "ASC"}, "follower_count_desc": {"name": "follower_count", "order": "DESC"}} %}
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable UnreachableCode
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', requester: current_profile, do: context.page.metadata.permission, entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-enable UnreachableCode
+
+  assign sort = '[]' | parse_json
+
+  assign page = context.params.page | to_positive_integer: 1
+  assign query = context.params.query | default: '' | strip
+  if sort_options[context.params.sort]
+    assign sort = sort | add_to_array: sort_options[context.params.sort] | compact
+  endif
+  assign filters = null | hash_merge: page: page, sort: sort, query: query
+
+  function hashtags = 'modules/community/queries/tags/search', limit: 20, page: page, query: query, sort: sort, with_creator: true, not_ids: null, name: null, names: null, status: null
+
+  render 'modules/community/admin_pages/hashtags', hashtags: hashtags, filters: filters, page: page
+%}

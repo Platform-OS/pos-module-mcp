@@ -1,0 +1,13 @@
+mutation ($id: ID!, $attempts: Int, $locked_at: String) {
+  user_update: user_update(
+    id: $id,
+    user: {
+      properties: [
+        { name: "attempts" value_int: $attempts }
+        { name: "locked_at" value: $locked_at }
+      ]
+    }
+  ) {
+    id
+  }
+}

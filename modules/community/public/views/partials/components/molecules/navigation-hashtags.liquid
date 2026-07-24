@@ -1,0 +1,94 @@
+---
+metadata:
+  name: Navigation hashtags
+  params:
+    tags: {}
+  styleguide:
+    tags:
+      - id: 1
+        name: lorem
+      - id: 2
+        name: ipsum
+---
+{% liquid
+  assign tags = tags | default: params.tags
+%}
+
+{% if tags %}
+
+  {% capture card_content %}
+  <section data-tc="followedTags">
+
+    {% assign followed = 'modules/community/tags.followed' | t %}
+    {% theme_render_rc 'components/atoms/sidenote', content: followed %}
+
+    <div class="flex flex-wrap gap-2 pt-4">
+      {% for tag in tags %}
+        <form
+          action="#"
+          x-data="relationship('tagIds')"
+          x-ref="form"
+          x-on:submit.prevent
+          data-id="{{ tag.id }}"
+          x-init="initManual()"
+          x-show.transition="exists"
+          x-cloak
+        >
+          <input type="hidden" name="r_id" value="{{ tag.id }}">
+          <input type="hidden" name="name" value="followship:tag">
+          {% liquid
+            assign attributes = '{}' | parse_json
+            hash_assign attributes['x-on:click'] = "toggle()"
+            assign tagtext = "#" | append: tag.name
+            theme_render_rc 'components/molecules/chip', content: tagtext, variant: 'selected', attributes: attributes, classes: 'cursor-pointer'
+          %}
+        </form>
+      {% endfor %}
+    </div>
+
+  </section>
+  {% endcapture %}
+
+  <div class="pt-4">
+  {% theme_render_rc 'components/atoms/card', content: card_content %}
+  </div>
+
+
+  {% capture card_content %}
+  <section data-tc="tagsToFollow">
+
+    {% assign followable = 'modules/community/tags.followable' | t %}
+    {% theme_render_rc 'components/atoms/sidenote', content: followable %}
+
+    <div class="flex flex-wrap gap-2 pt-4">
+      {% for tag in tags %}
+        <form
+          action="#"
+          x-data="relationship('tagIds')"
+          x-ref="form"
+          x-on:submit.prevent
+          data-id="{{ tag.id }}"
+          x-init="initManual()"
+          x-show.transition="exists === false"
+          x-cloak
+        >
+          <input type="hidden" name="r_id" value="{{ tag.id }}">
+          <input type="hidden" name="name" value="followship:tag">
+          {% liquid
+            assign attributes = '{}' | parse_json
+            hash_assign attributes['x-on:click'] = "toggle()"
+            assign tagtext = "#" | append: tag.name
+            theme_render_rc 'components/molecules/chip', content: tagtext, variant: 'clickable', attributes: attributes, classes: 'cursor-pointer'
+          %}
+        </form>
+      {% endfor %}
+    </div>
+
+  </section>
+  {% endcapture %}
+
+  <div class="pt-4">
+  {% theme_render_rc 'components/atoms/card', content: card_content %}
+  </div>
+
+{% endif %}

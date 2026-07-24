@@ -1,0 +1,9 @@
+{% liquid
+  function object = 'modules/community/commands/posts/delete/check',  object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/posts/delete', selection: 'record_delete', object: object
+  endif
+
+  return object
+%}

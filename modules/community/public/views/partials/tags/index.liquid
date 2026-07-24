@@ -1,0 +1,41 @@
+<section>
+  {% if tags == blank %}
+    {% capture card_content %}
+  <div class="container bg-panel w-full h-auto">
+   <div class="flex flex-col md:flex-row items-center justify-evenly gap-4 p-6">
+     <div class="border-r pr-4">
+       {% theme_render_rc 'components/atoms/heading', content: "This user is not following any hashtags.", level: 4 %}
+       <p>
+         Check back later, or explore their profile for more
+         information.
+       </p>
+     </div>
+     <svg data-icon="search" {{ attrs | html_safe }} class="h-10 w-10 fill-current " viewBox="0 0 24 24" fill="none">
+       <path d="M23.245 23.996a.743.743 0 01-.53-.22L16.2 17.26a9.824 9.824 0 01-2.553 1.579 9.766 9.766 0 01-7.51.069 9.745 9.745 0 01-5.359-5.262c-1.025-2.412-1.05-5.08-.069-7.51S3.558 1.802 5.97.777a9.744 9.744 0 017.51-.069 9.745 9.745 0 015.359 5.262 9.748 9.748 0 01.069 7.51 9.807 9.807 0 01-1.649 2.718l6.517 6.518a.75.75 0 01-.531 1.28zM9.807 1.49a8.259 8.259 0 00-3.25.667 8.26 8.26 0 00-4.458 4.54 8.26 8.26 0 00.058 6.362 8.26 8.26 0 004.54 4.458 8.259 8.259 0 006.362-.059 8.285 8.285 0 002.594-1.736.365.365 0 01.077-.076 8.245 8.245 0 001.786-2.728 8.255 8.255 0 00-.059-6.362 8.257 8.257 0 00-4.54-4.458 8.28 8.28 0 00-3.11-.608z"/>
+     </svg>
+   </div>
+ </div>
+{% endcapture %}
+    {% assign card_params = null | hash_merge: content: card_content, classes: 'text-center', variant: 'highlighted' %}
+    {% theme_render_rc 'components/atoms/card', params: card_params %}
+  {% endif %}
+
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-center">
+    {% for tag in tags %}
+      <div class="pos-card">
+        <a href="/hashtag/{{ tag.name }}" class="pos-heading-3">
+          #{{ tag.name }}
+        </a>
+        {% liquid
+          assign followers = tag.follower_count | to_positive_integer: 0
+        %}
+        <p class="pb-6"><span x-text="followers">{{ followers }} {{ 'Follower' | pluralize: followers }}</span></p>
+        {% render 'modules/community/migrated/tags/follow_toggle',
+          id: tag.id,
+          name: tag.name,
+          current_profile: current_profile
+        %}
+      </div>
+    {% endfor %}
+  </div>
+</section>

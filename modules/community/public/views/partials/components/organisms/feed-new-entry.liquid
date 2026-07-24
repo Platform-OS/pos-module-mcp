@@ -1,0 +1,119 @@
+---
+metadata:
+  name: Feed new entry form
+  params:
+    presigned_url: ''
+    context: {}
+    current_profile: {}
+    placeholder: ''
+    target_entity: {}
+    action: '/posts.frame'
+    images: false
+  styleguide:
+    presigned_url: ''
+    context: {}
+    current_profile:
+      name: 'John Doe'
+      avatar:
+        photo:
+          versions:
+            sm: 'https://i.pravatar.cc/100'
+    placeholder: ''
+    target_entity: {}
+    action: ''
+    images: true
+---
+{% liquid
+  assign uuid = '' | uuid
+  assign images = images | default: params.images
+  if images == null
+    assign images = true
+  endif
+  assign presigned_url = presigned_url | default: params.presigned_url | default: context.presigned_url
+  assign current_profile = current_profile | default: params.current_profile
+  assign placeholder = placeholder | default: params.placeholder
+  assign target_entity = target_entity | default: params.target_entity
+  assign action = action | default: params.action | default: '/posts.frame'
+%}
+{% capture card_content %}
+<div
+  x-data='frames()' x-on:submit.prevent='
+    insert({where: "afterbegin", target: "feed"}).then(() => {
+      api.photoUploadReset($refs.form.elements["post[uuid]"], document.querySelector("#uppy-form-{{group.id}}"));
+      upload = false;
+
+      document.dispatchEvent(new Event("pos-feed-posting"));
+    });'
+>
+  <form action="{{action}}" method="post" x-ref="form" data-tc="postForm">
+    {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+    <input type="hidden" name="post[entity_type]" value="{{ target_entity.type }}">
+    <input type="hidden" name="post[entity_id]" value="{{ target_entity.id }}">
+    <input type="hidden" name="post[content_type]" value="post">
+    <input type="hidden" name="post[uuid]" value="{{ uuid }}" autocomplete="off">
+    <input type="hidden" name="post[embeded_media]" value="">
+
+    <fieldset class="grid gap-4" style="grid-template-columns: min-content auto">
+      {% liquid
+        if current_profile.first_name and current_profile.last_name
+          assign name = current_profile.first_name | append: ' ' | append: current_profile.last_name
+        else
+          assign name = current_profile.slug
+        endif
+        assign name = current_profile.name | default: name
+
+        theme_render_rc 'components/atoms/avatar', size: 'l', name: name, imageSrc: current_profile.avatar.photo.versions.sm
+
+        assign post_input_attrs = '{}' | parse_json
+        # "h-11" "h-28"
+        hash_assign post_input_attrs['resize-on-focus'] = 'true'
+        theme_render_rc 'components/molecules/hashtag-textarea', name: 'post[body]', attributes: post_input_attrs, placeholder: placeholder, classes: '', input_classes: 'h-11 transition-all whitespace-pre-wrap', required: true
+      %}
+    </fieldset>
+
+    <fieldset class="mt-2 flex gap-2 items-center justify-end">
+      {% if images %}
+        {% liquid
+          assign button_attrs = '{}' | parse_json
+          hash_assign button_attrs['x-on:click'] = 'upload=!upload'
+          theme_render_rc 'components/molecules/iconbutton', icon: 'camera', attributes: button_attrs, gap: 0, size: 'small', weight: 'secondary'
+        %}
+      {% endif %}
+      {% liquid
+        assign attrs = null | parse_json
+        hash_assign attrs['x-bind:disabled'] = 'spinner'
+        theme_render_rc 'components/atoms/button', size: 'small', attributes: attrs content: 'Post', type: 'submit'
+      %}
+    </fieldset>
+
+    <small class="mt-1 flex text-danger" x-show="error" x-cloak>
+      {% theme_render_rc 'components/atoms/icon', name: 'warningCloud', class: 'w-5 h-5 me-2 flex-shrink-0' %}
+      <span x-text="error"></span>
+    </small>
+
+    {% if images %}
+      <fieldset x-cloak x-show.transition="upload">
+        {% render 'modules/community/photos/uppy_area', class: "mt-5" %}
+      </fieldset>
+    {% endif %}
+  </form>
+
+  {% liquid
+    if images
+      render 'modules/community/photos/uppy_form', object_uuid: uuid, object_id: group.id, presigned_url: presigned_url, photo_type: 'main', max_number_of_files: 3, existing_photos: null, note: null, disabled: null, editor_enabled: null
+    endif
+  %}
+
+  <div id="mediaEmbed" class="mt-4 relative flex !hidden">
+    <button id="removeMediaAttachment" class="p-2 absolute -right-2 -top-2 rounded-full bg-graphic text-inverted">
+      <span class="sr-only">Remove media from post</span>
+      {% theme_render_rc 'components/atoms/icon', name: 'x' %}
+    </button>
+    <iframe width="560" height="315" class="w-full h-auto" style="aspect-ratio: 16 / 9;" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <style>.mediaEmbedInstagram { width: 320px; height: 600px; margin-inline: auto; }</style>
+  </div>
+
+</div>
+{% endcapture %}
+{% theme_render_rc 'components/atoms/card', content: card_content, variant: 'highlighted', classes: 'mb-6' %}
+

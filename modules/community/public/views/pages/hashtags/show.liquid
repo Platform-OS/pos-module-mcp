@@ -1,0 +1,26 @@
+---
+slug: hashtag/:name
+layout: modules/community/community
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: context.params.name
+  # platformos-check-enable DeprecatedTag
+
+  function hashtags = 'modules/community/queries/tags/search', name: context.params.name, limit: 1, query: null, page: null, not_ids: null, sort: null, names: null, status: null, with_creator: null
+  assign hashtag = hashtags.results.first
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: hashtag.id
+  # platformos-check-enable DeprecatedTag
+
+  unless hashtag.status == 'unpublished'
+    function list = 'modules/community/queries/activities/search_with_records', feed: 'tag-public', feed_id: hashtag.id, limit: 20, uuid: null, page: null
+  endunless
+
+  theme_render_rc 'components/templates/feed', feed_type: 'public', section: 'hashtag', hashtag: hashtag, list: list, current_profile: current_profile, profile: current_profile, context: context
+%}

@@ -1,0 +1,19 @@
+---
+slug: groups/:id/remove-admin
+method: delete
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true
+  function group = 'modules/community/queries/groups/find', id: context.params.id, with_owner: false, current_profile: current_profile, relationships: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'remove_admin', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  assign object = '{}' | parse_json | hash_merge: id: context.params.relation_id
+  function relation = 'modules/community/commands/relationships/delete', object: object, skip_execution: null
+
+  assign redirect_url = context.params.return_to | default: context.headers.HTTP_REFERER
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/redirect_to', url: redirect_url
+  # platformos-check-enable DeprecatedTag
+%}

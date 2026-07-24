@@ -1,0 +1,10 @@
+{% liquid
+  assign url = context.constants.AFTER_LOGIN_REDIRECT | default: '/'
+  function profile = 'modules/community/helpers/current_profile'
+  function can_view_admin = 'modules/user/helpers/can_do', requester: profile, do: 'admin_pages.view', entity: null, access_callback: null
+  if can_view_admin
+    assign url = '/admin'
+  endif
+
+  return url
+%}

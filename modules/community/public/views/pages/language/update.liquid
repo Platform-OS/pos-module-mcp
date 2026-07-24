@@ -1,0 +1,26 @@
+---
+slug: language/update/:language
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+
+  # platformos-check-disable MissingPartial
+  function object = 'modules/community/commands/profiles/update_language', object: context.params, profile: current_profile
+  # platformos-check-enable MissingPartial
+  assign return_to = context.params.return_to | url_decode | default: '/'
+%}
+{% if object %}
+  {%- comment -%}platformos-check-disable LiquidHTMLSyntaxError{%- endcomment -%}
+  {% try_rc %}
+    {% liquid
+      # platformos-check-disable DeprecatedTag
+      include 'modules/community/helpers/redirect_to', url: return_to
+      # platformos-check-enable DeprecatedTag
+    %}
+  {% catch err %}
+    {% liquid redirect_to "/" %}
+  {% endtry_rc %}
+  {%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}
+{% else %}
+  {% liquid log object, type: 'ERROR: language/update' %}
+{% endif %}

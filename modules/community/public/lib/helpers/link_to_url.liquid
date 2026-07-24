@@ -1,0 +1,3 @@
+{% function relative_path = 'modules/community/helpers/link_to', object: object, type: type, namespace: namespace, current_profile: current_profile, action: action, role: role, anchor: anchor, template: template %}
+{% assign url = 'https://' | append: context.location.host | append: relative_path %}
+{% return url | strip %}

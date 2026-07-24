@@ -1,0 +1,85 @@
+---
+metadata:
+  name: Breadcrumbs
+  params:
+    separator:
+    activeLastBreadcrumb:
+      - true
+      - false
+    breadcrumbs:
+      - text: Golden Platform
+        link: /goldenplatform
+      - text: Styleguide
+        link: /styleguide
+      - text: Molecules
+        link: /molecules
+      - text: Breadcrumbs
+        link: /breadcrumbs
+  styleguide:
+      - activeLastBreadcrumb: false
+        breadcrumbs:
+        - text: Golden Platform
+          link: /goldenplatform
+        - text: Styleguide
+          link: /styleguide
+        - text: Molecules
+          link: /molecules
+        - text: Breadcrumbs
+          link: /breadcrumbs
+      - activeLastBreadcrumb: true
+        breadcrumbs:
+        - text: Golden Platform
+          link: /goldenplatform
+        - text: Styleguide
+          link: /styleguide
+        - text: Molecules
+          link: /molecules
+        - text: Breadcrumbs
+          link: /breadcrumbs
+      - activeLastBreadcrumb: false
+        separator: \
+        breadcrumbs:
+        - text: Golden Platform
+          link: /goldenplatform
+        - text: Styleguide
+          link: /styleguide
+        - text: Molecules
+          link: /molecules
+        - text: Breadcrumbs
+          link: /breadcrumbs
+---
+{% liquid
+  assign breadcrumbs = breadcrumbs | parse_json | default: params.breadcrumbs | parse_json | default: '[]' | parse_json
+  assign separator = separator | default: params.separator
+  assign activeLastBreadcrumb = activeLastBreadcrumb | default: params.activeLastBreadcrumb | default: false
+%}
+
+<nav aria-label="Breadcrumb">
+  <ol class="flex list-none">
+  {% for breadcrumb in breadcrumbs %}
+    <li class="flex">
+      {% if forloop.last == false or activeLastBreadcrumb == true %}
+        {% if forloop.last == true %}
+          <a href="{{breadcrumb.link}}" aria-current="page">{{breadcrumb.text}}</a>
+        {% else %}
+          <a href="{{breadcrumb.link}}">{{breadcrumb.text}}</a>
+          <div class="flex flex-col justify-center items-center" aria-hidden="true">
+            {% if separator %}
+              <span class="mx-2 text-interactive-text">
+                {{separator}}
+              </span>
+            {% else %}
+              {% assign icon_params = '{}' | parse_json | hash_merge: name: 'dashRight', class: 'w-3 h-4 mx-2 text-interactive-text ' %}
+              {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+            {% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <span aria-current="page">
+          {{breadcrumb.text}}
+        </span>
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ol>
+</nav>

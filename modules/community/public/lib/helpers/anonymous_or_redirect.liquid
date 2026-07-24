@@ -1,0 +1,11 @@
+{% liquid
+  if profile.roles contains 'anonymous'
+    assign anonymous = true
+  endif
+  if profile and anonymous != true
+    assign return_to = return_to | default: '/feed'
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: '/dashboard', error: error
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

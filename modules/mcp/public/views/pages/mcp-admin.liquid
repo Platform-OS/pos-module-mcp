@@ -1,0 +1,485 @@
+---
+slug: mcp-admin
+layout: ''
+---
+{%- comment -%}
+  MCP operator console (spec §20). Admin-gated ledger view + observability. The
+  ledger is the audit surface; this page reads it, never mutates it.
+
+  ACCESS: operators are an explicit allowlist in MCP_ADMIN_USER_IDS (same rule as
+  the admin_only tool policy). A non-operator (or anonymous) request gets 403 and
+  no data — the gate runs BEFORE any query. Session identity is context.current_user
+  (browser login), distinct from the bearer identity used by the /mcp API.
+
+  LAYOUT: sections are organised into CSS-only tabs (radio "checkbox hack" — NO
+  client JS, preserving the JS-free control-plane posture). Pure tab clicks toggle
+  panels with no reload and no scroll jump. Reloads that DO happen (ledger filter,
+  security lens, POST redirects) carry ?tab= so the correct tab is re-selected
+  server-side; every panel starts at the top, so there is no long scroll to lose.
+
+  Structural HTML is literal template (rendered raw). All ledger values are emitted
+  through {{ }}, which HTML-escapes them (escape_output_instead_of_sanitize) — a
+  deliberate XSS defense, since some fields (agent_id, tool_name) are agent-influenced.
+{%- endcomment -%}
+{%- liquid
+  function is_admin = 'modules/mcp/commands/is_operator'
+
+  unless is_admin
+    response_status 403
+  endunless
+
+  if is_admin
+    function m = 'modules/mcp/commands/observability/metrics'
+    graphql search = 'modules/mcp/ledger/search', tool_name: context.params.tool_name, principal_id: context.params.principal_id, client_id: context.params.client_id, authz_decision: context.params.authz_decision, execution_outcome: context.params.execution_outcome, page: 1, per_page: 50
+    assign rows = search.records.results
+    graphql pending_res = 'modules/mcp/approvals/list', status: 'pending', per_page: 50
+    assign pending = pending_res.records.results
+    graphql eval_res = 'modules/mcp/eval/runs_latest', per_page: 1
+    assign latest_eval = eval_res.records.results.first
+    graphql access_res = 'modules/mcp/access/list', per_page: 200
+    assign access_rows = access_res.records.results
+    function registry = 'modules/mcp/commands/registry/load'
+    function cfg = 'modules/mcp/commands/config'
+
+    # Active tab (persisted across reloads via ?tab=). Fail back to overview for any
+    # unknown value so a panel is always shown.
+    assign valid_tabs = 'overview,approvals,tokens,ledger,config' | split: ','
+    assign active_tab = context.params.tab | default: 'overview'
+    unless valid_tabs contains active_tab
+      assign active_tab = 'overview'
+    endunless
+
+    # Active bearer tokens (operator kill-switch + abuse watchlist). One rate_counter
+    # fetch (the table is short-lived / small) reconstructs each principal's current
+    # abuse-window violation count without an N+1 per-token lookup.
+    graphql tokens_res = 'modules/mcp/tokens/list_all', per_page: 200
+    assign tokens = tokens_res.records.results
+    graphql rc_res = 'modules/mcp/rate/all', per_page: 500
+    assign now_unix = 'now' | to_time | strftime: '%s' | plus: 0
+    assign abuse_win = cfg.defaults.abuse_window_seconds | plus: 0
+    assign cur_window = 0
+    if abuse_win > 0
+      assign cur_window = now_unix | divided_by: abuse_win
+    endif
+    assign abuse_map = '{}' | parse_json
+    for rc in rc_res.records.results
+      hash_assign abuse_map[rc.key] = rc.count
+    endfor
+    assign abuse_threshold = cfg.defaults.abuse_threshold | plus: 0
+    assign half_threshold = 1
+    if abuse_threshold > 0
+      assign half_threshold = abuse_threshold | divided_by: 2
+    endif
+
+    # Per-principal pending-approval counts, for the bulk-drain control.
+    assign pending_by_pid = '{}' | parse_json
+    for a in pending
+      assign prev_p = pending_by_pid[a.principal_id] | default: 0
+      hash_assign pending_by_pid[a.principal_id] = prev_p | plus: 1
+    endfor
+
+    # Preserve the active ledger filter across the export link (values url-encoded).
+    assign v_tool = context.params.tool_name | url_encode
+    assign v_prin = context.params.principal_id | url_encode
+    assign v_client = context.params.client_id | url_encode
+    assign v_authz = context.params.authz_decision | url_encode
+    assign v_outcome = context.params.execution_outcome | url_encode
+    assign export_qs = 'tool_name=' | append: v_tool | append: '&principal_id=' | append: v_prin | append: '&client_id=' | append: v_client | append: '&authz_decision=' | append: v_authz | append: '&execution_outcome=' | append: v_outcome | append: '&tab=ledger'
+  endif
+-%}
+{%- if is_admin == false -%}
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Forbidden</title></head>
+<body style="font-family:system-ui;max-width:40rem;margin:4rem auto;padding:0 1rem">
+  <h1>403 — Operators only</h1>
+  <p>The MCP operator console requires an account listed in <code>MCP_ADMIN_USER_IDS</code>.</p>
+</body></html>
+{%- else -%}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCP Operator Console</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #0b0e14; color: #e6e6e6; }
+  .wrap { max-width: 72rem; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+  .topbar { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: .9rem; }
+  h1 { font-size: 1.15rem; margin: 0; letter-spacing: .01em; }
+  h2 { font-size: 1rem; color: #b7c0d0; margin: 0 0 .75rem; }
+  .banner { padding: .5rem .85rem; border-radius: .5rem; font-weight: 600; font-size: .85rem; flex: 1; min-width: 16rem; }
+  .ok { background: #0f3d2e; color: #7ee2b8; }
+  .bad { background: #4d1113; color: #ffb4b4; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; margin-bottom: 1.5rem; }
+  .card { background: #141a24; border: 1px solid #232b38; border-radius: .6rem; padding: .85rem 1rem; transition: border-color .15s ease; }
+  .card:hover { border-color: #34405420; }
+  .card .n { font-size: 1.6rem; font-weight: 700; }
+  .card .l { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: #8a94a6; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  th, td { text-align: left; padding: .45rem .55rem; border-bottom: 1px solid #232b38; white-space: nowrap; }
+  th { color: #8a94a6; font-weight: 600; }
+  tbody tr { transition: background .1s ease; }
+  tbody tr:hover { background: #10151f; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .tbl-wrap { overflow-x: auto; border: 1px solid #232b38; border-radius: .6rem; }
+  .pill { padding: .1rem .45rem; border-radius: 1rem; font-size: .72rem; }
+  .allow { background: #123a2a; color: #7ee2b8; } .deny { background: #4d1113; color: #ffb4b4; }
+  .success { color: #7ee2b8; } .denied, .error, .invalid { color: #ffb4b4; }
+  .kv { display: inline-block; margin-right: 1.25rem; font-size: .8rem; color: #b7c0d0; }
+  .kv b { color: #e6e6e6; }
+  .btn { font: inherit; border-radius: .4rem; padding: .3rem .8rem; cursor: pointer; border: 1px solid #3a4a63; background: #1a2436; color: #e6e6e6; transition: background .12s ease, border-color .12s ease; }
+  .btn:hover { background: #22304a; }
+  .btn-ok { border-color: #2f7a55; background: #123a2a; color: #7ee2b8; }
+  .btn-ok:hover { background: #164e39; }
+  .btn-danger { border-color: #a33; background: #2a1113; color: #ffb4b4; }
+  .btn-danger:hover { background: #3a171a; }
+  .field { font: inherit; padding: .35rem .45rem; border-radius: .4rem; border: 1px solid #232b38; background: #0b0e14; color: #e6e6e6; }
+  .muted { color: #8a94a6; }
+  .inline-actions { display: flex; gap: .4rem; }
+  /* CSS-only tabs (radio hack — no JS). */
+  input.tabin { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+  .tabnav { position: sticky; top: 0; z-index: 20; display: flex; gap: .1rem; flex-wrap: wrap; background: #0b0e14; border-bottom: 1px solid #232b38; margin: 0 0 1.5rem; }
+  .tabnav label { padding: .55rem .95rem; cursor: pointer; color: #8a94a6; font-size: .82rem; font-weight: 600; border-bottom: 2px solid transparent; transition: color .15s ease, border-color .15s ease; white-space: nowrap; }
+  .tabnav label:hover { color: #e6e6e6; }
+  .tabnav .badge { display: inline-block; margin-left: .35rem; background: #4a3a12; color: #ffcf7e; border-radius: 1rem; padding: 0 .4rem; font-size: .7rem; font-weight: 700; }
+  .panel { display: none; }
+  #tab-overview:checked ~ .tabnav label[for="tab-overview"],
+  #tab-approvals:checked ~ .tabnav label[for="tab-approvals"],
+  #tab-tokens:checked ~ .tabnav label[for="tab-tokens"],
+  #tab-ledger:checked ~ .tabnav label[for="tab-ledger"],
+  #tab-config:checked ~ .tabnav label[for="tab-config"] { color: #e6e6e6; border-bottom-color: #7ee2b8; }
+  #tab-overview:checked ~ .panels #p-overview,
+  #tab-approvals:checked ~ .panels #p-approvals,
+  #tab-tokens:checked ~ .panels #p-tokens,
+  #tab-ledger:checked ~ .panels #p-ledger,
+  #tab-config:checked ~ .panels #p-config { display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>MCP Operator Console</h1>
+    {%- if m.chain.ok -%}
+      <div class="banner ok">&#10003; Ledger chain verified — {{ m.chain.count }} entries intact.</div>
+    {%- else -%}
+      <div class="banner bad">&#10007; LEDGER CHAIN BROKEN at seq {{ m.chain.broken_at }} — {{ m.chain.reason }}. Investigate immediately.</div>
+    {%- endif -%}
+  </div>
+
+  <input class="tabin" type="radio" name="tabs" id="tab-overview"{% if active_tab == 'overview' %} checked{% endif %}>
+  <input class="tabin" type="radio" name="tabs" id="tab-approvals"{% if active_tab == 'approvals' %} checked{% endif %}>
+  <input class="tabin" type="radio" name="tabs" id="tab-tokens"{% if active_tab == 'tokens' %} checked{% endif %}>
+  <input class="tabin" type="radio" name="tabs" id="tab-ledger"{% if active_tab == 'ledger' %} checked{% endif %}>
+  <input class="tabin" type="radio" name="tabs" id="tab-config"{% if active_tab == 'config' %} checked{% endif %}>
+
+  <nav class="tabnav">
+    <label for="tab-overview">Overview</label>
+    <label for="tab-approvals">Approvals{%- if pending.size > 0 -%}<span class="badge">{{ pending.size }}</span>{%- endif -%}</label>
+    <label for="tab-tokens">Tokens &amp; access</label>
+    <label for="tab-ledger">Ledger</label>
+    <label for="tab-config">Tools &amp; config</label>
+  </nav>
+
+  <div class="panels">
+
+  <section class="panel" id="p-overview">
+    <div class="cards">
+      <div class="card"><div class="n">{{ m.total }}</div><div class="l">Total calls</div></div>
+      <div class="card"><div class="n">{{ m.blocked }}</div><div class="l">Blocked ({{ m.blocked_rate | times: 100 | round: 1 }}%)</div></div>
+      <div class="card" title="policy denials · schema/arg rejections · rate-limits">
+        <div class="n" style="font-size:1rem;line-height:1.5">{{ m.denials }} deny · {{ m.schema_rejections }} bad-args · {{ m.rate_limited }} rate</div>
+        <div class="l">Blocked breakdown</div></div>
+      <div class="card"{% if m.suspends != '0' and m.suspends != 0 %} style="border-color:#a33;background:#2a1113"{% endif %}><div class="n"{% if m.suspends != '0' and m.suspends != 0 %} style="color:#ffb4b4"{% endif %}>{{ m.suspends }}</div><div class="l">Auto-suspends</div></div>
+      <div class="card" title="approval-queue flood control — throttled (cap hit) · duplicate (same args hash)">
+        <div class="n" style="font-size:1rem;line-height:1.5">{{ m.by_outcome['approval_throttled'] | default: 0 }} throttled · {{ m.by_outcome['approval_duplicate'] | default: 0 }} dup</div>
+        <div class="l">Approval queue</div></div>
+      <div class="card"><div class="n">{{ m.rollbacks }}</div><div class="l">Rollbacks</div></div>
+      <div class="card"><div class="n">{%- if m.latency.available == false -%}—{%- else -%}{{ m.latency.p95_ms }}<span style="font-size:.9rem">ms</span>{%- endif -%}</div><div class="l">p95 latency</div></div>
+    </div>
+
+    <div style="margin-bottom:1.25rem">
+      {%- for pair in m.by_tool -%}
+        <span class="kv"><b>{{ pair[1] }}</b> {{ pair[0] }}</span>
+      {%- endfor -%}
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <div class="l" style="margin:0">Tool-surface eval</div>
+        {%- if latest_eval -%}
+          {%- assign ef = latest_eval.failed | plus: 0 -%}
+          {%- if ef == 0 -%}
+            <span class="pill allow">✓ {{ latest_eval.passed }}/{{ latest_eval.total }} passed</span>
+          {%- else -%}
+            <span class="pill deny">✗ {{ ef }} failed / {{ latest_eval.total }}</span>
+          {%- endif -%}
+          <span class="muted" style="font-size:.78rem">{{ latest_eval.occurred_at }}</span>
+        {%- else -%}
+          <span class="muted" style="font-size:.8rem">never run</span>
+        {%- endif -%}
+        <form method="post" action="/mcp-admin/eval" style="margin-left:auto">
+          <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+          <button type="submit" class="btn">Run eval</button>
+        </form>
+      </div>
+      {%- if latest_eval and latest_eval.failed != '0' and latest_eval.failures_json != blank -%}
+        {%- assign fails = latest_eval.failures_json | parse_json -%}
+        <ul style="margin:.6rem 0 0;padding-left:1.1rem;color:#ffb4b4;font-size:.82rem">
+          {%- for f in fails -%}
+            <li><b>{{ f.check }}</b> · {{ f.target }} — {{ f.detail }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+      {%- if latest_eval and latest_eval.warnings_json != blank and latest_eval.warnings_json != '[]' -%}
+        {%- assign warns = latest_eval.warnings_json | parse_json -%}
+        {%- if warns.size > 0 -%}
+        <div style="margin-top:.5rem;color:#ffcf7e;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em">Hygiene ({{ warns.size }} advisory)</div>
+        <ul style="margin:.25rem 0 0;padding-left:1.1rem;color:#ffcf7e;font-size:.82rem">
+          {%- for w in warns -%}
+            <li><b>{{ w.check }}</b> · {{ w.tool }}.{{ w.field }} — {{ w.detail }}</li>
+          {%- endfor -%}
+        </ul>
+        {%- endif -%}
+      {%- endif -%}
+    </div>
+  </section>
+
+  <section class="panel" id="p-approvals">
+    <h2>Pending approvals ({{ pending.size }})</h2>
+    {%- if pending.size > 0 -%}
+    {%- assign has_drain = false -%}
+    {%- for pair in pending_by_pid -%}{%- if pair[1] > 1 -%}{%- assign has_drain = true -%}{%- endif -%}{%- endfor -%}
+    {%- if has_drain -%}
+    <div style="margin-bottom:.6rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+      <span class="muted" style="font-size:.8rem">Queue drain:</span>
+      {%- for pair in pending_by_pid -%}{%- if pair[1] > 1 -%}
+      <form method="post" action="/mcp-admin/reject-principal" onsubmit="return confirm('Reject ALL {{ pair[1] }} pending proposals from {{ pair[0] }}?')" style="display:inline">
+        <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+        <input type="hidden" name="principal_id" value="{{ pair[0] }}">
+        <button type="submit" class="btn btn-danger" style="padding:.2rem .55rem;font-size:.76rem">Reject all {{ pair[1] }} from {{ pair[0] }}</button>
+      </form>
+      {%- endif -%}{%- endfor -%}
+    </div>
+    {%- endif -%}
+    <div class="tbl-wrap" style="border-color:#5a4a1a">
+      <table>
+        <thead><tr><th>tool</th><th>requested by</th><th>principal</th><th>requested</th><th></th></tr></thead>
+        <tbody>
+        {%- for a in pending -%}
+          <tr>
+            <td><b>{{ a.tool_name }}</b></td>
+            <td>{{ a.requested_by_agent }}</td>
+            <td>{{ a.principal_id }}</td>
+            <td>{{ a.created_at }}</td>
+            <td class="inline-actions">
+              <form method="post" action="/mcp-admin/approve" onsubmit="return confirm('Approve and EXECUTE this action as {{ a.principal_id }}?')">
+                <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+                <input type="hidden" name="handle" value="{{ a.handle }}">
+                <button type="submit" class="btn btn-ok" style="padding:.25rem .7rem">Approve</button>
+              </form>
+              <form method="post" action="/mcp-admin/reject" onsubmit="return confirm('Reject this action?')">
+                <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+                <input type="hidden" name="handle" value="{{ a.handle }}">
+                <button type="submit" class="btn btn-danger" style="padding:.25rem .7rem">Reject</button>
+              </form>
+            </td>
+          </tr>
+        {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+    {%- else -%}
+    <p class="muted" style="font-size:.85rem">No actions are awaiting approval. Approval-gated tools land here for a decision.</p>
+    {%- endif -%}
+  </section>
+
+  <section class="panel" id="p-tokens">
+    <h2>Active bearer tokens ({{ tokens.size }})</h2>
+    <div class="tbl-wrap" style="margin-bottom:1.75rem">
+      <table>
+        <thead><tr><th>label / agent</th><th>principal</th><th>status</th><th>last used</th><th title="policy violations in the current abuse window; the token auto-suspends at the threshold">violations</th><th></th></tr></thead>
+        <tbody>
+        {%- for t in tokens -%}
+          {%- assign akey = 'abuse:user:' | append: t.user_id | append: ':' | append: cur_window -%}
+          {%- assign viol = abuse_map[akey] | default: 0 | plus: 0 -%}
+          <tr>
+            <td><b>{{ t.label }}</b></td>
+            <td>user:{{ t.user_id }}</td>
+            <td>{%- if t.status == 'active' -%}<span class="pill allow">active</span>{%- else -%}<span class="pill deny">{{ t.status }}</span>{%- endif -%}</td>
+            <td>{%- if t.last_used_at -%}{{ t.last_used_at }}{%- else -%}<span class="muted">never</span>{%- endif -%}</td>
+            <td>{%- if viol > 0 -%}{%- assign risky = false -%}{%- if viol >= half_threshold -%}{%- assign risky = true -%}{%- endif -%}<span class="pill{% if risky %} deny{% endif %}">{{ viol }} / {{ abuse_threshold }}</span>{%- else -%}<span class="muted">0</span>{%- endif -%}</td>
+            <td>
+              {%- if t.status == 'active' -%}
+              <form method="post" action="/mcp-admin/token-revoke" onsubmit="return confirm('Revoke this token for principal user:{{ t.user_id }}? The agent using it loses access immediately.')" style="display:inline">
+                <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+                <input type="hidden" name="id" value="{{ t.id }}">
+                <button type="submit" class="btn btn-danger" style="padding:.2rem .55rem;font-size:.76rem">Revoke</button>
+              </form>
+              {%- else -%}<span class="muted">&mdash;</span>{%- endif -%}
+            </td>
+          </tr>
+        {%- endfor -%}
+        {%- if tokens.size == 0 -%}<tr><td colspan="6" class="muted">No tokens minted.</td></tr>{%- endif -%}
+        </tbody>
+      </table>
+    </div>
+
+    {%- assign reqcount = 0 -%}
+    {%- for a in access_rows -%}{%- if a.status == 'requested' -%}{%- assign reqcount = reqcount | plus: 1 -%}{%- endif -%}{%- endfor -%}
+
+    <h2>MCP access</h2>
+    {%- if reqcount > 0 -%}
+    <div class="tbl-wrap" style="margin-bottom:1rem;border-color:#5a4a1a">
+      <table>
+        <thead><tr><th>access requested</th><th>user id</th><th></th></tr></thead>
+        <tbody>
+        {%- for a in access_rows -%}{%- if a.status == 'requested' -%}
+          <tr>
+            <td>{{ a.email }}</td><td>{{ a.user_id }}</td>
+            <td class="inline-actions">
+              <form method="post" action="/mcp-admin/access">
+                <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+                <input type="hidden" name="decision" value="approve"><input type="hidden" name="user_id" value="{{ a.user_id }}"><input type="hidden" name="email" value="{{ a.email }}">
+                <button type="submit" class="btn btn-ok" style="padding:.25rem .7rem">Approve</button>
+              </form>
+              <form method="post" action="/mcp-admin/access">
+                <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+                <input type="hidden" name="decision" value="reject"><input type="hidden" name="user_id" value="{{ a.user_id }}"><input type="hidden" name="email" value="{{ a.email }}">
+                <button type="submit" class="btn btn-danger" style="padding:.25rem .7rem">Reject</button>
+              </form>
+            </td>
+          </tr>
+        {%- endif -%}{%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+    {%- endif -%}
+    <div class="tbl-wrap" style="margin-bottom:.75rem">
+      <table>
+        <thead><tr><th>member</th><th>role</th><th></th></tr></thead>
+        <tbody>
+        {%- for a in access_rows -%}{%- if a.status == 'active' -%}
+          <tr>
+            <td>{{ a.email }} <span class="muted">· {{ a.user_id }}</span></td>
+            <td><span class="pill {% if a.role == 'admin' %}allow{% endif %}">{{ a.role }}</span></td>
+            <td class="inline-actions">
+              {%- unless a.role == 'admin' -%}<form method="post" action="/mcp-admin/access"><input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}"><input type="hidden" name="decision" value="make_admin"><input type="hidden" name="user_id" value="{{ a.user_id }}"><input type="hidden" name="email" value="{{ a.email }}"><button type="submit" class="btn" style="padding:.2rem .55rem;font-size:.76rem">Make admin</button></form>{%- endunless -%}
+              {%- unless a.role == 'user' -%}<form method="post" action="/mcp-admin/access"><input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}"><input type="hidden" name="decision" value="make_user"><input type="hidden" name="user_id" value="{{ a.user_id }}"><input type="hidden" name="email" value="{{ a.email }}"><button type="submit" class="btn" style="padding:.2rem .55rem;font-size:.76rem">Make user</button></form>{%- endunless -%}
+              <form method="post" action="/mcp-admin/access" onsubmit="return confirm('Revoke access for {{ a.email }}?')"><input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}"><input type="hidden" name="decision" value="revoke"><input type="hidden" name="user_id" value="{{ a.user_id }}"><input type="hidden" name="email" value="{{ a.email }}"><button type="submit" class="btn btn-danger" style="padding:.2rem .55rem;font-size:.76rem">Revoke</button></form>
+            </td>
+          </tr>
+        {%- endif -%}{%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+    <form method="post" action="/mcp-admin/access" style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+      <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+      <input type="hidden" name="decision" value="make_user">
+      <input type="text" name="user_id" placeholder="user id" class="field" style="width:7rem">
+      <input type="text" name="email" placeholder="email (optional)" class="field" style="width:12rem">
+      <button type="submit" class="btn">Grant user access</button>
+    </form>
+  </section>
+
+  <section class="panel" id="p-ledger">
+    <h2>Recent ledger</h2>
+    <form method="get" action="/mcp-admin" style="margin-bottom:.5rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+      <input type="hidden" name="tab" value="ledger">
+      <input type="text" name="tool_name" value="{{ context.params.tool_name }}" placeholder="tool" class="field" style="width:8rem">
+      <input type="text" name="principal_id" value="{{ context.params.principal_id }}" placeholder="principal (user:ID)" class="field" style="width:10rem">
+      <input type="text" name="execution_outcome" value="{{ context.params.execution_outcome }}" placeholder="outcome" class="field" style="width:9rem">
+      <select name="authz_decision" class="field">
+        <option value="">any authz</option>
+        <option value="allow"{% if context.params.authz_decision == 'allow' %} selected{% endif %}>allow</option>
+        <option value="deny"{% if context.params.authz_decision == 'deny' %} selected{% endif %}>deny</option>
+      </select>
+      <button type="submit" class="btn">Apply</button>
+      <a href="/mcp-admin?tab=ledger" class="muted" style="font-size:.8rem;padding:.3rem;text-decoration:none">Clear</a>
+      <a href="/mcp-admin/ledger-export.json?{{ export_qs }}" class="btn btn-ok" style="margin-left:auto;font-size:.8rem;padding:.3rem .6rem;text-decoration:none">Export JSON</a>
+    </form>
+    <div style="margin-bottom:.6rem;font-size:.78rem" class="muted">
+      Security lens:
+      <a href="/mcp-admin?tab=ledger&authz_decision=deny" style="color:#ffb4b4">denials</a> ·
+      <a href="/mcp-admin?tab=ledger&execution_outcome=suspended" style="color:#ffb4b4">suspends</a> ·
+      <a href="/mcp-admin?tab=ledger&execution_outcome=approval_throttled" style="color:#ffcf7e">throttled</a> ·
+      <a href="/mcp-admin?tab=ledger&execution_outcome=approval_duplicate" style="color:#ffcf7e">duplicates</a> ·
+      <a href="/mcp-admin?tab=ledger&execution_outcome=rolled_back" style="color:#ffcf7e">rollbacks</a>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>seq</th><th>time</th><th>method</th><th>tool</th><th>ver</th>
+          <th>principal</th><th>agent</th><th>policy</th><th>authz</th><th>outcome</th><th>subject</th>
+        </tr></thead>
+        <tbody>
+        {%- for r in rows -%}
+          <tr>
+            <td>{{ r.seq }}</td>
+            <td>{{ r.occurred_at }}</td>
+            <td>{{ r.method }}</td>
+            <td>{{ r.tool_name }}</td>
+            <td>{{ r.tool_version }}</td>
+            <td>{{ r.principal_id }}</td>
+            <td>{{ r.agent_id }}</td>
+            <td>{{ r.authz_policy }}</td>
+            <td>{%- if r.authz_decision == 'allow' -%}<span class="pill allow">allow</span>{%- elsif r.authz_decision == 'deny' -%}<span class="pill deny">deny</span>{%- else -%}{{ r.authz_decision }}{%- endif -%}</td>
+            <td class="{{ r.execution_outcome }}">{{ r.execution_outcome }}</td>
+            <td>{%- if r.subject_type -%}{{ r.subject_type }}:{{ r.subject_id }}{%- endif -%}</td>
+          </tr>
+        {%- endfor -%}
+        {%- if rows.size == 0 -%}<tr><td colspan="11" class="muted">No ledger entries match the current filter.</td></tr>{%- endif -%}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="p-config">
+    <h2>Registered tools ({{ registry.count }})</h2>
+    <div class="tbl-wrap" style="margin-bottom:1.75rem">
+      <table>
+        <thead><tr><th>tool</th><th>ver</th><th>mutating</th><th>approval</th><th>policy</th></tr></thead>
+        <tbody>
+        {%- for t in registry.tools -%}
+          <tr>
+            <td><b>{{ t.name }}</b></td>
+            <td>{{ t.version }}</td>
+            <td>{% if t.mutating %}<span class="pill deny">write</span>{% else %}<span class="muted">read</span>{% endif %}</td>
+            <td>{% if t.requires_approval %}<span class="pill" style="background:#4a3a12;color:#ffcf7e">required</span>{% else %}—{% endif %}</td>
+            <td>{{ t.authorization_policy }}</td>
+          </tr>
+        {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+    {%- if registry.excluded.size > 0 -%}
+    <p style="color:#ffb4b4;font-size:.85rem">Excluded manifests (not served):</p>
+    <ul style="color:#ffb4b4;font-size:.82rem">
+      {%- for e in registry.excluded -%}<li><b>{{ e.name }}</b> — {{ e.errors | join: '; ' }}</li>{%- endfor -%}
+    </ul>
+    {%- endif -%}
+
+    <h2>Effective configuration</h2>
+    <div class="tbl-wrap">
+      <table>
+        <tbody>
+          <tr><td class="muted">rate limit / min</td><td>{{ cfg.defaults.rate_limit_per_min }}</td></tr>
+          <tr><td class="muted">abuse threshold / window</td><td>{{ cfg.defaults.abuse_threshold }} violations in {{ cfg.defaults.abuse_window_seconds }}s</td></tr>
+          <tr><td class="muted">approval window</td><td>{{ cfg.defaults.approval_window_seconds }}s</td></tr>
+          <tr><td class="muted">max pending approvals / principal</td><td>{{ cfg.defaults.approval_max_pending_per_principal }}</td></tr>
+          <tr><td class="muted">max input bytes</td><td>{{ cfg.defaults.max_input_bytes }}</td></tr>
+          <tr><td class="muted">request timeout</td><td>{{ cfg.defaults.timeout_ms }}ms</td></tr>
+          <tr><td class="muted">ledger retention</td><td>{{ cfg.ledger.retention_days }} days</td></tr>
+          <tr><td class="muted">markdown resources</td><td>{%- if cfg.resources.expose_markdown_pages -%}on ({{ cfg.resources.markdown_page_prefixes | join: ', ' }}){%- else -%}off{%- endif -%}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  </div>
+</div>
+</body>
+</html>
+{%- endif -%}

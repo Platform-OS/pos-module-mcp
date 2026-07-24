@@ -1,0 +1,58 @@
+{%  liquid
+  assign profiles_selected = '[]' | parse_json
+  assign existing_profile_ids = '[]' | parse_json
+
+  assign limit = emails.size | to_positive_integer: 1
+  function profiles = 'modules/user/queries/profiles/search', limit: limit, emails: emails, uuid: null, page: null, sort: null, not_ids: null, first_name: null, last_name: null, id: null, ids: null, user_id: null, query: null
+  for email in emails
+    assign profile = profiles.results | detect: email: email
+
+    unless profile
+      function user = 'modules/community/commands/users/invites/create', email: email
+      unless user.valid
+        log user, type: 'ERROR: could not create user:'
+      endunless
+      function profile = 'modules/user/commands/profiles/create_proxy', object: user
+      unless profile.valid
+        log profile, type: 'ERROR: could not create profile:'
+      endunless
+
+      assign event_payload = null | hash_merge: inviting_profile_id: current_profile.id, group_id: group.id, invited_profile_id: profile.id, host: context.location.host
+      function _ = 'modules/core/commands/events/publish', type: 'group_account_for_invite_created', object: event_payload, delay: 0, max_attempts: null
+    else
+      assign existing_profile_ids = existing_profile_ids | add_to_array: profile.id
+    endunless
+
+    assign profiles_selected = profiles_selected | add_to_array: profile
+  endfor
+
+  function invites = 'modules/community/commands/groups/invite_many/create/build', profiles: profiles_selected, group_id: group.id, inviting_profile: current_profile
+  function invites = 'modules/community/commands/groups/invite_many/create/check', invites: invites
+  unless invites.valid
+    log invites.errors, type: 'ERROR: group invites validation'
+
+    return invites
+  endunless
+
+  for invite in invites.items
+    function rel = 'modules/community/commands/relationships/find_or_create', object: invite
+
+    if rel.created
+      assign event_payload = null | hash_merge: inviting_profile_id: current_profile.id, group_id: group.id, invited_profile_id: invite.l_id, relationship_id: rel.id, host: context.location.host
+      function _ = 'modules/core/commands/events/publish', type: 'group_invite_created', object: event_payload, delay: 0, max_attempts: null
+
+      if existing_profile_ids contains invite.l_id
+        function _ = 'modules/core/commands/events/publish', type: 'group_invite_created_for_existing_profile', object: event_payload, delay: 0, max_attempts: null
+      endif
+
+      assign event_payload = null | hash_merge: l_id: invite.l_id, r_id: invite.r_id, relationship_id: rel.id
+      function _ = 'modules/core/commands/events/publish', type: 'relationship_created', object: event_payload, delay: 0, max_attempts: null
+    endif
+
+    unless rel.valid
+      log rel, 'ERROR: something wrong with invite'
+    endunless
+  endfor
+
+  return invites
+%}

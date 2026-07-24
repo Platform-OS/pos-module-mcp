@@ -1,0 +1,13 @@
+---
+slug: groups.frame
+layout: ''
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+
+  function filters = 'modules/community/queries/groups/filters', params: context.params
+  function list = 'modules/community/queries/groups/search', limit: 6, page: filters.page, keyword: filters.keyword, sort: filters.sort, meta_visible: 'anonymous', current_profile: current_profile, owner_id: null, relation_name: null, not_name: null, not_type: null, not_ids: null, ask_to_join: null, with_owner: null, id: null
+
+  theme_render_rc 'components/organisms/group-list', list: list, filters: filters
+%}

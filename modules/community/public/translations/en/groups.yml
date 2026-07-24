@@ -1,0 +1,218 @@
+---
+en:
+  groups:
+    index:
+      empty:
+        title: There are no groups to show
+        desc:
+          You can create a new group if there are none that fits your interests
+          or adjust the filters to see more.
+        cta: Create a group
+    profiles:
+      empty:
+        title: This user is not a member of any group.
+        desc: Check back later, or explore their profile for more information.
+    results:
+      one: result
+      other: results
+    content:
+      form:
+        subtitle: Original post
+    invites:
+      sent: Invitations have been sent.
+      info: you have been invited by %{name} at %{at}
+      index:
+        header: Invite new member
+        summary: |-
+          Invite new members to join this group by entering their name or email address.
+          We'll send them a notification so they can decide whether to join.
+        email: Name or email address
+        add_more: Add more email addresses
+        send: Send invite
+        cancel: Cancel
+    filters:
+      sort_by: Sort by
+      time_asc: Sort by Created (old)
+      time_desc: Sort by Created (new)
+      filter_by_hashtags: Filter by topics
+      search: Search group
+      topics: Topics
+      select: Select
+    no_items: There are currently no posts to display.
+    no_members_found: This group has no members
+    cannot_see_content:
+      You are not allowed to browse this group content until you
+      are a member. Please request group membership
+    no_invitations_found: This group has no pending invitations
+    no_groups_found:
+      Join groups below or create your own based on your special
+      interest.
+    group_is: "Group is %{group_type}."
+    list: Groups
+    group: Group
+    my_groups: Groups
+    suggested_groups: Suggested groups
+    owner: Owner
+    created: Created
+    description: Description
+    code_of_conduct: Rules
+    members:
+      one: Member
+      other: Members
+    view_all: View all
+    name: Name
+    picture: Picture
+    summary: Summary
+    actions: Actions
+    add: Add group
+    deleted: Group has been deleted
+    marked_as_featured: Group has been marked as featured
+    unmarked_as_featured: Group has been unmarked as featured
+    feature_failed: Group could not be featured
+    new: New
+    new_group: Create a group
+    edit: "Edit Group: "
+    empty_state: You haven’t added any groups yet. <br> Create your first one now!
+    join: Join
+    join_button:
+      anonymous: Join
+      member: Ask to join
+    accept_and_join:
+      anonymous: Accept invite
+      member: Accept invite
+    invite: Invite
+    invite_new_member: Invite new member
+    already_joined: Already joined
+    joined: Joined group
+    left: You have left the group
+    leave: Leave group
+    reject: Reject invitation
+    rejected: Rejected invitation
+    permissions_explanation:
+      intro:
+        Choose what and which users will able to see and do in regards to this
+        group.
+      ask_to_join: Non-members <b>%{can}</b> ask to join this group
+      meta_visible: can see groups's metadata
+      content_visible: can see group's content
+      approve_request: can approve new members
+      post_content: can post content to this group
+      add_comments: can add comments to posts in this group
+      invite_member: can invite new members
+    content_types_explanation:
+      intro: Choose what kind of content will be posted on your group.
+      commentable: Users <b>%{can}</b> comment posts
+      replyable: Users <b>%{can}</b> reply to posts
+      votable: Users <b>%{can}</b> vote on posts
+      followable: Users <b>%{can}</b> follow posts
+      featurable: Users <b>%{can}</b> mark posts as featured
+      true: can
+      false: cannot
+    nav:
+      activity: Activity Feed
+      about: About
+      members: Members
+      group_type: "%{type} group"
+      created: Created
+      admins: Admin(s)
+      group_edit: Group edit
+      user_management: User management
+      invites: Invite new members
+    relationships:
+      manage_group: Manage group
+      l_accepted_at: Joined
+      r_accepted_at: Accepted
+      admins: Admins
+      general_members: General members
+      pending: Membership is pending approval
+      accept: Accept request
+      accepted: Accepted
+      approved: Accepted
+      failed_to_accept: Failed to accept
+      members_count:
+        other: Members (%{count} people)
+        one: Member (%{count} person)
+      admins_count:
+        other: Admins (%{count} people)
+        one: Admin (%{count} person)
+      remove_from_group: Remove from group
+    form:
+      group_edit: Basic information
+      group_edit_subtitle:
+        Your group description is a great chance to set the first
+        impression for new members.  Please explain the intent of your group clearly
+        to help new members understand how to best contribute and engage.
+      name: Group name
+      name_tip: Use maximum of 100 characters.
+      privacy: Group privacy
+      category: Related Community
+      category_tip: Select one of your communities that this group relates to.
+      content_type: Content type
+      content_types:
+        question: Question
+        post: Post
+        announcement: Announcement
+      content: Content
+      summary: Short description
+      summary_tip:
+        Describe in a sentence what your group is about. Use maximum of 100 characters.
+      photo: Cover picture
+      photo_desc:
+        Must be a .jpg, .png or .webp file smaller than 2 MB. Use only
+        free images.
+      description: Description
+      description_tip: Describe the purpose of your group in detail.
+      code_of_conduct: Rules
+      code_of_conduct_tip:
+        Describe the code of conduct that helps the group members
+        what is the accepted behaviour.
+      submit: Create group
+      update: Update group info
+      tags: Tags
+      tags_help: Select topics from the list to categorise your group.
+      chars: characters left.
+    errors:
+      description_too_short:
+        Description is too short, it has to be longer than
+        %{size} chars
+      description_too_long:
+        Description is too long, it has to be shorter than
+        %{size} chars
+      summary_too_short:
+        Short description is too short, it has to be longer than
+        %{size} chars
+      summary_too_long:
+        Short description is too long, it has to be shorter than
+        %{size} chars
+      at_least_one_conent_type: choose at least one content type
+    content_empty_state:
+      title: There is no content in this group yet
+      subtitle: You can contribute to the group by adding new content
+      add_content: Add content
+    types:
+      public: Public
+      public_desc:
+        Anyone can join the group, see members and previous content. Members can post and invite other members.
+      moderated: Moderated
+      moderated_desc: Anyone can request to join the group, see members and previous content. Members can post and invite other members.
+      secret: Secret
+      secret_desc:
+        Users can join the group through invite only. The group is invisible to users who are not member of this group.
+      private: Private
+      private_desc:
+        Anyone can request to join the group. Only members can see previous content, see who is in the group, post and invite other members.
+      project_group: Project group
+      project_group_desc: A group for working in a project together.
+      wall: Wall
+      wall_desc: Anyone can join the group, see members and previous content. Only owner can post, members can comment.
+    single_owner_leave: You can't leave the group as the single owner.
+    admin:
+      remove:
+        title: Remove admin permissions
+        description: <strong>%{name}</strong> will no longer have admin permissions but will still be a member of the group.
+      make:
+        title: Make admin
+        description: As an admin, <strong>%{name}</strong> will be able to edit the group info and manage the user permissions.
+      throw:
+        title: Remove from group
+        description: Are you sure you want to remove <strong>%{name}</strong> from the group? The user will not be notified of this change.

@@ -1,0 +1,12 @@
+{% liquid
+  if post.accepted_post_id == object.accepted_post_id
+    assign accepted_post_id = null
+  else
+    assign accepted_post_id = object.accepted_post_id
+  endif
+%}
+{% assign object = {"id": object.id, "accepted_post_id": accepted_post_id} %}
+
+{% liquid
+  return object
+%}

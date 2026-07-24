@@ -1,0 +1,13 @@
+---
+slug: public-feed
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true
+
+  function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+
+  function list = 'modules/community/queries/activities/search_with_records', feed: 'public-feed', feed_id: 1, limit: 20, uuid: null, page: null
+
+  theme_render_rc 'components/templates/public-feed', list: list, current_profile: current_profile, context: context
+%}

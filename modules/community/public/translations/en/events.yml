@@ -1,0 +1,62 @@
+---
+en:
+  events:
+    events: Events
+    event: Event
+    participation:
+      going: Going
+      maybe: Maybe
+      not_going: Not going
+      see_list: See who’s going
+    index:
+      empty:
+        title: There are no events to show
+        desc:
+          You can create a new event if none fits your interests
+          or adjust the filters to see more.
+        cta: Create an event
+    profile:
+      other:
+        empty:
+          title: This user is not participating in any events
+          desc: Check back later, or explore their profile for more information.
+    deleted: The event has been deleted
+    create: Create Event
+    edit: Edit event
+    save: Save Event
+    cancel_edit: Cancel
+    cancel: Cancel Event
+    no_events_found:
+        Join events below or create your own based on your special
+        interest.
+    suggested:
+      title: Suggested events
+      subtitle: Based on your followed hashtags
+    validation:
+      uuid: Something went wrong during the image upload, please try again
+      name:
+        presence: Please name your event
+        length: The name is too long, max. 35 characters
+        uniqueness: There is an event with the same name
+      tags:
+        presence: Please add at least one tag to the event
+        length: Please don't add more than 20 tags to an event
+      start_date:
+        presence: Please add a date for the event
+        past: The date can't be in the past
+      end_date:
+        past: The end date should be greater than the start date
+      description:
+        presence: Please add a description
+        length: Description is too short, please add at least 10 characters
+      short_description:
+        presence: Please add a short description
+        length: The description is too long, max 140 characters
+      link: If this is an online event please add the link here.
+      venue: If this is an offline event please add the address here.
+    add_to_calendar: Add to calendar
+    status: Event status
+    status_description: All created events need to be approved by the admin. Once the event is created, its status will be populated here.
+    left: You have rejected the event
+    approved: You have approved the event
+    rejected: You have rejected the event

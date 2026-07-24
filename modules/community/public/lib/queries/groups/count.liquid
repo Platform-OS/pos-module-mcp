@@ -1,0 +1,7 @@
+{% comment %}
+  Counts the created groups
+{% endcomment %}
+{% liquid
+  graphql count = 'modules/community/groups/count'
+  return count.groups.total_entries
+%}

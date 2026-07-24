@@ -1,0 +1,32 @@
+---
+metadata:
+  name: Input with button
+  params:
+    classes: ''
+    input_params:
+      name: input
+      placeholder: Type here
+    button_params:
+      weight: primary
+      content: Search
+  styleguide:
+    classes: 'w-1/2'
+    input_params:
+      name: input
+      placeholder: Type here
+    button_params:
+      weight: primary
+      content: Search
+---
+{% liquid
+  assign input_params = input_params | default: params.input_params | hash_merge: classes: 'w-full pr-8'
+  assign button_classes = button_params.classes | prepend: 'rounded-none rounded-r-button '
+  assign button_params = button_params | default: params.button_params | hash_merge: classes: button_classes
+
+  assign classes = classes | default: params.classes | default: 'w-full'
+
+%}
+<div class="inline-flex items-end {{classes}}">
+  {% theme_render_rc 'components/atoms/input', params: input_params %}
+  {% theme_render_rc 'components/atoms/button', params: button_params %}
+</div>

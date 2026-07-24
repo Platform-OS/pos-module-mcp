@@ -1,0 +1,18 @@
+{% liquid
+  if id == blank
+    log '(comments) ID cannot be blank when searching for user audience'
+    return null
+  endif
+
+  assign audience = '{ "author": [], "commentable": [] }' | parse_json
+
+  function profile_table = 'modules/user/helpers/table_name'
+  assign commentable_tables = '["item", "group", "comment", "post"]' | parse_json | array_add: profile_table
+  graphql r = 'modules/community/activities/comments/audience', id: id, limit: 1, commentable_tables: commentable_tables
+  assign comment = r.comments.results.first
+
+  hash_assign audience['commentable'] = audience['commentable'] | add_to_array: comment.commentable.id
+  hash_assign audience['author'] = audience['author'] | add_to_array: comment.creator_id
+
+  return audience
+%}

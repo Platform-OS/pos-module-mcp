@@ -1,0 +1,8 @@
+---
+en:
+  statuses:
+    projects:
+      open: Open
+      under_evaluation: Under Evaluation
+      closed: Closed
+      draft: Draft

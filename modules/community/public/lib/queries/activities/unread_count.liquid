@@ -1,0 +1,5 @@
+{% liquid
+  graphql r = 'modules/community/activities/unread_count', feed: feed, feed_id: feed_id
+
+  return r.activities
+%}

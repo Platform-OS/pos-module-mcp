@@ -1,0 +1,7 @@
+{% comment %}
+  Implements hook_permission.
+{% endcomment %}
+{% liquid
+  assign permissions = '["events.set_status", "events.manage.all", "groups.manage.all", "posts.manage.all", "comments.manage.all", "profiles.list", "hashtags.manage"]' | parse_json
+  return permissions
+%}

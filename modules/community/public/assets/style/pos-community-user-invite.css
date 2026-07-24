@@ -1,0 +1,89 @@
+/*
+  user invitation component
+  TO DO: This whole thing needs to be redone as it's UX is poor
+
+  
+  layout
+  selected users
+*/
+
+
+
+/* layout
+============================================================================ */
+.pos-community-user-invite-container {
+  margin-block-start: var(--pos-gap-card-card);
+}
+
+
+/* search field
+============================================================================ */
+#pos-community-user-invite-email {
+  width: 100%;
+}
+
+
+/* popover
+============================================================================ */
+.pos-community-user-invite-popover {
+  margin-block-start: 2px;
+  margin-inline: -2px;
+  z-index: 10;
+  overflow: hidden;
+
+  border-radius: 0 0 var(--pos-radius-panel) var(--pos-radius-panel);
+  background-color: var(--pos-color-content-background);
+}
+
+.pos-community-user-invite-popover li {
+  padding: calc(var(--pos-padding-card) / 2);
+
+  cursor: pointer;
+}
+
+.pos-community-user-invite-popover li:not(:last-child) {
+  border-block-end: 1px solid var(--pos-color-frame);
+}
+
+.pos-community-user-invite-popover li:hover {
+  background-color: var(--pos-color-highlight-background);
+  color: var(--pos-color-highlight-text);
+}
+
+.pos-community-user-invite-popover [x-html="entry.profileLink"] a {
+  color: var(--pos-color-interactive);
+}
+
+  .pos-community-user-invite-popover [x-html="entry.profileLink"] a:hover {
+    color: var(--pos-color-interactive-hover);
+  }
+
+
+/* selected users
+============================================================================ */
+.pos-community-user-invite-selected {
+  margin-block: var(--pos-gap-section-elements);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pos-gap-section-elements);
+}
+
+.pos-community-user-invite-selected li {
+  display: flex;
+  align-items: center;
+  gap: var(--pos-gap-section-elements);
+}
+
+.pos-community-user-invite-selected-remove {
+  width: 16px;
+  height: 16px;
+  margin-inline-start: auto;
+}
+
+.pos-community-user-invite-selected [x-html="entry.profileLink"] a {
+  color: var(--pos-color-content-text-supplementary);
+}
+
+  .pos-community-user-invite-selected [x-html="entry.profileLink"] a:hover {
+    color: var(--pos-color-interactive-hover);
+  }

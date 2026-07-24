@@ -1,0 +1,5 @@
+{% liquid
+  graphql r = 'modules/community/photos/search', object_uuid: object_uuid, photo_type: photo_type, limit: limit
+
+  return r.photos
+%}

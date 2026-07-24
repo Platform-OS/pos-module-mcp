@@ -1,0 +1,29 @@
+---
+metadata:
+  name: tags frame
+  params:
+    list: []
+    current_profile: {}
+
+---
+{% if list.total_entries > 0 %}
+
+  {% liquid
+    for activity in list.results
+      theme_render_rc 'components/organisms/feed-entry', payload: activity.payload, current_profile: current_profile, context: context, can_comment: false
+    endfor
+  %}
+
+  {% if list.has_next_page %}
+    <button
+      id="pos-community-load-feed-more"
+      class="pos-button"
+      data-load-content="{{ loadmore_url }}?page={{ page | plus: 1 }}"
+      data-load-where="last"
+      data-load-target="#pos-community-feed-posts"
+      disabled
+    >{{ 'modules/community/app.show_more' | t }}</button>
+  {% endif %}
+
+{% endif %}
+

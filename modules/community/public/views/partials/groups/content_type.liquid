@@ -1,0 +1,26 @@
+{% assign scope = 'modules/community/groups.content_types_explanation' %}
+  <fieldset class="flex flex-wrap gap-2 items-center">
+    <input type="checkbox" id="group_content_type_{{ content_type }}" name="group[content_types][]" value="{{ content_type }}"
+      {% if group.content_types contains content_type %}checked{% endif %}
+    >
+    <label for="group_content_type_{{ content_type }}" class="cursor-pointer">
+      {{ content_type | titleize }}
+    </label>
+  </fieldset>
+
+{% capture content_type_tip %}
+  <ul class="space-y-1">
+    {% for action in template %}
+      <li>
+        <span>
+          {% assign can = action[1] | append: '' | t: scope: scope %}
+          {{ action[0] | t: can: can, scope: scope }}
+        </span>
+      </li>
+    {% endfor %}
+  </ul>
+{% endcapture %}
+{% liquid
+  assign content_type_tip = content_type_tip | html_safe
+  theme_render_rc 'components/atoms/sidenote', content: content_type_tip
+%}

@@ -1,0 +1,6 @@
+{% liquid
+  assign regex = "@\[(.*?)\]\((\d+)\)"
+  assign output = input | regex_matches: regex
+
+  return output
+%}

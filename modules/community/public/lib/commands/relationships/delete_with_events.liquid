@@ -1,0 +1,14 @@
+{% liquid
+  function object = 'modules/community/queries/relationships/find', name: object.name, l_id: object.l_id, r_id: object.r_id, include_related: null
+  if object
+    hash_assign object['valid'] = true
+  else
+    assign object = '{ "valid": false }' | parse_json
+  endif
+
+  if object.valid and skip_execution != true
+    function object = 'modules/community/commands/relationships/delete', object: object, skip_execution: null
+  endif
+
+  return object
+%}

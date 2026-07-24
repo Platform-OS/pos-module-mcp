@@ -1,0 +1,10 @@
+@import "tailwindcss/base";
+@layer base {
+  hr:not(.pos-clean) {
+    @apply my-4 border-t-divider;
+  }
+
+  .prose a:not(.pos-clean) {
+    @apply underline text-interactive-text;
+  }
+}

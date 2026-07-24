@@ -1,0 +1,23 @@
+name: profile
+properties:
+  - name: uuid
+  - name: user_id
+  - name: name
+  - name: first_name
+  - name: last_name
+  - name: email # duplication from user
+  - name: roles
+    type: array
+  # tokenized downcased names for searching
+  - name: c__names
+
+  # customized properties
+  - name: timezone
+
+  #post counter for admin page
+  - name: post_count
+    type: integer
+
+  # notification settings
+  - name: allow_emails
+  - name: allow_notifications

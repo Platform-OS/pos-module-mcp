@@ -1,0 +1,49 @@
+{% liquid
+  assign active_class = 'text-interaction hover:text-interaction-hover border-b md:border-b-0 border-interaction hover:border-interaction-hover'
+  assign class = 'p-4 md:p-0 block text-content'
+%}
+
+<nav class="md:p-0 lg:w-1/5 md:w-1/4 -mt-8 md:mt-0 border-t md:border-0" data-tc="feedNavigation">
+  <ul class="md:card w-full flex gap-4 md:flex-col overflow-x-auto whitespace-nowrap md:whitespace-normal font-bold">
+    <li>
+      <a href="/{{path}}feed" class="{{class}} {% if tab == 'feed' %}{{ active_class }}{% endif %} flex items-center justify-between">
+        {{ 'modules/community/profiles.nav.activity' | t }}
+        {% theme_render_rc 'components/atoms/icon', name: 'dashRight', class: 'w-4 hidden md:block' %}
+      </a>
+    </li>
+    <li>
+      <a href="/{{path}}groups" class="{{class}} {% if tab == 'groups' %}{{ active_class }}{% endif %} flex items-center justify-between">
+        {{ 'modules/community/profiles.nav.groups' | t }}
+        {% theme_render_rc 'components/atoms/icon', name: 'dashRight', class: 'w-4 hidden md:block' %}
+      </a>
+    </li>
+    <li>
+      <a href="/{{path}}projects" class="{{class}} {% if tab == 'projects' %}{{ active_class }}{% endif %} flex items-center justify-between">
+        {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+        {{ 'modules/community/profiles.nav.projects' | t }}
+        {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+        {% theme_render_rc 'components/atoms/icon', name: 'dashRight', class: 'w-4 hidden md:block' %}
+      </a>
+    </li>
+    <li>
+      <a href="/{{path}}following" class="{{class}} {% if tab == 'following' %}{{ active_class }}{% endif %} flex items-center justify-between">
+        {{ 'modules/community/profiles.nav.following' | t }}
+        {% theme_render_rc 'components/atoms/icon', name: 'dashRight', class: 'w-4 hidden md:block' %}
+      </a>
+    </li>
+    <li>
+      <a href="/{{path}}followers" class="{{class}} {% if tab == 'followers' %}{{ active_class }}{% endif %} flex items-center justify-between">
+        {{ 'modules/community/profiles.nav.followers' | t }}
+        {% theme_render_rc 'components/atoms/icon', name: 'dashRight', class: 'w-4 hidden md:block' %}
+      </a>
+    </li>
+    {% if context.tags %}
+      <li class="block md:hidden">
+        <a href="/{{path}}tags" class="{{class}} {% if tab == 'tags' %}{{ active_class }}{% endif %}">
+          {{ 'modules/community/profiles.nav.tags' | t }}
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+
+</nav>

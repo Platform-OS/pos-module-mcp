@@ -1,0 +1,30 @@
+/*
+  global button behavior
+  main
+    with icon
+  secondary
+  danger
+  small
+    with icon
+  small secondary
+  compact
+  admin buttons
+*/
+
+
+
+/* global button behavior
+============================================================================ */
+button > * {
+  pointer-events: none;
+}
+
+button:focus {
+  @apply
+    outline-none;
+}
+
+button:focus-visible {
+  @apply
+    ring-2;
+}

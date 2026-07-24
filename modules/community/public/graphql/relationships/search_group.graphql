@@ -1,0 +1,90 @@
+query records(
+  $id: ID
+  $profile_table: String
+  $name: String
+  $r_id: String
+  $l_id: String
+  $not_l_id: [String!]
+  $limit: Int!
+  $include_related: Boolean = false
+  $accepted: Boolean
+  $approved: Boolean
+  $keyword: String = ""
+  $page: Int = 1
+){
+  records(
+    page: $page
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/relationship" }
+      properties: [
+        { name: "name" value: $name }
+        { name: "r_id" value: $r_id }
+        { name: "l_id" value: $l_id, not_value_in: $not_l_id }
+        { name: "l_accepted_at" exists: $accepted }
+        { name: "r_accepted_at" exists: $approved }
+      ]
+      related_records: [
+        {
+          join: {
+            join_on_property: "l_id"
+            foreign_property: "id"
+          }
+          filter: {
+            table: { value: $profile_table }
+            properties: [
+              { name: "name", contains: $keyword }
+            ]
+          }
+        }
+      ]
+    }
+  ){
+    total_entries
+    has_previous_page
+    has_next_page
+    total_pages
+    results {
+      id
+      type: table
+      created_at
+      created_by_id: property(name: "created_by_id")
+      name: property(name: "name")
+      r_id: property(name: "r_id")
+      l_id: property(name: "l_id")
+      r_accepted_at: property(name: "r_accepted_at")
+      l_accepted_at: property(name: "l_accepted_at")
+
+      l: related_record(foreign_property: "id" join_on_property: "l_id" table: [$profile_table]) @include(if: $include_related) {
+        ...record
+      }
+      r: related_record(foreign_property: "id" join_on_property: "r_id" table: [$profile_table]) @include(if: $include_related) {
+        ...record
+      }
+    }
+  }
+}
+
+fragment record on Record {
+  id
+  type: table
+  user_id: property(name: "user_id")
+  uuid: property(name: "uuid")
+  name: property(name: "name")
+  first_name: property(name: "first_name")
+  last_name: property(name: "last_name")
+  slug: property(name: "slug")
+  uuid: property(name: "uuid")
+  properties
+
+  avatar: related_record(table: "modules/community/photo", join_on_property: "uuid", foreign_property: "object_uuid", filter: { properties: { name: "photo_type", value: "avatar"}}) {
+    photo_width: property_int(name: "photo_width")
+    photo_height: property_int(name: "photo_height")
+    photo: property_upload(name: "photo") {
+      url
+      versions
+    }
+  }
+}
+

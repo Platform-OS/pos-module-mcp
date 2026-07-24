@@ -1,0 +1,16 @@
+{% liquid
+  function relationships = 'modules/community/queries/relationships/count', r_id: group_id, name: 'membership', l_id: null
+
+  assign object = null | hash_merge: id: group_id, c__members_count: relationships.total_entries
+
+  function full_relationships = 'modules/community/queries/relationships/full_count', r_id: group_id, name: 'membership', l_id: null
+
+  hash_assign object['c__full_members_count'] = full_relationships.total_entries
+
+  function object = 'modules/community/commands/groups/update_count_cache', object: object
+  if object.valid != true
+    log object, type: 'ERROR: relationship_created/update_group_counter'
+  endif
+
+  return object
+%}

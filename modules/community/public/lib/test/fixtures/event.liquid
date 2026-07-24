@@ -1,0 +1,11 @@
+{% liquid
+  assign event_name_suffix = 4 | random_string
+  assign event_name = "test event-" | append: event_name_suffix
+  assign event_uuid = '' | uuid
+  assign event_data = {"name": event_name, "link": "sumamry", "short_description": "test test test test", "description": "test description, and long description very long", "venue": "test venue", "uuid": event_uuid, "start_date": "2050-12-10T00:00", "end_date": "2050-12-12T00:00"}
+  function event = 'modules/community/commands/events/create', object: event_data, profile: profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/valid_object', contract: contract, object: event, field_name: "event"
+  # platformos-check-enable DeprecatedTag
+  return event
+%}

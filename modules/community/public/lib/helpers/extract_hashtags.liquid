@@ -1,0 +1,6 @@
+{% liquid
+  assign regex = "(?:^|\s)#([\p{L}][\p{L}\d\-]*)"
+  assign output = input | regex_matches: regex | flatten | uniq
+
+  return output
+%}

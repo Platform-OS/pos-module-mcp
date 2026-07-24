@@ -1,0 +1,9 @@
+{% liquid
+  assign lang = lang | default: context.language
+  graphql r = 'modules/community/quick_search/search', keyword: keyword, limit: limit
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/handle_graphql_response', r: r, name: 'queries/quick_search/search'
+  # platformos-check-enable DeprecatedTag
+
+  return r
+%}

@@ -1,0 +1,235 @@
+---
+metadata:
+  name: Select
+  params:
+    id: mySelect
+    name: mySelect
+    value: ''
+    multiple:
+      - true
+      - false
+    combined:
+      - true
+      - false
+    options:
+      - label: Option 1
+        value: value1
+      - label: Option 2
+        value: value2
+    attributes: {}
+    placeholder: ''
+    selected_label: ''
+    filter: false
+    filter_placeholder: 'Type to filter options'
+    classes: ''
+  styleguide:
+    - multiple: false
+      id: 'mySelect1'
+      options:
+      - label: Option 1
+        value: value1
+      - label: Option 2
+        value: value2
+    - multiple: true
+      id: 'mySelect2'
+      options:
+      - label: Option 1
+        value: value1
+      - label: Option 2
+        value: value2
+    - multiple: false
+      id: 'mySelect3'
+      value: value2
+      options:
+      - label: Option 1
+        value: value1
+      - label: Option 2
+        value: value2
+      filter: true
+    - multiple: true
+      id: 'mySelect4'
+      filter: true
+      value:
+        - value1
+        - value2
+      options:
+      - label: Option 1
+        value: value1
+      - label: Option 2
+        value: value2
+      - label: Option 3
+        value: value3
+    - multiple: true
+      id: 'mySelect5'
+      filter: true
+      combined: true
+      value:
+        - value1
+        - value2
+      options:
+      - label: Option 1
+        value: value1
+      - label: Option 2
+        value: value2
+      - label: Option 3
+        value: value3
+---
+{% liquid
+  assign options = options | default: params.options | parse_json | default: '[]' | parse_json
+  assign id = id | default: params.id | default: "mySelect"
+  assign name = name | default: params.name | default: "mySelect"
+  assign multiple = multiple | default: params.multiple | default: false
+  assign combined = combined | default: params.combined | default: false
+  assign overflow = overflow | default: params.overflow | default: 'visible'
+  assign filter = filter | default: params.filter | default: false
+  assign filter_placeholder = filter_placeholder | default: params.filter_placeholder | default: 'Type to filter options'
+  assign value = value | default: params.value
+  assign attributes = attributes | default: params.attributes
+  assign placeholder = placeholder | default: params.placeholder | default: 'Select an option'
+  assign selected_label = selected_label | default: params.selected_label | default: 'selected'
+  assign classes = classes | default: params.classes
+%}
+
+{% if multiple == true %}
+<div data-pos-component="select" class="relative inline-block {{classes}}" id="{{id}}">
+  <div class="pos-select pos-select--multi-custom w-full">
+    <div class="pos-select__head cursor-pointer flex items-center justify-between border border-input-border bg-panel py-2 px-2 h-11" tabindex="0">
+      <div class="{% if value %}hidden {% endif %}pos-select__placeholder cursor-pointer">{{placeholder}}</div>
+      <div class="pos-select__tags flex">
+
+        {% if combined %}
+          <div class="pos-select__tags_counter {% unless value %}hidden{% endunless %}" data-label=" {{ selected_label }}">
+            {% liquid
+              if value[1]
+                assign chip_content = value.size
+              elsif value
+                assign chip_content = 1
+              else
+                assign chip_content = 0
+              endif
+
+              assign chip_content = chip_content | append: ' ' | append: selected_label
+            %}
+            {% assign chip_params = '{}' | parse_json | hash_merge: content: chip_content %}
+            {% theme_render_rc 'components/molecules/chip', params: chip_params %}
+          </div>
+        {% endif %}
+
+        {% for option in options %}
+          <div class="{% if combined %} !hidden {% endif %} {% unless value contains option.value%}hidden {% endunless %}mr-2 cursor-pointer" data-value="{{option.value}}">
+            {% assign chip_params = '{}' | parse_json | hash_merge: closable: true, variant: 'clickable', content: option.label %}
+            {% theme_render_rc 'components/molecules/chip', params: chip_params %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="pos-select__opener ml-3 cursor-pointer">
+        {% assign icon_params = '{}' | parse_json | hash_merge: name: 'dashDown' %}
+        <div>
+          {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+        </div>
+        {% assign icon_params = '{}' | parse_json | hash_merge: name: 'dashUp' %}
+        <div class="hidden">
+          {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-select__popup w-full px-1 py-2 z-50 hidden absolute bg-panel shadow-card" aria-hidden="true">
+      {% if filter %}
+        <div class="mb-2 pb-2 border-b">
+          <input type="text" class="pos-select__filter w-full py-2 px-4" placeholder="{{filter_placeholder}}">
+        </div>
+      {% endif %}
+      <ul class="pos-select__options max-h-48 overflow-y-auto">
+        {% for option in options %}
+        {% liquid
+          assign opt_id = id | append: '_' | append: option.value
+          assign input_name = name | append: '[]'
+          assign input_params = '{}' | parse_json | hash_merge: value: option.value, id: opt_id, attributes: attributes, focusable: false
+          if value contains option.value
+            hash_assign input_params['checked'] = true
+          endif
+        %}
+        <li class="pos-select__option flex items-center py-2 px-4">
+          {% theme_render_rc 'components/atoms/checkbox', params: input_params %}
+          <label class="ml-2 cursor-pointer" for="{{opt_id}}">{{option.label}}</label>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <select
+    class="pos-select--multi-native h-11 border border-input-border bg-panel px-2 {{classes}}"
+    name="{{name}}[]"
+    multiple
+    aria-labelledby="{{name}}"
+    {% for attribute in attributes %}
+      {{ attribute[0] | html_safe }}="{{ attribute[1] | html_safe }}"
+    {% endfor %}
+    >
+    {% for option in options %}
+    <option value="{{option.value}}" {% if value contains option.value %}selected{% endif %}>{{option.label}}</option>
+    {% endfor %}
+  </select>
+</div>
+{% endif %}
+
+{% if multiple == false %}
+<div data-pos-component="select" class="relative {{classes}}" id="{{id}}">
+  <div class="pos-select pos-select--simple-custom w-full">
+    <div class="pos-select__head cursor-pointer flex items-center justify-between border border-input-border bg-panel py-2 px-2 h-11" tabindex="0">
+      <div class="{% if value %}hidden {% endif %}pos-select__placeholder cursor-pointer">{{placeholder}}</div>
+      <div class="pos-select__tags flex">
+        {% for option in options %}
+        <div class="{% unless value == option.value%}hidden {% endunless %}mr-2 cursor-pointer" data-value="{{option.value}}">
+          {{option.label}}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="pos-select__opener ml-3 cursor-pointer">
+        {% assign icon_params = '{}' | parse_json | hash_merge: name: 'dashDown' %}
+        <div>
+          {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+        </div>
+        {% assign icon_params = '{}' | parse_json | hash_merge: name: 'dashUp' %}
+        <div class="hidden">
+          {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-select__popup hidden absolute bg-panel shadow-card px-1 py-2 z-50 w-full" aria-hidden="true">
+      {% if filter %}
+        <div class="mb-2 pb-2 border-b">
+          <input type="text" class="pos-select__filter w-full py-2 px-4" placeholder="{{filter_placeholder}}">
+        </div>
+      {% endif %}
+
+      <ul class="pos-select__options max-h-48 overflow-y-auto">
+        {% for option in options %}
+          <li class="pos-select__option {% if value == option.value %}bg-highlighted {% endif %}flex items-center py-2 px-4 cursor-pointer hover:text-inverted hover:bg-interactive-hover" data-value="{{option.value}}">
+            {{option.label}}
+          </li>
+        {% endfor %}
+      </ul>
+
+    </div>
+  </div>
+
+  <select
+    class="pos-select--simple-native h-11 border border-input-border bg-panel {{classes}}"
+    name="{{name}}"
+    aria-labelledby="{{name}}"
+    {% for attribute in attributes %}
+      {{ attribute[0] | html_safe }}="{{ attribute[1] | html_safe }}"
+    {% endfor %}
+    >
+    {% for option in options %}
+    <option
+      class="bg-panel"
+      value="{{option.value}}" {% if value == option.value %}selected{% endif %}>{{option.label}}</option>
+    {% endfor %}
+  </select>
+</div>
+{% endif %}

@@ -1,0 +1,23 @@
+{% liquid
+  if uuid == blank
+    function activities = 'modules/community/queries/activities/search', feed: feed, feed_id: feed_id, limit: limit, page: page
+  else
+    function activities = 'modules/community/queries/activities/one', uuid: uuid
+  endif
+
+  function records = 'modules/community/queries/activities/records_for_activities', activities: activities
+  assign records = records | group_by: 'id'
+
+  for activity in activities.results
+    assign a = activity
+
+    for entity in a.payload
+      if entity[1].type
+        assign type = entity[1].type
+        hash_assign a['payload'][type] = records[entity[1].id][0]
+      endif
+    endfor
+  endfor
+
+  return activities
+%}

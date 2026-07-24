@@ -1,0 +1,19 @@
+{% assign profile = {"id": 666, "type": "profile", "name": "Firstname Lastname", "slug": "firstname-lastname-666", "avatar": {"photo": "__TEST"}} %}
+
+{% comment %}
+  user
+{% endcomment %}
+{% liquid
+  assign name = "Firstname Lastname"
+  function url = 'modules/community/helpers/link_to', object: profile
+
+  assign header = '{"name": "", "url": ""}' | parse_json
+  hash_assign header['name'] = name
+  hash_assign header['url'] = url
+  hash_assign header['photo'] = profile.avatar.photo
+
+  function link = 'modules/community/commands/activities/header', profile: profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'header-link', given: link, expected: header
+  # platformos-check-enable DeprecatedTag
+%}

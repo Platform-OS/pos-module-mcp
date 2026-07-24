@@ -1,0 +1,25 @@
+{% liquid
+    if l_id == blank
+      log 'Something went wrong. Left-ID cannot be blank', type: 'ERROR: relationships/find'
+      return null
+    endif
+  
+    if r_id == blank
+      log 'Something went wrong. Right-ID cannot be blank.', type: 'ERROR'
+      return null
+    endif
+  
+    if name == blank
+      log 'Something went wrong. Name cannot be blank.', type: 'ERROR'
+      return null
+    endif
+  
+    assign l_id = l_id | append: ''
+    assign r_id = r_id | append: ''
+  
+    assign relation_tables = '["modules/community/group", "modules/community/post", "modules/community/event", "modules/community/tag", "modules/user/profile"]' | parse_json
+    graphql r = 'modules/community/relationships/search_by_name_prefix', limit: 1, name: name, l_id: l_id, r_id: r_id, include_related: include_related, relation_tables: relation_tables
+  
+    return r.records.results.first
+  %}
+  

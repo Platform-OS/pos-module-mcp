@@ -1,0 +1,21 @@
+{% liquid
+  if return_to
+    session return_to = return_to
+  endif
+
+  case profile.type
+  when 'organization'
+    return true
+  when blank
+    unless return_to
+      session return_to = context.location.href
+    endunless
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: '/sessions/new', error: 'modules/community/errors.unauthenticated'
+    # platformos-check-enable DeprecatedTag
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: '/dashboard/sell/organizations/new', error: 'modules/community/errors.organization_required'
+    # platformos-check-enable DeprecatedTag
+  endcase
+%}

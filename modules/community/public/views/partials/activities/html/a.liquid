@@ -1,0 +1,31 @@
+{% liquid
+  function path = 'modules/community/helpers/link_to', object: object, namespace: namespace, role: role, type: type
+  assign type = object.type | t: scope: 'modules/community/activities.tables'
+
+  if object.name
+    assign name = name | default: object.name
+  elsif object.name == blank and object.object.body
+    comment
+      Posts have no title, so the body becomes the link text (e.g. "X liked <body>").
+      Strip markdown to plain text so a post that starts with a markdown image does not
+      leak raw "![](...)" markup, and fall back to "an image" when nothing else remains.
+    endcomment
+    assign body = object.object.body
+    assign body_starts_with_image = body | start_with: '!['
+    assign body = body | markdown: '{ "elements": [] }'
+    if body_starts_with_image and body == blank
+      # platformos-check-disable TranslationKeyExists
+      assign body = 'modules/community/activities.notifications.posted_an_image' | t
+      # platformos-check-enable TranslationKeyExists
+    endif
+    assign name = name | default: body | truncate: 50, '...'
+  else
+    assign name = name | default: type | append: '#' | append: object.id
+  endif
+
+  if object.type == 'process'
+    assign name = name | t: scope: 'modules/community/activities.processes'
+  endif
+%}
+{% capture text %}<a href="{{path}}" class="{{class}}">{{name}}</a>{% endcapture %}
+{% return text %}

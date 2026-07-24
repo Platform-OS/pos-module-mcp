@@ -1,0 +1,32 @@
+---
+metadata:
+  name: Horizontal Navigation bar
+  params:
+    menu_items: []
+  styleguide:
+    menu_items:
+      - title: 'Menu item 1'
+        active: true
+      - title: 'Menu item 2'
+---
+{% assign menu_items = menu_items | default: params.menu_items %}
+<div class="bg-colorful relative">
+  <nav class="flex container flex-row relative">
+    <ul id="menuList" class="px-4 flex-1 overflow-auto text-sm whitespace-nowrap flex flex-nowrap">
+      {% for item in menu_items %}
+          <li class="border-e last:border-0 border-colorful-hover">
+            <a
+              aria-current="page"
+              class="flex items-center px-6 py-5 {% if item.active %}bg-colorful-hover{% endif %} hover:bg-colorful-hover text-inverted hover:text-inverted"
+              {% for attribute in item.link_attributes %}
+                {{ attribute[0] }}="{{ attribute[1] }}"
+              {% endfor %}
+            >
+              <span class="mx-4">{{item.title}}</span>
+            </a>
+          </li>
+        {% endfor %}
+    </ul>
+
+  </nav>
+</div>

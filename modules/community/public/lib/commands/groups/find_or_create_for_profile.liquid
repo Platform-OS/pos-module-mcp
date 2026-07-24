@@ -1,0 +1,28 @@
+{% liquid
+  function group = 'modules/community/queries/groups/find_by_owner', owner_id: profile.id, name: 'PROFILE_GROUP', id: null
+
+  unless group
+    assign object = '{}' | parse_json
+    hash_assign object['name'] = 'PROFILE_GROUP'
+    hash_assign object['uuid'] = '' | uuid
+    hash_assign object['content_types'] = 'post' | split: ','
+    hash_assign object['group_type'] = 'profile_group'
+
+    function group = 'modules/community/commands/groups/create', object: object, owner_id: profile.id
+    if group.valid
+      assign now = 'now' | to_time
+      function relation = 'modules/community/commands/relationships/create', name: 'owner', l_id: profile.id, r_id: group.id, created_by_id: profile.id, l_at: now, r_at: now
+      unless relation.valid
+        log relation.errors, type: 'ERROR: creating group owner relation'
+      endunless
+
+      function relationships = 'modules/community/queries/relationships/search', l_id: profile.id, limit: 100
+      function _profile = 'modules/community/queries/profiles/preload_relationships', profile: profile, relationships: relationships.results
+      hash_assign profile['relationships'] = _profile.relationships
+    else
+      log group, type: 'ERROR groups/find_or_create_for_profile'
+    endif
+  endunless
+
+  return group
+%}

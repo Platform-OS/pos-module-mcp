@@ -1,0 +1,16 @@
+{% liquid
+  function relationship = 'modules/community/queries/relationships/find_by_id', id: event.object.id, include_related: null
+  if relationship.name == 'followship:tag'
+    assign tag_id = relationship.r_id
+    function _followers = 'modules/community/queries/relationships/count', r_id: tag_id, name: 'followship:tag', l_id: null
+    assign followers = _followers.total_entries | plus: 0
+    function tag = 'modules/community/queries/tags/find', id: tag_id
+    assign object = tag
+    hash_assign object['follower_count'] = followers
+
+    function res = 'modules/community/commands/tags/update', object: object
+    if res.valid != true
+      log res, type: 'ERROR: relationship_created/update_tag_followers'
+    endif
+  endif
+%}

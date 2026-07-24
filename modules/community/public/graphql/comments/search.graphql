@@ -1,0 +1,66 @@
+query search(
+  $id: ID
+  $limit: Int = 20
+  $uuid: String
+  $commentable_uuid: String
+  $commentable_uuids: [String!]
+  $commentable_type: String
+  $creator_id: String
+  $query: String
+  $profile_table: [String]!
+) {
+  comments: records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/comment" }
+      properties: [
+        { name: "uuid" value: $uuid }
+        { name: "commentable_uuid" value: $commentable_uuid, value_in: $commentable_uuids }
+        { name: "commentable_type" value: $commentable_type }
+        { name: "creator_id" value: $creator_id }
+        { name: "title" contains: $query }
+        { name: "body" contains: $query }
+      ]
+    }
+    sort: [
+      { created_at: { order: DESC }}
+    ]
+  ){
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+      uuid: property(name: "uuid")
+      title: property(name: "title")
+      body: property(name: "body")
+      removed_at: property(name: "removed_at")
+
+      commentable: related_record(table: ["modules/user/profile", "item", "modules/community/group", "modules/community/comment"], join_on_property: "commentable_uuid", foreign_property: "uuid") {
+        type: table
+        id
+        slug: property(name: "slug")
+        name: property(name: "name")
+      }
+
+      photos: related_records(table: "modules/community/photo", join_on_property: "uuid", foreign_property: "object_uuid") {
+        id
+        photo_width: property_int(name: "photo_width")
+        photo_height: property_int(name: "photo_height")
+        photo: property_upload(name: "photo") {
+          url
+          versions
+        }
+      }
+
+      creator: related_record(table: $profile_table, join_on_property: "creator_id"){
+        ...profile
+      }
+    }
+  }
+}
+
+fragment profile on Record {
+  id
+}

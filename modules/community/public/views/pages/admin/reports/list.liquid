@@ -1,0 +1,18 @@
+---
+layout: modules/community/admin
+slug: admin/reports/list
+---
+{%- function current_profile = 'modules/community/helpers/current_profile' -%}
+
+{%- render 'modules/user/helpers/can_do_or_redirect', requester: current_profile, do: 'admin_pages.view', entity: null, access_callback: null, return_url: '/' -%}
+
+{% if context.params.type == blank %}
+  {% redirect_to '/admin/reports/list?type=profile' %}
+{% endif %}
+
+{% assign page = context.params.page | default: 1 | plus: 0 %}
+{% assign operation_models = '[]' | parse_json %}
+{% assign operation_models = operation_models | add_to_array: context.params.type %}
+{% graphql operations = 'modules/reports/reports/search', limit: 10, page: page, operation_models: operation_models %}
+
+{% render 'modules/community/admin/reports/list', operations: operations, type: context.params.type %}

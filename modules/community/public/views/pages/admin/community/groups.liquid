@@ -1,0 +1,20 @@
+---
+layout: modules/community/admin
+metadata:
+  menu:
+    title: "Group management"
+  permission: "groups.manage.all"
+  relative_path: "/admin/community/groups"
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable UnreachableCode
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', requester: current_profile, do: context.page.metadata.permission, entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-enable UnreachableCode
+  function filters = 'modules/community/queries/groups/filters', params: context.params
+  function groups = 'modules/community/queries/groups/search', limit: 20, page: filters.page, keyword: filters.keyword, sort: filters.sort, with_owner: true, not_type: 'profile_group', owner_id: null, relation_name: null, meta_visible: null, not_name: null, not_ids: null, ask_to_join: null, id: null, current_profile: null
+
+  render 'modules/community/admin_pages/groups', groups: groups, filters: filters, current_profile: current_profile
+%}

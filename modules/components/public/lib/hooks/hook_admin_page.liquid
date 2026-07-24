@@ -1,0 +1,17 @@
+{% parse_json admin_pages %}
+[
+  {
+    "relative_path": null,
+    "menu": {
+      "title": "Styleguide",
+      "link_attributes": {
+        "target": "_blank",
+        "href": "/styleguide"
+      }
+    },
+    "permission": "styleguide.view"
+  }
+]
+{% endparse_json %}
+
+{% return admin_pages %}

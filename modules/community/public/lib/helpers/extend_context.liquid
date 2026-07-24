@@ -1,0 +1,68 @@
+{% liquid
+  assign document_presign = document_presign | default: false
+  assign photo_presign = photo_presign | default: false
+  assign tags = tags | default: false
+  assign post_templates = post_templates | default: false
+  assign group_templates = group_templates | default: false
+  assign available_languages = available_languages | default: false
+  assign timezone = timezone | default: false
+  assign group = group
+
+  if document_presign
+    # platformos-check-disable MissingPartial
+    function presigned_url = 'lib/queries/document_presigned_url'
+    # platformos-check-enable MissingPartial
+    hash_assign context['presigned_url'] = presigned_url
+  endif
+
+  if photo_presign
+    function presigned_url = 'modules/community/queries/photos/presigned_url'
+    hash_assign context['presigned_url'] = presigned_url
+  endif
+
+  if tags
+    function current_profile = 'modules/community/helpers/current_profile'
+    if current_profile.id
+      function followed_tags = 'modules/community/queries/relationships/search_by_left', limit: 100, name: 'followship:tag', l_id: current_profile.id, include_related: true, r_id: null
+    else
+      assign followed_tags = '[]' | parse_json
+    endif
+
+    # platformos-check-disable UnknownProperty
+    assign followed_tags = followed_tags.results | map: 'r' | array_compact | array_reject: status: 'unpublished'
+    # platformos-check-enable UnknownProperty
+    assign followed_tag_ids = followed_tags | map: 'id' | flatten
+    function recommended_tags = 'modules/community/queries/tags/search', limit: 20, not_ids: followed_tag_ids, status: 'published', page: null, sort: null, name: null, names: null, query: null, with_creator: null
+    assign recommended_tags = recommended_tags.results
+
+    assign tags_list = followed_tags | add_to_array: recommended_tags | flatten
+
+    hash_assign context['tags'] = tags_list
+    hash_assign context['tag_names'] = tags_list | map: 'name'
+  endif
+
+  if post_templates
+    function post_templates = 'modules/community/queries/posts/post_templates'
+    hash_assign context['post_templates'] = post_templates
+  endif
+
+  if group_templates
+    function group_templates = 'modules/community/queries/groups/group_templates', group: group
+    assign _ = group_templates | remove_hash_key: 'profile_group'
+    assign _ = group_templates | remove_hash_key: 'project_group'
+    hash_assign context['group_templates'] = group_templates
+  endif
+
+  if available_languages
+    function available_languages = 'modules/core/queries/variable/find', name: "AVAILABLE_LANGUAGES", type: "array", default: null
+    hash_assign context['available_languages'] = available_languages
+  endif
+
+  if timezone
+    # platformos-check-disable TranslationKeyExists
+    hash_assign context['timezone'] = 'timezone' | t
+    # platformos-check-enable TranslationKeyExists
+  endif
+
+  return true
+%}

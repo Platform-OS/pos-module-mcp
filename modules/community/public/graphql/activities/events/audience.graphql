@@ -1,0 +1,37 @@
+query search(
+  $id: ID
+  $limit: Int = 1
+) {
+  events: records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/event" }
+    }
+    sort: [{ created_at: { order: DESC } }]
+  ) {
+    total_entries
+    results {
+      ...event
+    }
+  }
+}
+
+fragment event on Record {
+  id
+  created_at
+  type: table
+
+  relationships: related_records(table: "modules/community/relationship" join_on_property: "id" foreign_property: "r_id"
+    filter: { properties: [
+       { name: "l_accepted_at", exists: true }
+       { name: "r_accepted_at", exists: true }
+      ]
+    }
+  ) {
+    id
+    name: property(name: "name")
+    r_id: property(name: "r_id")
+    l_id: property(name: "l_id")
+  }
+}

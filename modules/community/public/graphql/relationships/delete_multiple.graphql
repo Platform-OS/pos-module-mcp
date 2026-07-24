@@ -1,0 +1,14 @@
+mutation delete_relationships($r_id: String!, $l_id: String!, $names: [String!]) {
+  records_delete_all(
+    table: "modules/community/relationship"
+    filter: {
+      properties: [
+        { name: "r_id", value: $r_id },
+        { name: "l_id", value: $l_id },
+        { name: "name", value_in: $names }
+      ]
+    }
+  ){
+    count
+  }
+}

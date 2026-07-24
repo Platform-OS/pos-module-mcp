@@ -1,0 +1,14 @@
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'group_type', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/length', c: c, object: object, field_name: 'name', maximum: 100, allow_blank: false, value: null, is: null, message_is: null, message_minimum: null, message_maximum: null, minimum: null
+  function c = 'modules/core/validations/uniqueness', c: c, object: object, field_name: 'name', table: 'modules/community/group', exclude_name: null, key: null, scope_name: null
+  function c = 'modules/core/validations/length', c: c, object: object, field_name: 'description', minimum: 30, maximum: 350, allow_blank: false, value: null, is: null, message_is: null, message_minimum: null, message_maximum: null
+  function c = 'modules/core/validations/length', c: c, object: object, field_name: 'summary', maximum: 100, allow_blank: false, value: null, is: null, message_is: null, message_minimum: null, message_maximum: null, minimum: null
+
+  hash_assign object['valid'] = c.valid
+  hash_assign object['errors'] = c.errors
+
+  return object
+%}

@@ -1,0 +1,33 @@
+{% if list.total_entries > 0 %}
+  <div
+    class="hidden"
+    x-init="currentPage++; totalEntries = {{ list.total_entries }}; hasNextPage = {{ list.has_next_page }};"
+  ></div>
+
+  {% for event in list.results %}
+    {% liquid
+      assign event_type = 'online'
+      if event.venue and event.link == blank
+        assign event_type = 'local'
+      endif
+      assign url = '/events/' | append: event.id
+      assign event_tz = 'now' | to_time: current_profile.timezone | strftime: '(%Z)'
+      assign date = event.start_date | localize: 'long', current_profile.timezone | append: ' ' | append: event_tz
+      assign members = event.c__going | plus: event.c__maybe
+    %}
+    {%- comment -%}platformos-check-disable LiquidHTMLSyntaxError{%- endcomment -%}
+    {% render 'modules/community/migrated/events/card',, current_profile: null, image: null
+      owner: event.owner.profile,
+      title: event.name,
+      url: url,
+      location: event.venue,
+      date: event.start_date,
+      type: event_type,
+      summary: event.description,
+      members: members,
+      img: event.photo.photo
+    %}
+    {%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}
+  {% endfor %}
+
+{% endif %}

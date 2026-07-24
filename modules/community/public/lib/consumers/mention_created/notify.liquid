@@ -1,0 +1,10 @@
+{% liquid
+  function audience = 'modules/community/commands/audience/build'
+  hash_assign audience['notifications']['profile'] = event.mentioned_profile_ids
+
+  assign notification_title = 'modules/community/push_notifications.mention.title' | t
+  assign notification_body = 'modules/community/push_notifications.mention.body' | t: actor: event.actor.name
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": event.url}
+
+  function publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+%}

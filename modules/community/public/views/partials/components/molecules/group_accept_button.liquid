@@ -1,0 +1,18 @@
+---
+metadata:
+  name: Group accept button
+  params:
+    group: {}
+    profile: {}
+---
+<form action="{% render 'modules/community/helpers/link_to', object: group.member %}" method="post">
+  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+  <input type="hidden" name="_method" value="put" />
+  <input type="hidden" name="return_to" value="{% render 'modules/community/helpers/link_to', object: group %}">
+  <input type="hidden" name="notice_key" value="modules/community/groups.joined">
+
+  {% liquid
+    assign button_label = group.approve_request | t: scope: 'modules/community/groups.accept_and_join'
+    theme_render_rc 'components/atoms/button', content: button_label, type: 'submit'
+  %}
+</form>

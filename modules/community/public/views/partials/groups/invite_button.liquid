@@ -1,0 +1,6 @@
+{% function can = "modules/community/helpers/can", actor: current_profile, do: "invite", object: group %}
+{% if can.valid %}
+  <a class="{{ class }}" href="{% render 'modules/community/helpers/link_to', object: group, action: 'invites' %}">
+    {{ label | t  }}
+  </a>
+{% endif %}

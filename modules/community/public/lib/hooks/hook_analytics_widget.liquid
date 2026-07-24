@@ -1,0 +1,134 @@
+{% assign result = '[]' | parse_json %}
+
+
+{% comment %} Welcome text {% endcomment %}
+
+{% capture welcome_widget %}
+  <div class="py-6 w-full">
+  {% liquid
+    assign message = "Welcome " | append: context.exports.current_profile.first_name | append: ","
+    theme_render_rc 'components/atoms/heading', content: message, level: 2, classes: 'py-4'
+    theme_render_rc 'components/atoms/heading', content: "Check and manage the site to provide great community experience for your users.", level: 4, classes: 'pb-8'
+  %}
+  </div>
+{% endcapture %}
+{% liquid
+  assign widget = null | hash_merge: content: welcome_widget, id: 'welcome_widget', weight: 0
+  assign result = result | add_to_array: widget
+%}
+
+
+{% comment %} Groups widget {% endcomment %}
+
+{% function total_groups = 'modules/community/queries/groups/count' %}
+{% capture groups_content %}
+  <div class="flex flex-col justify-between h-full">
+    <div>
+      <div class="uppercase">Groups</div>
+      <div class="font-bold">{{total_groups}}</div>
+      <br/>
+    </div>
+    <div>
+      <hr>
+      <div class="flex justify-end">
+        {% theme_render_rc 'components/atoms/button', weight: 'secondary', href: '/admin/community/groups', content: 'View' %}
+      </div>
+    </div>
+  </div>
+{% endcapture %}
+
+{% capture groups_widget %}
+  {% theme_render_rc 'components/atoms/card', content: groups_content, classes: 'w-full lg:w-80' %}
+{% endcapture %}
+{% liquid
+  assign widget = null | hash_merge: content: groups_widget, id: 'groups_widget', weight: 1
+  assign result = result | add_to_array: widget
+%}
+
+
+{% comment %} Users widget {% endcomment %}
+
+{% function total_users = 'modules/user/queries/user/count' %}
+{% capture users_content %}
+  <div class="flex flex-col justify-between h-full">
+    <div>
+      <div class="uppercase">Registered users</div>
+      <div class="font-bold">{{total_users}}</div>
+      <br/>
+    </div>
+    <div>
+      <hr>
+      <div class="flex justify-end">
+        {% theme_render_rc 'components/atoms/button', weight: 'secondary', href: '/admin/users', content: 'View' %}
+      </div>
+    </div>
+  </div>
+{% endcapture %}
+
+{% capture users_widget %}
+  {% theme_render_rc 'components/atoms/card', content: users_content, classes: 'w-full lg:w-80' %}
+{% endcapture %}
+{% liquid
+  assign widget = null | hash_merge: content: users_widget, id: 'users_widget', weight: 2
+  assign result = result | add_to_array: widget
+%}
+
+
+{% comment %} Events widget {% endcomment %}
+
+{% function total_events = 'modules/community/queries/events/count' %}
+{% capture events_content %}
+  <div class="flex flex-col justify-between h-full">
+    <div>
+      <div class="uppercase">Events</div>
+      <div class="font-bold">{{total_events}}</div>
+      <br/>
+    </div>
+    <div>
+      <hr>
+      <div class="flex justify-end">
+        {% theme_render_rc 'components/atoms/button', weight: 'secondary', href: '/admin/community/events', content: 'View' %}
+      </div>
+    </div>
+  </div>
+{% endcapture %}
+
+{% capture events_widget %}
+  {% theme_render_rc 'components/atoms/card', content: events_content, classes: 'w-full lg:w-80' %}
+{% endcapture %}
+{% liquid
+  assign widget = null | hash_merge: content: events_widget, id: 'events_widget', weight: 3
+  assign result = result | add_to_array: widget
+%}
+
+
+{% comment %} Hashtags widget {% endcomment %}
+
+{% function total_hashtags = 'modules/community/queries/tags/count' %}
+{% capture hashtags_content %}
+  <div class="flex flex-col justify-between h-full">
+    <div>
+      <div class="uppercase">Hashtags</div>
+      <div class="font-bold">{{ total_hashtags }}</div>
+      <br/>
+    </div>
+    <div>
+      <hr>
+      <div class="flex justify-end">
+        {% theme_render_rc 'components/atoms/button', weight: 'secondary', href: '/admin/community/hashtags', content: 'View' %}
+      </div>
+    </div>
+  </div>
+{% endcapture %}
+
+{% capture hashtags_widget %}
+  {% theme_render_rc 'components/atoms/card', content: hashtags_content, classes: 'w-full lg:w-80' %}
+{% endcapture %}
+{% liquid
+  assign widget = null | hash_merge: content: hashtags_widget, id: 'hashtags_widget', weight: 4
+  assign result = result | add_to_array: widget
+%}
+
+
+{% comment %} hook results {% endcomment %}
+{% return result %}

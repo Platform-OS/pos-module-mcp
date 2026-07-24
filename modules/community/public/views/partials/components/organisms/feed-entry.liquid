@@ -1,0 +1,176 @@
+---
+metadata:
+  name: Feed entry
+  params:
+    payload: {}
+    current_profile: {}
+    context: {}
+  styleguide:
+    payload:
+      object:
+        type: 'post_created'
+        body: 'Lorem ipsum dolor sit amet'
+      target:
+        type: 'profile'
+      post:
+        body: 'Lorem ipsum dolor sit amet'
+        comments:
+          - id: 0
+            created_at: '2023-01-09T07:24:19.418Z'
+            body: 'test comment'
+            creator:
+              id: '0'
+              name: 'Jane Doe'
+              avatar:
+                photo:
+                  versions:
+                    sm: 'https://i.pravatar.cc/100'
+            removed_at: null
+      actor:
+        name: 'John Doe'
+        avatar:
+          photo:
+            versions:
+              sm: 'https://i.pravatar.cc/100'
+    current_profile:
+      id: '0'
+      name: 'John Doe'
+      avatar:
+        photo:
+          versions:
+            sm: 'https://i.pravatar.cc/100'
+    context: {}
+---
+{% liquid
+  assign payload = payload | default: params.payload
+  assign current_profile = current_profile | default: params.current_profile
+  assign context = context | default: params.context
+
+  if current_profile
+    function can_edit = 'modules/user/helpers/can_do', requester: current_profile, do: 'edit', entity: payload.object, access_callback: 'modules/community/can/posts'
+  endif
+%}
+
+<article class="pos-card pos-community-post" id="pos-community-post-{{ payload.object.id }}" data-post-id="{{ payload.object.id }}">
+  {% render 'modules/community/activities/feed_unit/header', payload: payload, namespace: namespace, role: role, current_profile: current_profile, post: payload['modules/community/post'], hide_menu: null %}
+
+{% liquid
+  assign types = 'profile,group' | split: ','
+  if types contains payload.target.type and payload.object.type == 'modules/community/comment'
+    function comment_body_formatted = 'modules/community/helpers/linkify_hashtags', input: payload.object.body
+    assign comment_body_formatted = comment_body_formatted | markdown: '{ "elements": ["b","strong","i","em","a","code", "pre"], "attributes":{ "a": ["href"] } }'
+    echo comment_body_formatted
+  endif
+%}
+
+{% if payload['modules/community/post'] %}
+  {% liquid
+    assign post = payload['modules/community/post']
+    assign comments = post.comments
+    function comment_body_formatted = 'modules/community/helpers/linkify_hashtags', input: post.body
+    function comment_body_formatted = 'modules/community/helpers/linkify_mentions', input: comment_body_formatted
+    assign comment_body_formatted = comment_body_formatted | markdown: '{ "elements": ["b","br","strong","i","em","a","code","p","pre","img","h1", "h2", "h3", "h4", "h5", "table", "tr", "td", "th", "ul", "li", "ol"], "attributes":{ "a": ["href"], "img": ["src"] } }'
+  %}
+
+  {% if can_edit %}
+    <div
+      id="pos-community-post-{{ post.id }}-edit"
+      class="pos-community-post-edit"
+    >
+      {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+      <form action="/api/posts">
+      {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+        <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+        <input type="hidden" name="post[id]" value="{{ post.id }}">
+        {% liquid
+          assign editor_id = 'pos-community-post-' | append: post.id | append: '-editor'
+        %}
+        {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments{%- endcomment -%}
+        {% render 'modules/common-styling/forms/markdown',
+          name: 'post[body]',
+          id: editor_id,
+          presigned_upload: context.presigned_url,
+          mention_search_url: '/api/users/search.json',
+          value: post.body,
+          minlength: 3
+        %}
+        {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments{%- endcomment -%}
+        <fieldset class="pos-form-actions">
+          <button type="button" class="pos-community-post-edit-close">{{ 'modules/community/app.cancel' | t }}</button>
+          <button type="submit" class="pos-button pos-button-primary">{{ 'modules/community/static-pages.save' | t }}</button>
+        </fieldset>
+      </form>
+    </div>
+  {% endif %}
+
+    <div class="pos-community-post-content pos-prose">
+      {{ comment_body_formatted }}
+    </div>
+    {% comment %} old video embedings that supports only YouTube {% endcomment %}
+    {% if payload.object.video_url %}
+      <div class="mt-4 pos-feed-video-container">
+        {% liquid
+          assign video = payload.object.video_url | video_params
+        %}
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video.video_id }}" class="w-full h-auto rounded-surface" style="aspect-ratio: 16 / 9;" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+    {% comment %} new video embedings {% endcomment %}
+    {% elsif payload.object.embeded_media %}
+      <div class="mt-4 pos-feed-video-container">
+        {% liquid
+          assign video = payload.object.embeded_media | parse_json
+        %}
+        {% if video.app == 'instagram' %}
+          <iframe width="320" height="600" src="{{ video.embedUrl }}" class="mx-auto border border- rounded-surface" frameborder="0" scrolling="no" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        {% else %}
+          <iframe width="560" height="315" src="{{ video.embedUrl }}" class="w-full h-auto rounded-surface" style="aspect-ratio: 16 / 9;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% if payload.type == 'post_created' and payload.object.photos.size > 0 %}
+    <div class="mt-2 flex flex-col text-center lg:grid lg:grid-cols-{{ payload.object.photos.size }} gap-2 justify-center">
+      {% for photo in payload.object.photos %}
+        <div class="bg-white flex flex-1 mt-4 overflow-hidden rounded-lg shadow-lg justify-center items-center">
+          <div class="lg:h-56 xl:h-72" style="aspect-ratio: 6/4;">
+          {% if photo.url.versions.uncropped %}
+            <a href="{{ photo.url.versions.uncropped }}" target="_blank">
+          {% endif %}
+            <picture>
+              <source type="image/avif" srcset="{{ photo.url.versions.m_avif | replace: ' ', '%20' }}, {{ photo.url.versions.lg_avif | replace: ' ', '%20' }} 2x">
+              <img src="{{ photo.url.versions.m }}" srcset="{{ photo.url.versions.lg | replace: ' ', '%20' }} 2x" width="{{ photo.photo_width }}" height="{{ photo.photo_height }}" alt="" class="w-full rounded">
+            </picture>
+          {% if photo.url.versions.uncropped %}
+            </a>
+          {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if comments.size > 0 or current_profile.id %}
+    <footer>
+      <ul>
+        {% if current_profile.id %}
+          <li>
+            {% render 'modules/community/migrated/post/like', profile_id: current_profile.id, post: payload['modules/community/post'], parent_entity_type: payload.target.type %}
+          </li>
+        {% endif %}
+
+        {% if comments.size > 0 %}
+          <li>
+            {% render 'modules/common-styling/icon', icon: 'messageBubblesDouble', class: null %}
+            {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+            {{ 'modules/community/feed.comments' | t: count: comments.size }}
+            {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+          </li>
+        {% endif %}
+      </ul>
+    </footer>
+  {% endif %}
+
+  {% theme_render_rc 'components/organisms/comments', comments: comments, post: post, current_profile: current_profile, can_comment: can_comment, event: event, target_activity_uuid: payload.uuid %}
+{% endif %}
+
+</article>

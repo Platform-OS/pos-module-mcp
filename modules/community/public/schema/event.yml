@@ -1,0 +1,27 @@
+name: event
+properties:
+  - name: event_uuid
+  - name: uuid
+  - name: name
+  - name: short_description
+  - name: description
+  - name: start_date
+    type: datetime
+  - name: end_date
+    type: datetime
+  - name: link
+  - name: venue
+  - name: commentable
+    type: boolean
+  - name: status # pending | published | unpublished | cancelled
+  
+
+# Cache
+  - name: c__names
+    type: string
+  - name: c__going
+    type: integer
+  - name: c__maybe
+    type: integer
+  - name: c__not_going
+    type: integer

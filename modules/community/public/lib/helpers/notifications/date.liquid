@@ -1,0 +1,8 @@
+{% capture date %}
+  {% if payload.date %}
+    {% unless skip_link == true %}<a href="{% render 'modules/community/helpers/link_to', object: payload, type: 'activity' %}" class="pos-clean"> {% endunless %}
+      <time title="{{ payload.date | l: 'long', timezone }}" datetime="{{ payload.date }}" class="block mt-1 text-xs text-supplementary timeago">{{ payload.date | l: 'compact', timezone }}</time>
+    {% unless skip_link == true %}</a>{% endunless %}
+  {% endif %}
+{% endcapture %}
+{% return date %}

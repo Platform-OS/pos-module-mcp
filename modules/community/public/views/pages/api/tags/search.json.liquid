@@ -1,0 +1,5 @@
+{% liquid
+  function tags = 'modules/community/queries/tags/search', query: context.params.query, limit: 10, status: "published", page: null, not_ids: null, sort: null, name: null, names: null, with_creator: null
+
+  echo tags
+%}

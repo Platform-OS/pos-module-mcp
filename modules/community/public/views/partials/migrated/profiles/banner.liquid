@@ -1,0 +1,89 @@
+{% liquid
+  assign profile = profile | default: params.profile
+  assign current_profile = current_profile | default: params.current_profile
+  assign profile_cover_photo = profile.profile_cover.photo.url
+
+  assign name = profile.first_name | append: ' ' | append: profile.last_name
+  unless name
+    assign name = profile.name
+  endunless
+
+  content_for 'meta_image'
+    print profile.avatar.photo.versions.lg
+  endcontent_for
+  content_for 'meta_description'
+    print name | append: ' - ' | append: profile.bio | truncate: 200
+  endcontent_for
+%}
+
+<section class="pos-community-profile-banner">
+
+  {% if profile_cover_photo %}
+    <div class="pos-community-profile-banner-cover" style="background-image: url('{{ profile_cover_photo }}')"></div>
+  {% endif %}
+
+  <div class="pos-community-profile-banner-heading">
+    {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+    {% render 'modules/common-styling/user/avatar', size: '2xl', name: name, params: null %}
+    {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+    <nav class="pos-community-profile-banner-actions">
+      <ul>
+        {% if profile.linkedin_url %}
+          <li>
+            <a href="{{ profile.linkedin_url }}" rel="noopener external noreferrer" target="_blank" class="pos-button">
+              {% render 'modules/common-styling/icon', icon: 'linkedin', class: null %}
+            </a>
+          </li>
+        {% endif %}
+        {% if profile.id != current_profile.id %}
+          <li>
+            <a href="/inbox/?to_uuid={{ profile.uuid }}" class="pos-button">
+              {% render 'modules/common-styling/icon', icon: 'messagesTyping', class: null %}
+              Message
+            </a>
+          </li>
+          <li>
+            {% render 'modules/community/migrated/profiles/follow_toggle', profile: profile, show_label: false, show_icon: null, small: null %}
+          </li>
+        {% else %}
+          <li>
+            <a href="/profile/edit" class="pos-button">{{ 'modules/community/profiles.edit' | t }}</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+
+  <div class="pos-community-profile-banner-content">
+    
+    <div>
+      <div class="pos-community-profile-banner-job">
+        {{ profile.job_title }}{% if profile.job_title and profile.employer %}, {% endif %}{{ profile.employer }}
+      </div>
+      <a href="{% render 'modules/community/helpers/link_to', object: profile %}" class="pos-community-profile-banner-name">
+        <h2 class="pos-heading-2">{{ name }}</h2>
+      </a>
+      {% if profile.bio %}
+        <div class="pos-community-profile-banner-bio">{{ profile.bio }}</div>
+      {% endif %}
+    </div>
+
+    <ul class="pos-community-profile-banner-details">
+
+      {% if profile.location %}
+        <li>
+          {{ profile.location }}
+          {% render 'modules/common-styling/icon', icon: 'location', class: null %}
+        </li>
+      {% endif %}
+
+      <li>
+        {{ 'modules/community/profiles.member_since' | t }} {{ profile.created_at | l: 'date_compact' }}
+        {% render 'modules/common-styling/icon', icon: 'clock', class: null %}
+      </li>
+    
+    </ul>
+
+  </div>
+
+</section>

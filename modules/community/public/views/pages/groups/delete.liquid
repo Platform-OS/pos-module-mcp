@@ -1,0 +1,32 @@
+---
+slug: groups/:id
+method: delete
+---
+{% liquid
+  assign route = context.params.route | default: '/groups'
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign group_id = context.params.id | split: '-' | last
+  function group = 'modules/community/queries/groups/find', id: group_id, current_profile: null
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'delete', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/groups/delete', group: group
+  if object.valid
+    assign event_payload = null | hash_merge: group_id: group.id, actor_id: current_profile.id, target_name: group.name
+    function _ = 'modules/core/commands/events/publish', type: 'group_deleted', object: event_payload, delay: 0, max_attempts: null
+
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: route , notice: 'modules/community/groups.deleted'
+    # platformos-check-enable DeprecatedTag
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: route, error: 'modules/community/common.delete_failed'
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

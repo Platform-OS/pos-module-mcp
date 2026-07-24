@@ -1,0 +1,20 @@
+---
+slug: api/comments
+method: post
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/comments/create', object: context.params.comment, current_profile: null
+  if object.valid
+    assign event_payload = null | hash_merge: creator_id: current_profile.id, comment_id: object.id, commentable_id: context.params.comment.commentable_id
+    function _ = 'modules/core/commands/events/publish', type: 'comment_created', object: event_payload, delay: 0, max_attempts: null
+  endif
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/json/shared/show', object: object
+  # platformos-check-enable DeprecatedTag
+%}

@@ -1,0 +1,13 @@
+<div id="pos-community-dashboard" class="pos-community-contentgrid">
+
+  <div id="pos-dashboard-feed" class="pos-community-contentgrid-content">
+    {% render 'modules/community/components/pages/feed', list: feed, feed_type: 'private', current_profile: current_profile, user: current_profile, page: 1, uuid: uuid, params: null, frame: null, attrs: null %}
+  </div>
+
+  <aside id="pos-dashboard-sidebar" class="pos-community-contentgrid-sidebar">
+    {% render 'modules/community/migrated/informative/people_to_follow', list: people_to_follow, current_profile: current_profile %}
+
+    {% render 'modules/community/migrated/informative/suggested_topics', list: topics_to_follow, current_profile: current_profile %}
+  </aside>
+
+</div>

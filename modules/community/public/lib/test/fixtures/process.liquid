@@ -1,0 +1,11 @@
+{% liquid
+  assign command = 'testcommand'
+  assign payload = null | hash_merge: foo: 'bar'
+  # platformos-check-disable MissingPartial
+  function process = 'modules/community/commands/processes/create', payload: payload, command: command, profile: profile, run_in_background: false
+  # platformos-check-enable MissingPartial
+
+  function contract = 'modules/tests/assertions/valid_object', contract: contract, object: process, field_name: 'process'
+
+  return process
+%}

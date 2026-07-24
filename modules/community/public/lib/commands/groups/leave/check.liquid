@@ -1,0 +1,19 @@
+{% liquid
+  assign c = '{ "valid": true, "errors": {} }' | parse_json
+
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'id', key: 'modules/core/validation.blank'
+
+  hash_assign object['valid'] = c.valid
+
+  # platformos-check-disable UnknownProperty
+  if object.error_reason
+  # platformos-check-enable UnknownProperty
+    # platformos-check-disable UnknownProperty
+    hash_assign object['errors'] = '[]' | parse_json | add_to_array: object.error_reason
+    # platformos-check-enable UnknownProperty
+  else
+    hash_assign object['errors'] = c.errors
+  endif
+
+  return object
+%}

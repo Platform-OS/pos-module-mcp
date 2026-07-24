@@ -1,0 +1,40 @@
+---
+metadata:
+  name: Review bar
+  params:
+    barClasses: ''
+    valueClasses: ''
+    maxValue: 120
+    value: 80
+    ariaLabel: 'myProgress'
+  styleguide:
+    - maxValue: 120
+      value: 120
+    - maxValue: 120
+      value: 70
+    - maxValue: 120
+      value: 20
+    - maxValue: 60
+      value: 20
+      barClasses: 'w-60 h-1 rounded bg-highlighted'
+      valueClasses: 'bg-colorful rounded h-full'
+---
+{% liquid
+  assign maxValue = maxValue | default: params.maxValue | default: 100
+  assign value = value | default: params.value
+  assign ariaLabel = ariaLabel | default: params.ariaLabel
+
+  assign percent = value | times: 100 | divided_by: maxValue
+
+  assign barClasses = barClasses | default: params.barClasses | default :'w-52 h-1.5 border border-input-border bg-panel'
+  assign valueClasses = valueClasses | default: params.valueClasses | default :'bg-warning h-full'
+%}
+
+<div
+  role="range"
+  class="{{barClasses}}"
+  aria-valuenow="{{value}}"
+  aria-valuemax="{{maxValue}}">
+  <div class="{{valueClasses}}" style="width: {{percent}}%;">
+  </div>
+</div>

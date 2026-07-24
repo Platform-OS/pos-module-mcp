@@ -1,0 +1,44 @@
+name: post
+properties:
+  - name: uuid
+  - name: parent_id
+    type: string
+  - name: creator_id
+    type: string
+  - name: group_id
+    type: string
+  - name: title
+    type: string
+  - name: body
+    type: text
+  - name: tags
+    type: array
+  - name: upvote_profile_ids
+    type: array
+  - name: downvote_profile_ids
+    type: array
+  - name: accepted_post_id
+    type: string
+  - name: c__score
+    type: integer
+  - name: c__answers
+    type: integer
+  - name: slug
+    type: string
+  - name: removed_at
+    type: datetime
+  - name: edited_at
+    type: datetime
+  - name: embeded_media
+  - name: video_url
+# Params telling what user can do with certain content type
+  - name: commentable
+    type: boolean
+  - name: replyable
+    type: boolean
+  - name: votable
+    type: boolean
+  - name: followable
+    type: boolean
+  - name: featurable
+    type: boolean

@@ -1,0 +1,13 @@
+{% liquid
+  assign header = '{}' | parse_json
+
+  assign photo = profile.avatar.photo
+  assign name = profile.name | default: profile.slug
+  function url = 'modules/community/helpers/link_to', object: profile
+
+  hash_assign header['url'] = url
+  hash_assign header['photo'] = photo
+  hash_assign header['name'] = name
+
+  return header
+%}

@@ -1,0 +1,103 @@
+---
+slug: profile.frame(/:type)(/:username)
+layout: ''
+---
+{% liquid
+  assign type = context.params.type
+
+  assign page = context.params.page | to_positive_integer: 1
+
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign slug = context.params.username | default: current_profile.slug
+
+  assign profile = current_profile
+  assign meta_visible = null
+
+  unless type == 'tag'
+    unless slug == current_profile.slug
+    assign slug = context.params.username | default: current_profile.slug
+    function profile_id = 'modules/community/helpers/slugs/get_id' , slug:slug
+    function profile = 'modules/user/queries/profiles/find', id: profile_id, uuid: null, user_id: null, first_name: null, last_name: null
+    endunless
+
+    assign profile_id = profile.id
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/present_or_404', property:  profile_id
+    # platformos-check-enable DeprecatedTag
+  endunless
+
+  if type == 'feed'
+    function list = 'modules/community/queries/activities/search_with_records', feed: 'user-public', feed_id: profile.id, limit: 9, page: page, uuid: null
+    theme_render_rc 'components/pages/feed', list: list, current_profile: current_profile, user: profile, self: false, frame: true, page: page
+
+  elsif type == 'tag'
+    function hashtags = 'modules/community/queries/tags/search', name: context.params.username, limit: 1, query: null, page: null, not_ids: null, sort: null, names: null, status: null, with_creator: null
+    assign hashtag = hashtags.results.first
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/present_or_404', property: hashtag.id
+    # platformos-check-enable DeprecatedTag
+
+    function list = 'modules/community/queries/activities/search_with_records', feed: 'tag-public', feed_id: hashtag.id, limit: 20, uuid: null, page: page
+
+    theme_render_rc 'components/molecules/tags-frame', list: list, current_profile: current_profile, hashtag: hashtag, page: page
+
+  elsif type == 'suggested-groups'
+    function joined_groups = 'modules/community/queries/groups/search_for_member', member_id: profile_id, current_profile: current_profile, meta_visible: meta_visible, page: null, limit: null, group_type: null, without_group_type: null, not_ids: null
+    assign joined_group_ids = joined_groups.results | map: 'id'
+
+    function list = 'modules/community/queries/groups/search', limit: 2, page: page, not_ids: joined_group_ids, meta_visible: 'anonymous', ask_to_join: 'yes', current_profile: current_profile, sort: null, keyword: null, owner_id: null, relation_name: null, not_name: null, not_type: null, with_owner: null, id: null
+
+    theme_render_rc 'components/molecules/groups-frame', current_profile: current_profile, list: list
+
+  elsif type == 'my-groups'
+    if profile.id != current_profile.id
+      assign meta_visible = 'anonymous'
+    endif
+    function list = 'modules/community/queries/groups/search_for_member', limit: 2, page: page, member_id: profile_id, current_profile: current_profile, without_group_type: "project_group", meta_visible: meta_visible, group_type: null, not_ids: null
+
+    theme_render_rc 'components/molecules/groups-frame', current_profile: current_profile, list: list
+
+  elsif type == 'my-events'
+    if profile.id != current_profile.id
+      assign meta_visible = 'anonymous'
+    endif
+    function list = 'modules/community/queries/events/search_for_member', limit: 3, page: page, member_id: profile_id, current_profile: current_profile, with_owner: true
+
+    theme_render_rc 'components/molecules/events-frame', current_profile: current_profile, list: list
+
+  elsif type == 'suggested-events'
+    function list = 'modules/community/queries/events/search_for_member', limit: 3, member_id: profile_id, current_profile: current_profile, page: null, with_owner: null
+    assign joined_event_ids = list.results | map: 'id'
+    assign now = 'now' | to_time | strftime: '%Y-%m-%dT%H:%M:%S.%LZ'
+    assign sort = '{ "properties": { "name": "start_date", "order": "ASC" } }' | parse_json
+    function suggested = 'modules/community/queries/events/search', limit: 3, page: page, not_ids: joined_event_ids, current_profile: current_profile, from: now, sort: sort, name: null, status: null, keyword: null, owner_id: null, relation_name: null, not_name: null, with_owner: null
+
+    theme_render_rc 'components/molecules/events-frame', current_profile: current_profile, list: suggested
+
+  elsif type == 'following'
+    function list = 'modules/community/queries/relationships/search_by_left', limit: 3, pagef: page, name: 'followship:profile', r_id: null, include_related: true, l_id: profile_id
+    assign followings = list.results | map: 'r'
+    assign list = list | hash_merge: results: followings
+
+    theme_render_rc 'components/molecules/profiles-frame', current_profile: current_profile, list: list
+  elsif type == 'suggested-following'
+    assign followed_ids = profile.relationships['followship:profile'] | map: 'r_id'
+    assign excluded_ids = followed_ids | add_to_array: profile.id
+    # TODO: further optimizations needed around profiles/search
+    function suggested = 'modules/user/queries/profiles/search', limit: 3, page: page, not_ids: excluded_ids, uuid: null, sort: null, first_name: null, last_name: null, id: null, ids: null, user_id: null, emails: null, query: null
+
+    theme_render_rc 'components/molecules/profiles-frame', current_profile: current_profile, list: suggested
+
+  elsif type == 'followers'
+    function list = 'modules/community/queries/relationships/search_by_right', limit: 3, pagef: page, name: 'followship:profile', r_id: profile_id, include_related: true, l_id: null, not_l_id: null, accepted: null, approved: null
+    assign followers = list.results | map: 'l'
+    assign list = list | hash_merge: results: followers
+
+    theme_render_rc 'components/molecules/profiles-frame', current_profile: current_profile, list: list
+
+  endif
+%}

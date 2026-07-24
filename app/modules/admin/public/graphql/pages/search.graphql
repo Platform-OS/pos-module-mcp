@@ -1,0 +1,17 @@
+{
+  admin_pages(
+    filter: {
+      slug: { starts_with: "admin" }
+      metadata: { has_key: "menu"}
+    }
+    per_page: 20
+  ){
+    results{
+      id
+      physical_file_path
+      slug
+      metadata
+      request_method
+    }
+  }
+}

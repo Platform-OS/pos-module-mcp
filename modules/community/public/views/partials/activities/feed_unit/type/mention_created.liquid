@@ -1,0 +1,7 @@
+{% liquid
+  assign type = 'post_mention_notification'
+  if payload.source_type == 'comment'
+    assign type = 'comment_mention_notification'
+  endif
+%}
+{% print type | t: content_url: payload.content_url, scope: 'modules/community/activities.types' %}

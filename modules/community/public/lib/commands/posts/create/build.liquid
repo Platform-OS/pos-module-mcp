@@ -1,0 +1,21 @@
+{% liquid
+  assign group_id = object.group_id | default: object.entity_id
+  assign data = {"id": object.id, "parent_id": object.parent_id, "group_id": group_id, "entity_type": object.entity_type, "creator_id": current_profile.id, "title": object.title, "uuid": object.uuid, "body": object.body, "embeded_media": object.embeded_media, "c__score": 0}
+
+  if current_profile.roles contains 'superadmin'
+    assign date_value = object.date | to_time: current_profile.properties.timezone | to_time: 'UTC' | strftime: "%Y-%m-%dT%H:%M:%S%Z"
+    hash_assign data['date'] = date_value
+  endif
+
+  # platformos-check-disable UnknownProperty
+  if data['uuid'] == blank
+  # platformos-check-enable UnknownProperty
+    hash_assign data["uuid"] = '' | uuid | json
+  endif
+  function post_templates = 'modules/community/queries/posts/post_templates'
+  assign template = post_templates['post']
+  hash_assign data['template'] = template
+  assign data = data | hash_merge: template
+
+  return data
+%}

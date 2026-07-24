@@ -1,0 +1,46 @@
+{% liquid
+  assign actor = '{"id":1000, "roles": []}' | parse_json
+  assign object = '{"id":2000, "type":"group"}' | parse_json
+
+  function can = 'modules/user/helpers/can_do', requester: actor, do: 'join', entity: object, access_callback: 'modules/community/can/groups'
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: false, field_name: null
+%}
+
+
+{% liquid
+  assign actor = '{"id":1001, "roles": []}' | parse_json
+  assign object = '{"id":2001, "type":"group", "ask_to_join": "yes", "approve_request": "anonymous" }' | parse_json
+
+  function can = 'modules/user/helpers/can_do', requester: actor, do: 'join', entity: object, access_callback: 'modules/community/can/groups'
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: true, field_name: null
+%}
+
+
+{% liquid
+  assign actor = '{"id":1003, "roles": []}' | parse_json
+  assign object = '{"id":2003, "type":"group", "ask_to_join": "no" }' | parse_json
+
+  function can = 'modules/user/helpers/can_do', requester: actor, do: 'join', entity: object, access_callback: 'modules/community/can/groups'
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: false, field_name: null
+%}
+
+
+{% liquid
+  assign actor = '{"id": "1002", "roles": [], "relationships": {"owner": [], "membership": []}}' | parse_json
+  assign membership = '{"id": "2000", "type":"relationship", "name": "membership", "r_id": "2002", "l_id": "1002", "r": { "id": "2002", "type": "group" }, "l_accepted_at": "now", "r_accepted_at": "now", "valid": true}' | parse_json
+  hash_assign actor['relationships']['membership'] = actor['relationships']['membership'] | add_to_array: membership
+
+  assign object = '{"id": "2002", "type": "group", "post_content": "member" }' | parse_json
+
+  function can = 'modules/user/helpers/can_do', requester: actor, do: 'post', entity: object, access_callback: 'modules/community/can/groups'
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: true, field_name: null
+%}
+
+{% comment %}can't post when not member of group{% endcomment %}
+{% liquid
+  assign actor = '{"id": "1002", "roles": [], "relationships": {"owner": [], "membership": []}}' | parse_json
+  assign object = '{"id":2002, "type": "group", "post_content": "member" }' | parse_json
+
+  function can = 'modules/user/helpers/can_do', requester: actor, do: 'post', entity: object, access_callback: 'modules/community/can/groups'
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: can, expected: false, field_name: null
+%}

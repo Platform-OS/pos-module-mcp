@@ -1,0 +1,28 @@
+{% liquid
+  if ids == blank
+    log '(model) ID cannot be blank when searching for audience'
+    return null
+  endif
+
+  # platformos-check-disable MissingPartial
+  graphql r = 'modules/community/activities/model', ids: ids, limit: 20
+  # platformos-check-enable MissingPartial
+
+  assign models = r.records.results
+
+  for m in models
+    assign index = forloop.index | minus: 1
+    assign model = models[index]
+
+    assign uuid = model.uuid | default: 'no-uuid-this-is-fake-report-and-add'
+    # platformos-check-disable MissingPartial, NestedGraphQLQuery
+    graphql ri = 'modules/community/activities/photo', uuid: uuid
+    # platformos-check-enable MissingPartial, NestedGraphQLQuery
+    hash_assign model['photos'] = ri.records.results
+    # platformos-check-disable UnknownProperty
+    hash_assign model['name'] = model['name'] | default: model['title'] | default: model['first_name']
+    # platformos-check-enable UnknownProperty
+  endfor
+
+  return models
+%}

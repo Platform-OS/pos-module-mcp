@@ -1,0 +1,50 @@
+query search(
+  $id: ID
+  $limit: Int = 1
+) {
+  groups: records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/group" }
+    }
+    sort: [{ created_at: { order: DESC } }]
+  ) {
+    total_entries
+    results {
+      ...group
+    }
+  }
+}
+
+fragment group on Record {
+  id
+  created_at
+  type: table
+
+  name: property(name: "name")
+  tags: property_array(name: "tags")
+
+  group_type: property(name: "group_type")
+  ask_to_join: property(name: "ask_to_join")
+  meta_visible: property(name: "meta_visible")
+  content_visible: property(name: "content_visible")
+  approve_request: property(name: "approve_request")
+  post_content: property(name: "post_content")
+  add_comments: property(name: "add_comments")
+
+  invite_member: property(name: "invite_member")
+
+  relationships: related_records(table: "modules/community/relationship" join_on_property: "id" foreign_property: "r_id"
+    filter: { properties: [
+       { name: "l_accepted_at", exists: true }
+       { name: "r_accepted_at", exists: true }
+      ]
+    }
+  ) {
+    id
+    name: property(name: "name")
+    r_id: property(name: "r_id")
+    l_id: property(name: "l_id")
+  }
+}

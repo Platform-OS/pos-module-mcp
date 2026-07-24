@@ -1,0 +1,31 @@
+---
+slug: relationships/:id
+method: delete
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign data = context.params
+  function relation = 'modules/community/queries/relationships/find', name: data.name, l_id: data.l_id, r_id: data.r_id, include_related: null
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: relation.id
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: relation, do: 'delete', requester: current_profile, access_callback: 'modules/community/can/relationships', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/relationships/delete', object: relation, skip_execution: null
+  if object.valid
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: context.params.return_to, notice: context.params.notice_key
+    # platformos-check-enable DeprecatedTag
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: context.params.return_to, error: context.params.error_key
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

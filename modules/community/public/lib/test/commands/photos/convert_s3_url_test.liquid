@@ -1,0 +1,8 @@
+{% liquid
+  assign from = "https://s3.us-west-2.amazonaws.com/uploads.staging.oregon.platform-os.com/property_uploads%2F4865%2Fphoto%2Fphoto%2Fdfc5aff2-8abc-4f85-aed2-001ea23ee2a7%2Fcomment_1621841227ZLpj1jh3Tui56ufGU38aCM%2Cw400.jpg"
+  assign expected = "https://uploads.staging.oregon.platform-os.com/instances/4865/property_uploads/photo/photo/dfc5aff2-8abc-4f85-aed2-001ea23ee2a7/comment_1621841227ZLpj1jh3Tui56ufGU38aCM%2Cw400.jpg" | url_decode
+
+  function given = 'modules/community/commands/photos/convert_s3_url', from: from
+
+  function contract = 'modules/tests/assertions/equal', contract: contract, given: given, expected: expected, field_name: null
+%}

@@ -1,0 +1,12 @@
+{% liquid
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/commands/activities/unpublish', record_id: event.object.id
+  # platformos-check-enable DeprecatedTag
+
+  function hashtags = 'modules/community/queries/tags/search', names: event.tags, page: null, not_ids: null, sort: null, name: null, query: null, limit: null, status: null, with_creator: null
+  for tag in hashtags.results
+    assign post_count = tag.post_count | to_positive_integer: 0 | minus: 1 | at_least: 0
+    assign tag_object = tag | hash_merge: post_count: post_count
+    function _ = 'modules/community/commands/tags/update', object: tag_object
+  endfor
+%}

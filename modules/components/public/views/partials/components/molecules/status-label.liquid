@@ -1,0 +1,84 @@
+---
+metadata:
+  name: Status label
+  params:
+    severity:
+      - info
+      - error
+      - success
+      - warning
+    icon:
+      - true
+      - false
+    alignment:
+      - left
+      - right
+    content: Fill your profile
+    classes: ''
+  styleguide:
+    - severity: info
+      content: Draft
+      icon: true
+      alignment: left
+    - severity: error
+      content: Closed
+      icon: true
+      alignment: right
+    - severity: success
+      content: <b>Open</b> until 20 July 2021
+      icon: true
+    - severity: warning
+      content: Under Evaluation
+      icon: true
+    - severity: info
+      content: Draft
+      icon: false
+    - severity: error
+      content: Closed
+      icon: false
+      alignment: left
+    - severity: success
+      content: <b>Open</b> until 20 July 2021
+      icon: false
+    - severity: warning
+      content: Under Evaluation
+      icon: false
+      classes: 'px-2 py-1 h-6 rounded border border-confirmation bg-highlighted'
+---
+{% parse_json icons %}
+{
+  "success": { "name": "checkBadge", "color": "text-confirmation", "bgcolor": "bg-confirmation" },
+  "error": { "name": "warningCloud", "color": "text-important", "bgcolor": "bg-important" },
+  "info": { "name": "info", "color": "text-graphic", "bgcolor": "bg-graphic" },
+  "warning": { "name": "warning", "color": "text-warning", "bgcolor": "bg-warning" }
+}
+{% endparse_json %}
+{% liquid
+  assign icon = icon | default: params.icon | default: false
+  assign alignment = alignment | default: params.alignment | default: 'right'
+  assign severity = severity | default: params.severity | default: 'info'
+  assign content = content | default: params.content
+  assign classes = classes | default: params.classes | default: 'px-2 py-1 h-6 rounded-surface border border-divider bg-panel'
+
+  if alignment == "left"
+    assign reverse = " flex-row-reverse"
+    assign content_classes = "mr-1"
+  else
+    assign content_classes = "ml-1"
+  endif
+
+  assign icon_classes = 'w-3 h-3 ' | append: icons[severity].color
+  assign icon_params = null | hash_merge: name: icons[severity].name, class: icon_classes
+%}
+<div class="inline-block {{classes}}">
+  <div class="flex items-center align-center {{reverse}}" data-tc="statusLabel">
+      {% if icon == true %}
+        <div>
+          {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+        </div>
+      {% else %}
+        <div class="rounded-full block w-3 h-3 {{icons[severity].bgcolor}}"></div>
+      {% endif %}
+      <div class="text-xs {{content_classes}}" data-tc="statusLabel">{{content | html_safe}}</div>
+  </div>
+</div>

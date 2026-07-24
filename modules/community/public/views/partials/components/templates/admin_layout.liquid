@@ -1,0 +1,62 @@
+---
+metadata:
+  name: Admin layout
+  params:
+    context: {}
+    current_page:
+    admin_menu_items:
+    query_path:
+---
+<!DOCTYPE html>
+
+{% liquid
+  function direction = 'modules/community/helpers/text_direction', lang: context.language
+  if context.current_user
+    response_headers '{ "Cache-Control": "no-store", "Pragma": "no-cache" }'
+  endif
+%}
+
+<html dir="{{direction}}" lang="{{context.language}}" class="overflow-y-scroll scroll-smooth">
+  <head>
+    {% capture meta %}{% yield 'metatags' %}{% endcapture %}
+    {% render 'modules/community/layout/head', meta: meta, lang: null %}
+    {% render 'modules/community/layout/assets_styles' %}
+    {%- capture canonical_url -%}{%- yield 'canonical' -%}{%- endcapture -%}
+    {% if canonical_url != blank %}
+      <link rel="canonical" href="https://{{ context.location.host }}{% print canonical_url | strip %}" />
+    {% endif %}
+    {% render 'modules/community/layout/js_global_variables', current_profile: context.exports.current_profile %}
+  </head>
+
+  <body class="font-sans antialiased leading-normal text-normal bg-base scroll-smooth">
+    <div class="flex flex-col min-h-screen">
+      {% theme_render_rc 'components/organisms/header', profile: context.exports.current_profile, context: context %}
+      {% theme_render_rc 'components/organisms/navigation-bar', menu_items: admin_menu_items %}
+      <main class="flex flex-col flex-1 flex-grow relative mt-10">
+        {% liquid
+          if current_page
+            # platformos-check-disable DeprecatedTag
+            include current_page
+            # platformos-check-enable DeprecatedTag
+          endif
+        %}
+
+        {% liquid
+          function flash = 'modules/core/commands/session/get', key: 'sflash', clear: null
+          if context.location.pathname != flash.from or flash.force_clear
+            function _ = 'modules/core/commands/session/clear', key: 'sflash'
+          endif
+          theme_render_rc 'components/molecules/flashes', params: flash
+        %}
+      </main>
+
+      {% theme_render_rc 'components/organisms/footer', profile: context.exports.current_profile %}
+      {%- comment -%}platformos-check-disable MissingPartial{%- endcomment -%}
+      {% render 'layout/scripts' %}
+      {%- comment -%}platformos-check-enable MissingPartial{%- endcomment -%}
+    </div>
+
+    {% render 'modules/community/layout/assets_scripts' %}
+    {% yield 'custom_scripts' %}
+  </body>
+</html>

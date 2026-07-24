@@ -1,0 +1,26 @@
+{% liquid
+  if id == blank and names == empty
+    log '(tags) ID or tag-names cannot be blank when searching for audience'
+    return null
+  endif
+
+  graphql r = 'modules/community/activities/tags/audience', names: names, limit: 1000
+  assign tags = r.tags.results
+  assign audience = '{ "profile": [], "tag": [] }' | parse_json
+
+  for tag in tags
+    assign relationships = tag.relationships | group_by: 'name'
+
+    hash_assign audience['tag'] = audience['tag'] | add_to_array: tag.id
+
+    unless skip_followers
+      for r in relationships['followship:tag']
+        # platformos-check-disable UnknownProperty
+        hash_assign audience['profile'] = audience['profile'] | add_to_array: r.l_id
+        # platformos-check-enable UnknownProperty
+      endfor
+    endunless
+  endfor
+
+  return audience
+%}

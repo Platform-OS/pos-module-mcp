@@ -1,0 +1,54 @@
+{% liquid
+  assign can = false
+
+  if profile == blank
+    return false
+  endif
+
+  if actor.type == 'organization'
+    assign actor = actor.representative
+  endif
+
+  assign permissions = actor.permissions | default: '{}' | parse_json
+  assign superadmins = context.constants.superadmins | split: ','
+  # platformos-check-disable UnknownProperty
+  if superadmins contains actor.user.email or permissions.superadmin or actor.roles contains 'superadmin'
+  # platformos-check-enable UnknownProperty
+    assign superadmin = true
+  endif
+
+  case do
+  when 'be_admin'
+    # platformos-check-disable UnknownProperty
+    if permissions.admin or superadmin
+    # platformos-check-enable UnknownProperty
+      return true
+    endif
+  when 'required_2fa'
+    function required_2fa = 'modules/core/queries/variable/find' name: "REQUIRED_2FA", type: "boolean", default: null
+    function can_be_admin = "modules/community/helpers/can", actor: actor, do: "be_admin", object: actor
+    if profile.organizations.size > 0 or can_be_admin.valid
+      if required_2fa
+        return true
+      endif
+    endif
+    if required_2fa and profile.otp_configured
+      return true
+    endif
+  when 'be_admin_or_merchant'
+    assign roles = 'site_admin,store_admin,maker,checker,superadmin' | split: ','
+    assign applied_roles = roles | array_intersect: actor.roles
+    if applied_roles.size > 0
+      return true
+    endif
+  endcase
+
+  # platformos-check-disable MissingPartial
+  function permissions = 'modules/user/queries/user/get_permissions', user: actor
+  # platformos-check-enable MissingPartial
+  if permissions contains do
+    assign can = true
+  endif
+
+  return can
+%}

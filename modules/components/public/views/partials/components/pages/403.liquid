@@ -1,0 +1,12 @@
+---
+metadata:
+  name: 403
+---
+<section class="container mt-24 flex flex-1 max-w-2xl flex-col justify-center" id="onboard">
+  <header class="mb-8 pb-8 text-center">
+    {% liquid
+      theme_render_rc 'components/atoms/heading', content: '403 Forbidden', level: 1, classes: 'mb-6'
+      theme_render_rc 'components/atoms/heading', content: "You don't have access to this page", level: 3
+    %}
+  </header>
+</section>

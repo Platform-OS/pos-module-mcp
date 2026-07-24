@@ -1,0 +1,30 @@
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'id', key: 'modules/core/validation.blank'
+
+  comment
+    if object['owner_id'] == object['profile_id']
+      # platformos-check-disable DeprecatedTag
+      include 'modules/community/helpers/register_error', contract: c, field_name: 'base', key: 'modules/community/posts.errors.owner_cant_vote_his_post'
+      # platformos-check-enable DeprecatedTag
+    endif
+  endcomment
+
+  if object['upvote_profile_id_append'] == blank and object['upvote_profile_id_remove'] == blank
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/register_error', contract: c, field_name: 'upvote_profile_ids', key: 'modules/core/validation.blank', message: null
+    # platformos-check-enable DeprecatedTag
+  endif
+
+  if object['downvote_profile_id_append'] == blank and object['downvote_profile_id_remove'] == blank
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/register_error', contract: c, field_name: 'downvote_profile_ids', key: 'modules/core/validation.blank', message: null
+    # platformos-check-enable DeprecatedTag
+  endif
+
+  hash_assign object['valid'] = c.valid
+  hash_assign object['errors'] = c.errors
+
+  return object
+%}

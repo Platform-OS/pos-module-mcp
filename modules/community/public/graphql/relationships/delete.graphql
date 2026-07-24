@@ -1,0 +1,10 @@
+mutation delete_relationship($id: ID!) {
+  record_delete(
+    table: "modules/community/relationship"
+    id: $id
+  ){
+    id
+    r_id: property(name: "r_id")
+    l_id: property(name: "l_id")
+  }
+}

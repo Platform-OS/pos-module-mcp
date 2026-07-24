@@ -1,0 +1,44 @@
+---
+slug: relationships/:id
+method: put
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign data = context.params
+  function relation = 'modules/community/queries/relationships/find', name: data.name, l_id: data.l_id, r_id: data.r_id, include_related: true
+
+  hash_assign relation['_incoming_changes'] = data
+  # platformos-check-disable DeprecatedTag
+  # platformos-check-disable UnknownProperty
+  include 'modules/community/helpers/present_or_404', property: relation.id
+  # platformos-check-enable UnknownProperty
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: relation, do: 'update', requester: current_profile, access_callback: 'modules/community/can/relationships/memberships', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/relationships/update', object: data
+  if object.valid
+    if object.l_accepted_at and object.r_accepted_at
+      assign event_payload = null | hash_merge: l_id: object.l_id, r_id: object.r_id, relationship_id: object.id
+      function _ = 'modules/core/commands/events/publish', type: 'relationship_created', object: event_payload, delay: 0, max_attempts: null
+      if object.r.type == 'group' or object.r.type == 'modules/community/group'
+        # platformos-check-disable UnknownProperty
+        assign event_payload = null | hash_merge: group_id: object.r_id, requester_id: relation.created_by_id, group_admin_id: current_profile.id
+        # platformos-check-enable UnknownProperty
+        function _ = 'modules/core/commands/events/publish', type: 'group_join_request_accepted', object: event_payload, delay: 0, max_attempts: null
+      endif
+    endif
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', notice: context.params.notice_key
+    # platformos-check-enable DeprecatedTag
+  else
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', error: context.params.error_key
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

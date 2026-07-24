@@ -1,0 +1,17 @@
+{% liquid
+  function list = 'modules/community/queries/relationships/search_by_right', limit: 100, name: 'event:going', r_id: event.event_id, l_id: null, not_l_id: null, accepted: null, include_related: null, approved: null
+  assign going_ids = list.results | map: 'l_id'
+
+  function list = 'modules/community/queries/relationships/search_by_right', limit: 100, name: 'event:maybe', r_id: event.event_id, l_id: null, not_l_id: null, accepted: null, include_related: null, approved: null
+  assign maybe_ids = list.results | map: 'l_id'
+
+  function audience = 'modules/community/commands/audience/build'
+  hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: going_ids | concat: maybe_ids
+
+  assign notification_title = 'modules/community/push_notifications.event_cancelled.title' | t
+  assign notification_body = 'modules/community/push_notifications.event_cancelled.body' | t: event: event.object.name
+  function url = 'modules/community/helpers/link_to_url', object: event.object, type: 'event', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  function publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+%}

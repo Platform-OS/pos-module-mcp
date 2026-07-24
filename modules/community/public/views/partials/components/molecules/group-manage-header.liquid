@@ -1,0 +1,47 @@
+---
+metadata:
+  name: Group management header
+  params:
+    groupname: ''
+    id: ''
+    tab: ''
+  styleguide:
+    groupname: 'Example group'
+    id: 123
+    tab: 'relationships'
+---
+{% liquid
+  assign groupname = groupname | default: params.groupname
+  assign id = id | default: params.id
+  assign tab = tab | default: params.tab
+%}
+<header>
+  <div class="container pt-2 pb-8">
+    {% capture title %}
+      {{ 'modules/community/groups.relationships.manage_group' | t }}: <a href="/groups/{{ id }}">{{ groupname }}</a>
+    {% endcapture %}
+    {% theme_render_rc 'components/atoms/heading', content: title, is_html: true %}
+  </div>
+</header>
+
+{% liquid
+  assign class = 'py-4 block text-normal pos-clean'
+  assign active_class = 'border-b-2 border-interactive-graphic text-interactive-text'
+%}
+
+<nav class="mb-6 container">
+  <div class="px-6 bg-panel">
+    <ul class="overflow-x-auto flex flex-col md:flex-row gap-8 !mb-0  md:font-semibold whitespace-nowrap">
+      <li>
+        <a href="/groups/{{ id }}/relationships" class="{{ class }} {% if tab contains 'relationships' %} {{ active_class }} {% endif %}">
+          {{ 'modules/community/groups.nav.user_management' | t }}
+        </a>
+      </li>
+      <li>
+        <a href="/groups/{{ id }}/edit" class="{{ class }} {% if tab contains 'edit' %} {{ active_class }} {% endif %}">
+          {{ 'modules/community/groups.nav.group_edit' | t }}
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>

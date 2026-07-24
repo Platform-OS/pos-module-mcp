@@ -1,0 +1,14 @@
+# Ignore external modules - fix issues in their own GitHub repos
+ignore:
+  - modules/chat/**
+  - modules/common-styling/**
+  - modules/components/**
+  - modules/openai/**
+  - modules/reports/**
+  - modules/user/**
+  - modules/core/**
+  - modules/profile/**
+  - modules/tests/**
+  - modules/oauth_github/**
+  - modules/oauth_google/**
+  - tests/**

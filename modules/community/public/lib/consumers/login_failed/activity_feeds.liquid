@@ -1,0 +1,7 @@
+{% comment %}
+  actor:private actor:public actor:audience
+  object:private
+{% endcomment %}
+
+{% comment %} system:audit {% endcomment %}
+{% render 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "1", at: null %}

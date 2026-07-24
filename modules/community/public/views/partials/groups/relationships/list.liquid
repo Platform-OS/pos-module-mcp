@@ -1,0 +1,81 @@
+{% if list.results.size > 0 %}
+
+  <div class="table w-full mt-12 first:mt-0">
+
+    <h3 class="lg:hidden font-semibold capitalize">{{ title | t }}</h3>
+
+    <header>
+      <div class="text-base"><h3 class="font-semibold capitalize">{{ title | t }}</h3></div>
+      <div>{{ 'modules/community/groups.relationships.l_accepted_at' | t }}</div>
+      <div>{{ 'modules/community/groups.relationships.r_accepted_at' | t }}</div>
+      <div></div>
+    </header>
+
+    {% for relation in list.results %}
+
+      <ul class="md:table-row">
+        <li class="md:table-cell pt-4 md:py-4 md:pe-6 border-t align-middle">
+          {% assign profile = relation.l %}
+          <a class="inline-flex items-center gap-2" href="/profile/{{ profile.slug }}">
+            {% theme_render_rc 'components/atoms/avatar', profile: profile, size: 44, class: 'w-11 h-11' %}
+            {{ profile.first_name }} {{ profile.last_name }}
+          </a>
+        </li>
+
+        <li class="md:table-cell pt-4 md:py-4 md:px-6 md:border-t align-middle">
+          {% if relation.l_accepted_at %}
+            <span class="md:hidden">{{ 'modules/community/groups.relationships.l_accepted_at' | t }}:</span>
+            <time class="timeago" datetime="{{ relation.l_accepted_at }}">{{ relation.l_accepted_at }}</time>
+          {% endif %}
+        </li>
+
+        <li class="md:table-cell md:py-4 md:px-6 md:border-t align-middle">
+          <span class="md:hidden">{{ 'modules/community/groups.relationships.r_accepted_at' | t }}:</span>
+          {% if relation.r_accepted_at == blank %}
+            {%- comment -%}platformos-check-disable MissingPartial{%- endcomment -%}
+            {% render 'modules/community/groups/buttons/approve_request', group: group, relation: relation %}
+            {%- comment -%}platformos-check-enable MissingPartial{%- endcomment -%}
+          {% else %}
+            <time class="timeago" datetime="{{ relation.r_accepted_at }}">{{ relation.r_accepted_at }}</time>
+          {% endif %}
+        </li>
+
+        <li class="md:table-cell py-4 md:border-t align-middle">
+          <div class="flex items-center justify-between md:justify-end gap-4">
+            {%- comment -%}platformos-check-disable LiquidHTMLSyntaxError{%- endcomment -%}
+            {% capture 'dropdown' %}
+              <ul class="whitespace-nowrap">
+                <li>
+                  <form action="{% render 'modules/community/helpers/link_to', object: relation %}" method="post">
+                    {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+                    <input type="hidden" name="_method" value="delete">
+                    <input type="hidden" name="name" value="{{ relation.name }}">
+                    <input type="hidden" name="l_id" value="{{ relation.l_id }}">
+                    <input type="hidden" name="r_id" value="{{ relation.r_id }}">
+                    <input type="hidden" name="return_to" value="{% render 'modules/community/helpers/link_to', object: group, action: 'relationships' %}">
+
+                    <button class="block py-3 px-7 rounded hover:bg-interaction text-content hover:text-content-inverted transition-colors">
+                      {{ 'modules/community/groups.relationships.remove_from_group' | t }}
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            {% endcapture %}
+            {%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}
+            {% capture dropdown_label %}
+              {% theme_render_rc 'components/atoms/icon', name: 'menuHorizontal', class: 'w-6 h-6' %}
+            {% endcapture %}
+            {% theme_render_rc 'components/molecules/dropdown', toggle_class: 'p-4 ps-0 lg:ps-4 text-content-sidenote hover:text-interaction-hover' toggle_title: '', label: dropdown_label, content: dropdown %}
+
+            {% render "modules/chat/theme/simple/message_button", to_uuid: profile.uuid, label_key: 'modules/chat/message', class: 'button button-secondary', button: null, defaultLabel: null %}
+          </div>
+        </li>
+      </ul>
+    {% endfor %}
+
+  </div>
+
+  <form action="" id="search-form"></form>
+
+  {% theme_render_rc 'components/molecules/pagination-old', form: 'search-form' collection: list, current_page: page %}
+{% endif %}

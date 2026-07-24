@@ -1,0 +1,8 @@
+{% liquid
+  assign site_name = 'modules/community/app.title' | t
+  assign from_email = 'modules/community/app.from_email' | t
+  assign subject = 'modules/community/emails.accounts.created_by_admin.subject' | t: site_name: site_name
+  assign object = {"to": object.email, "from": from_email, "subject": subject, "data": {"url": object.url}, "layout": "modules/community/mailer", "partial": "modules/community/emails/accounts/created_by_admin"}
+  function object = 'modules/core/commands/email/send', object: object
+  return object
+%}

@@ -1,0 +1,6 @@
+{% liquid
+  assign page = page | to_positive_integer: 1
+  graphql r = 'modules/community/activities/search', feed: feed, feed_id: feed_id, limit: limit, page: page
+
+  return r.activities
+%}

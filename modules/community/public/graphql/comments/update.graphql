@@ -1,0 +1,37 @@
+mutation update_comment(
+  $id: ID!
+  $uuid: String
+  $commentable_id: String
+  $commentable_type: String
+  $creator_id: String
+  $title: String
+  $body: String
+  $removed_at: String
+) {
+  record: model_update(
+    id: $id
+    model: {
+      model_schema_name: "modules/community/comment"
+      properties: [
+              { name: "uuid" value: $uuid }
+              { name: "commentable_id" value: $commentable_id }
+              { name: "commentable_type" value: $commentable_type }
+              { name: "creator_id" value: $creator_id }
+              { name: "title" value: $title }
+              { name: "body" value: $body }
+              { name: "removed_at" value: $removed_at }
+            ]
+    }
+  ){
+    id
+    created_at
+    updated_at
+      uuid: property(name: "uuid")
+      commentable_id: property(name: "commentable_id")
+      commentable_type: property(name: "commentable_type")
+      creator_id: property(name: "creator_id")
+      title: property(name: "title")
+      body: property(name: "body")
+      removed_at: property(name: "removed_at")
+    }
+}

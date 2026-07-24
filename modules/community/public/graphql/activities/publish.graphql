@@ -1,0 +1,4 @@
+mutation publish($uuid: ID!, $type: String!, $ids: [ID]!, $at: ISO8601DateTime = null) {
+  activity_publish(feed_type: $type, ids: $ids, uuid: $uuid, at: $at)
+}
+

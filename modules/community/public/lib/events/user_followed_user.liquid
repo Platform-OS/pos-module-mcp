@@ -1,0 +1,17 @@
+---
+metadata:
+  event:
+    actor_id
+    followed_profile_id
+    relation_id
+---
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'actor_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'followed_profile_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'relation_id', key: 'modules/core/validation.blank'
+
+  function _ = 'modules/community/commands/activities/enhance_event', event: event, actor_id: event.actor_id, target_id: event.followed_profile_id, object_id: relation_id
+
+  return c
+%}

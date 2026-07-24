@@ -1,0 +1,106 @@
+---
+metadata:
+  name: Profile Search page
+  params:
+    list: {}
+    current_profile: {}
+    filters: {}
+---
+{% liquid
+ assign list = list | default: params.list
+ assign current_profile = current_profile | default: params.current_profile
+ function filters = 'modules/community/queries/profiles/filters', params: context.params, default_sort_by: null
+%}
+{% capture card_content %}
+<div class="flex justify-between">
+  <form action="/profiles" name="profile-search" method="get">
+    {% liquid
+      assign search_placeholder = 'modules/community/quick_search.name' | t
+      assign input_params = null | hash_merge: name: 'keyword', placeholder: search_placeholder, value: filters.keyword
+      assign button_params = null | hash_merge: type: 'submit', icon: 'search', weight: 'primary'
+      theme_render_rc 'components/molecules/search-field', input_params: input_params, button: true, button_params: button_params, classes: "w-full md:w-80"
+    %}
+  </form>
+  <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+    <form action="/profiles" name="profile-search" method="get" data-profiles-list="">
+      <input type="hidden" name="keyword"  value="{{ filters.keyword }}">
+      {% assign select_options = [{"label": "Sort by First Name (Z-A)", "value": "first_name_desc"}, {"label": "Sort by First Name (A-Z)", "value": "first_name_asc"}, {"label": "Sort by Created (old)", "value": "created_at_asc"}, {"label": "Sort by Created (new)", "value": "created_at_desc"}] %}
+      {% theme_render_rc 'components/molecules/select',  name:'sort_by', value: filters.sort_by, id:'filter_sort', options:select_options, classes:'rounded-none w-full' %}
+    </form>
+  </div>
+</div>
+{% endcapture %}
+
+<header class="relative bg-cover bg-center -mt-10">
+  <div class="text-center pt-16 pb-24">
+    {% theme_render_rc 'components/atoms/heading', content: "MEMBERS", level: 1, classes: 'text-inverted' %}
+    {% theme_render_rc 'components/atoms/heading', content: "lorem ispum dolor sit amet elit", level: 4, classes: 'pt-4 text-inverted' %}
+  </div>
+</header>
+
+<div  class="container -mt-10 z-10">
+  {% theme_render_rc 'components/atoms/card', content: card_content %}
+</div>
+{% if list.results.size > 0 %}
+
+<div class="container grid grid-cols-1 md:grid-cols-2 gap-4 lg:grid-cols-4 md:gap-4 pt-8">
+  {% for profile in list.results %}
+      {% liquid
+        function url = 'modules/community/helpers/link_to', object: profile, type: 'profile'
+        assign my_profile = false
+        if current_profile.id != profile.id
+          assign allow_to_follow = true
+        else
+          assign my_profile = true
+          assign allow_to_follow = false
+        endif
+      %}
+      {% theme_render_rc 'components/organisms/profile-card',
+          profile_id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          imageSrc: profile.avatar.photo.url,
+          url: url,
+          allow_to_follow: allow_to_follow,
+          my_profile: my_profile
+        %}
+  {% endfor %}
+</div>
+
+<div class="container pt-5 flex flex-row-reverse">
+  {% liquid
+    if list.total_pages > 1
+      assign pager_template = '{?keyword,sort_by}'
+      assign pager_url = pager_template | expand_url_template: filters
+      assign pager_url = pager_url | append: '&page='
+      theme_render_rc 'components/molecules/pagination', count: list.total_pages, active: filters.page, maxCount: 5, url: pager_url
+    endif
+  %}
+</div>
+{% else %}
+<section
+x-init="currentPage = 1; itemsCounter = 0; totalPages = {{ list.total_pages }}; totalEntries = {{ list.total_entries }};"
+class="card mt-10 container md:h-64 flex flex-col md:flex-row justify-center items-center text-center md:text-start"
+>
+<div class="max-w-lg order-2 md:order-1">
+  <p class="subtitle">{{ 'modules/community/profiles.index.empty.title' | t }}</p>
+  <p>{{ 'modules/community/profiles.index.empty.desc' | t }}</p>
+</div>
+<div class="w-16 mb-6 md:mb-0 md:w-32 md:ms-10 md:ps-10 md:mt-1 order-1 md:order-last md:border-s">
+  {% theme_render_rc 'components/atoms/icon', name: 'binocular', class: 'w-full text-interaction-disabled' %}
+</div>
+</section>
+{% endif %}
+
+<script>
+  const profileFilter = document.querySelector('[data-profiles-list=""]');
+  profileFilter?.querySelector('select')?.addEventListener('change', () => {
+      profileFilter.submit();
+  });
+</script>
+
+
+
+
+
+

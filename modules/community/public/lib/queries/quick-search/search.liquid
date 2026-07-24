@@ -1,0 +1,19 @@
+{% liquid
+
+  assign qkeyword = context.params.qkeyword | strip
+  function filters = 'modules/community/queries/events/filters', params: context.params
+  function events = 'modules/community/queries/events/quick_search', limit: 3, page: filters.page, keyword: qkeyword, sort: filters.sort, current_profile: current_profile, with_relationships: null, status: null
+
+  function filters = 'modules/community/queries/groups/filters', params: context.params
+  function groups = 'modules/community/queries/groups/search', limit: 3, page: filters.page, keyword: qkeyword, sort: filters.sort, meta_visible: 'anonymous', current_profile: current_profile, owner_id: null, relation_name: null, not_name: null, not_type: null, not_ids: null, ask_to_join: null, with_owner: null, id: null
+
+  function filters = 'modules/user/queries/profiles/filters_proxy', params: context.params
+  assign keywords = qkeyword
+  function profiles = 'modules/user/queries/profiles/search', limit: 4, page: filters.page, query: keywords, sort: filters.sort, uuid: null, not_ids: null, first_name: null, last_name: null, id: null, ids: null, emails: null, user_id: null
+
+  assign list = '{}' | parse_json | hash_merge: profiles: profiles, events: events, groups: groups
+  assign filters = '{}' | parse_json | hash_merge: keyword: qkeyword
+
+  assign result = '{}' | parse_json | hash_merge: list: list, filters: filters
+  return result
+%}

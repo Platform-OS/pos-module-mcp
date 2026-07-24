@@ -1,0 +1,123 @@
+  {% comment %}
+    Renders a component's view.
+
+    Params:
+      - component: Object
+        The component object to render.
+      - example_position: string (optional)
+        By default the example section is rendered to the right. Available vaules: 'right', 'bottom'.
+  {% endcomment %}
+
+  {% assign example_position = example_position | default: 'right' %}
+  {% liquid
+    assign generated_name = component.path | split: '/' | last | prepend: '⚠️ '
+    hash_assign component['metadata']['name'] = component.metadata.name | default: generated_name
+  %}
+  {% if example_position == 'right' %}
+  <section tabindex="-1" class="inset-y-0 z-10 flex-shrink-0 w-64 bg-white border-r focus:outline-none" >
+    <div class="flex flex-col h-screen">
+  {% else %}
+  <section tabindex="-1" class="inset-y-0 z-10 flex-shrink-0 bg-white border-r focus:outline-none" >
+    <div class="flex flex-col">
+  {% endif %}
+      <!-- Panel header -->
+      <div class="flex-shrink-0">
+        <div class="px-4 pt-4 border-b">
+          <h2 class="pb-4 font-semibold">{{ component.metadata.name }}</h2>
+        </div>
+      </div>
+
+      <!-- Panel content -->
+      <div class="flex-1 pt-4 overflow-y-hidden hover:overflow-y-auto">
+        <div class="space-y-4">
+        <!-- Content -->
+          <div class="px-4">
+            <b>Implementation:</b>
+            <span class="text-sm break-words">{{ component.path }}.liquid</span>
+            <hr />
+            {% assign default_render_params = '{}' | parse_json %}
+            {% assign styleguide_stories = component.metadata.styleguide %}
+            {% for param_group in component.metadata.params %}
+              {% liquid
+                assign paramtype = param_group[1] | type_of
+                assign rendertype = paramtype
+                assign key = param_group[0]
+                if paramtype == 'Array'
+                  hash_assign default_render_params[key] = param_group[1].first
+                  assign rendertype = param_group[1].first | type_of
+                else
+                  hash_assign default_render_params[key] = param_group[1]
+                endif
+              %}
+              <p class="pt-4"><span class="font-bold">{{ param_group[0] | humanize }} ({{ rendertype }}):</span>
+              {% if paramtype == 'Array' %}
+                {{ param_group[1] | join: ' | '}}
+              {% else %}
+                {{ param_group[1] }}
+              {% endif %}
+              </p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+  </div>
+  </section>
+
+  <div class="flex-1">
+    <section class="p-4">
+      <div data-styleguide-component="{{component.metadata.name}}" class="relative">
+      {% try %}
+        {% if styleguide_stories %}
+          {% assign styleguide_stories_type = styleguide_stories | type_of %}
+          {% if styleguide_stories_type != 'Array' %}
+            {% assign styleguide_stories = '[]' | parse_json | add_to_array: styleguide_stories %}
+          {% endif %}
+          {% for story in styleguide_stories %}
+            {% include component.path, params: story %}
+            <code data-component-config="" class="bg-white block p-4 my-4 shadow-sm rounded-sm whitespace-pre-wrap break-all text-sm">{{ story | json }}</code>
+          {% endfor %}
+        {% elsif component.metadata.params %}
+          {% for param_group in component.metadata.params %}
+              {% assign render_params = '{}' | parse_json | hash_merge: default_render_params %}
+              {% for param_value in param_group[1] %}
+                {% liquid
+                assign paramtype = param_value | type_of
+                if paramtype == 'Boolean' and param_value == param_group[1].first
+                  assign is_default_boolean = true
+                else
+                  assign is_default_boolean = false
+                endif
+
+                assign should_skip = is_default_boolean
+                if param_group[0] == 'content'
+                  assign should_skip = true
+                endif
+
+                if component.metadata.params.size == 1
+                  assign should_skip = false
+                endif
+                %}
+                {% unless should_skip %}
+                  {% liquid
+                    assign key = param_group[0]
+                    hash_assign render_params[key] = param_value
+                  %}<br>
+                  <b>{{key}}:</b> {{param_value}}
+                  <br>
+                  <div class="mt-4">
+                    {% include component.path, params: render_params %}
+                  </div>
+                  <code data-component-config="" class="bg-white block p-4 my-4 shadow-sm rounded-sm whitespace-pre-wrap break-all text-sm">{{ render_params | json }}</code>
+
+                {% endunless %}
+              {% endfor %}
+          {% endfor %}
+        {% else %}
+          {% include component.path %}
+        {% endif %}
+      {% catch err %}
+        {{err}}
+      {% endtry %}
+      </div>
+    </section>
+  </div>

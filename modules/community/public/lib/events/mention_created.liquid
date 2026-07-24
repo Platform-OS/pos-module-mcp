@@ -1,0 +1,20 @@
+---
+metadata:
+  event:
+    actor_id
+    object_id
+    source_type
+    container_id
+    mentioned_profile_ids
+---
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'actor_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'object_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'source_type', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'container_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'mentioned_profile_ids', key: 'modules/core/validation.blank'
+
+  function _ = 'modules/community/commands/activities/enhance_event', event: event, object_id: event.object_id, actor_id: event.actor_id, target_id: event.container_id
+  return c
+%}

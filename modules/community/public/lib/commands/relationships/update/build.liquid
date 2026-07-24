@@ -1,0 +1,13 @@
+{% liquid
+  assign data = '{}' | parse_json
+
+  hash_assign data['id'] = object.id
+  hash_assign data['l_accepted_at'] = object.l_accepted_at
+  hash_assign data['r_accepted_at'] = object.r_accepted_at
+  hash_assign data['model'] = object.model
+  if object.name
+    hash_assign data['name'] = object.name
+  endif
+
+  return data
+%}

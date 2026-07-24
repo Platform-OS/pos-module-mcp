@@ -1,0 +1,44 @@
+---
+slug: api/posts
+method: put
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function post = 'modules/community/queries/posts/find', id: context.params['post[id]']
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property:  post.id
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: post, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/posts', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  if context.params['post[body]'] != blank
+    hash_assign post['body'] = context.params['post[body]']
+  endif
+  if context.params['post[title]'] != blank
+    hash_assign post['title'] = context.params['post[title]']
+  endif
+  hash_assign post['edited_at'] = 'now' | to_time | json
+
+  assign response = '{}' | parse_json
+
+  function object = 'modules/community/commands/posts/update', object: post
+  if object.valid
+    function _tags = 'modules/community/commands/tags/create_tags_from_text', text: object.body
+
+    function body_formatted = 'modules/community/helpers/linkify_hashtags', input: post.body
+    function body_formatted = 'modules/community/helpers/linkify_mentions', input: post.body
+    hash_assign response['post_body'] = body_formatted
+    hash_assign response['post_body_markdown_parsed'] = body_formatted | markdown: '{ "elements": ["b","br","strong","i","em","a","code","p","pre","img","h1", "h2", "h3", "h4", "h5", "table", "tr", "td", "th", "ul", "li", "ol"], "attributes":{ "a": ["href"], "img": ["src"] } }'
+    hash_assign response['title'] = object.title
+  else
+    hash_assign response['errors'] = object["errors"]
+  endif
+
+  echo response
+%}

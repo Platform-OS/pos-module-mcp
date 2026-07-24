@@ -1,0 +1,5 @@
+{% liquid
+  assign id = object.id
+  assign object = {"id": id, "attempts": default_login_attempts, "locked_at": nil}
+  return object
+%}

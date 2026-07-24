@@ -1,0 +1,28 @@
+---
+metadata:
+  name: Feed welcome message
+  params:
+    current_profile: {}
+---
+{% assign current_profile = current_profile | default: params.current_profile %}
+{% assign following_url = '/profile/' | append: current_profile.slug | append: '/following' %}
+
+<article class="pos-prose pos-community-feed-welcome">
+  <h4 class="pos-heading-4">{{ 'modules/community/feed.welcome.title' | t }}</h4>
+
+  <p>{{ 'modules/community/feed.welcome.intro' | t }}</p>
+  <ol>
+    <li>
+      {{ 'modules/community/feed.welcome.events' | t }}
+    </li>
+    <li>
+      {{ 'modules/community/feed.welcome.groups' | t }}
+    </li>
+    <li>
+      {{ 'modules/community/feed.welcome.members' | t: following_url: following_url | html_safe }}
+    </li>
+    <li>
+      {{ 'modules/community/feed.welcome.support' | t }}
+    </li>
+  </ol>
+</article>

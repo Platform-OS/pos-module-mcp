@@ -1,0 +1,91 @@
+
+<div class="container">
+  {% assign users_management_heading = 'modules/community/admin.users.heading' | t %}
+  {% theme_render_rc 'components/atoms/heading', content: users_management_heading, level: 2, classes: 'pb-8' %}
+</div>
+
+{% capture card_content %}
+  <form action="/admin/community/profiles" method="GET" id="profiles-list" x-ref="form">
+    <div class="flex flex-col md:flex-row items-center gap-4 justify-between">
+      <div class="w-auto">
+        {% liquid
+          assign input_params = null | hash_merge: name: 'keyword', placeholder: 'Search users', value: filters.keyword
+          assign button_params = null | hash_merge: type: 'submit', icon: 'search', weight: 'primary'
+          theme_render_rc 'components/molecules/search-field', input_params: input_params, button_params: button_params, button: true
+        %}
+      </div>
+      {% assign select_options = [{"label": "Sort by Create (new)", "value": "created_at_desc"}, {"label": "Sort by Create (old)", "value": "created_at_asc"}, {"label": "Sort by Post count (asc)", "value": "post_count_asc"}, {"label": "Sort by Post count (desc)", "value": "post_count_desc"}] %}
+
+      <div class="flex flex-col md:flex-row gap-4">
+        {% liquid
+          assign select_attributes = null | hash_merge: onchange: 'submit()'
+          theme_render_rc 'components/molecules/select', name: 'sort_by', value: filters.sort_by, id: 'filter_sort', options: select_options, attributes: select_attributes
+        %}
+        <div class="text-center">
+          <a href="/admin/reports/list?type=profile" class="h-11 px-4 py-2.5 leading-tight  inline-flex items-center justify-center gap-3 rounded-button whitespace-nowrap transition-all disabled:opacity-30 disabled:pointer-events-none uppercase tracking-wide text-sm font-medium border-secondary border-button-secondary-stroke hover:border-button-secondary-stroke-hover text-button-secondary-foreground hover:text-button-secondary-foreground-hover">Exports List</a>
+        </div>
+      </div>
+    </div>
+  </form> 
+
+{% endcapture %}
+
+{% capture list_content %}
+  <table class="w-full">
+    <thead class="hidden md:block">
+      <tr class="uppercase text-sm flex flex-row">
+        <th class=" font-normal w-16 min-w-[4rem]">ID</th>
+        <th class="flex-1 font-normal">first name</th>
+        <th class="flex-1 font-normal">last name</th>
+        <th class="flex-1 font-normal">email</th>
+        <th class="flex-1 font-normal">created at</th>
+        <th class="flex-1 font-normal">roles</th>
+        <th class="flex-1 font-normal">post count</th>
+        <th class="flex-1 font-normal">modify</th>
+      </tr>
+    </thead>
+    <tbody >
+    {% for profile in profiles.results %}
+      <tr class="text-sm flex flex-row">
+        <td class=" truncate "><a href="/profile/{{ profile.slug }}" target="_blank">{{ profile.id }}</a></td>
+        <td class="flex-1 break-all">{{ profile.first_name }}</td>
+        <td class="flex-1 break-all">{{ profile.last_name }}</td>
+        <td class="flex-1 break-all ">{{ profile.user.email }}</td>
+        <td class="flex-1 break-all">{{ profile.created_at | l: 'long', current_profile.timezone }}</td>
+        <td class="flex-1">
+          {% liquid
+            assign user_roles = profile.roles | array_intersect: roles
+            for role in user_roles
+              theme_render_rc 'components/molecules/chip', content: role, classes: "m-1"
+            endfor
+          %}
+        </td>
+        <td class="flex-1 truncate"> {{ profile.post_count }} </td>
+        <td class="flex-1 truncate">
+          {% liquid
+            assign edit_url = '/admin/users/' | append: profile.id | append: '/edit'
+            assign attributes = null | hash_merge: target: 'blank'
+            theme_render_rc 'components/molecules/iconbutton', icon: 'pencil', weight: 'primary', classes: 'w-11', attributes: attributes, href: edit_url , gap: 0
+          %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endcapture %}
+
+<div class="container">
+  {% theme_render_rc 'components/atoms/card', content: card_content %}
+  {% theme_render_rc 'components/atoms/card', content: list_content, classes: 'mt-8' %}
+</div>
+
+<div class="container pt-5 flex flex-row-reverse">
+  {% liquid
+    if profiles.total_pages > 1
+      assign pager_template = "{?keyword,sort_by}"
+      assign pager_url = pager_template | expand_url_template: filters
+      assign pager_url = pager_url | append: "&page="
+      theme_render_rc 'components/molecules/pagination', count: profiles.total_pages, active: filters.page, url: pager_url
+    endif
+ %}
+</div>

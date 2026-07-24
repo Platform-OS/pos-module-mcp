@@ -1,0 +1,35 @@
+---
+slug: groups/:id/invites
+method: post
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+
+  assign group_id = context.params.id | split: '-' | last
+  function group = 'modules/community/queries/groups/find', id: group_id, with_owner: true, current_profile: null
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'invite', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  assign emails = context.params.email_list | split: ','
+  function object = 'modules/community/commands/groups/invite_many/create', group: group, emails: emails, current_profile: current_profile
+
+  if object.valid
+    function can_edit_group = 'modules/user/helpers/can_do', entity: group, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/groups'
+    if can_edit_group
+      # Redirect to the group manage page, if the user has the edit permision
+      assign action = 'relationships'
+    endif
+    function url = 'modules/community/helpers/link_to', object: group, action: action | default: ''
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: url, notice: 'modules/community/groups.invites.sent'
+    # platformos-check-enable DeprecatedTag
+  else
+    assign message = 'modules/community/errors.something_went_wrong' | t
+    assign flash = null | hash_merge: message: message, severity: 'error', force_clear: true
+    function _ = 'modules/core/commands/session/set', key: 'sflash', value: flash
+    function list = 'modules/community/queries/relationships/search_by_right', limit: 20, name: 'membership', r_id: group.id, include_related: true, l_id: null, not_l_id: null, accepted: null, approved: null
+    theme_render_rc 'components/templates/groups', section: 'invites', group: group, current_profile: current_profile, list: list, tab: 'members'
+  endif
+
+%}

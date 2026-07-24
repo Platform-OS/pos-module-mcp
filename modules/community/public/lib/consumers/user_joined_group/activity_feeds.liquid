@@ -1,0 +1,13 @@
+{% comment %}
+  actor:public
+  actor:audience
+  target:private
+  system:audit
+{% endcomment %}
+{% liquid
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "1", at: null
+  # platformos-check-enable DeprecatedTag
+  render 'modules/community/commands/activities/publish', uuid: event.uuid, type: "group-public", ids: event.target.id, at: null
+%}
+

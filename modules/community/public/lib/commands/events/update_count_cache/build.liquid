@@ -1,0 +1,9 @@
+{% liquid
+  assign data = '{}' | parse_json
+  hash_assign data['id'] = object.id
+  hash_assign data['going'] = object.going | plus: 0
+  hash_assign data['maybe'] = object.maybe | plus: 0
+  hash_assign data['not_going'] = object.not_going | plus: 0
+
+  return object
+%}

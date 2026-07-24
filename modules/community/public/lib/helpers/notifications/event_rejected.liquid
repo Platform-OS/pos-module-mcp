@@ -1,0 +1,13 @@
+{% assign target = payload.target.name | default: payload.event_object.name %}
+{% assign target_url = "/events/" |append: payload.object.id %}
+
+{% assign message = payload.type | t:
+  actor: null,
+  target: target,
+  object_url: null,
+  type: payload.target.type,
+  scope: 'modules/community/activities.types',
+  target_url: target_url
+%}
+
+{% return message %}

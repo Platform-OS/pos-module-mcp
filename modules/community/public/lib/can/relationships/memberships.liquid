@@ -1,0 +1,66 @@
+{% liquid
+  unless relationship
+    assign relationship = entity
+  endunless
+  unless actor
+    assign actor = requester
+  endunless
+
+  if relationship.r.type
+    assign group = relationship.r
+  else
+    function group = 'modules/community/queries/groups/find', id: relationship.r_id, relationships: true, current_profile: null
+  endif
+
+  case do
+
+  when 'delete'
+    if actor.id == relationship.l_id
+      return true
+    endif
+
+    assign owner = group.relationships | group_by: 'name' | dig: 'owner' | detect: r_id: relationship.r_id, l_id: actor.id
+    if owner
+      return true
+    else
+      return false
+    endif
+
+  when 'update'
+    assign can = true
+    if  relationship['l_accepted_at'] and relationship._incoming_changes['l_accepted_at'] != relationship['l_accepted_at']
+      if actor.id == relationship.l_id
+        assign can = true
+      endif
+    endif
+
+    if relationship['r_accepted_at'] and relationship._incoming_changes['r_accepted_at'] != relationship['r_accepted_at']
+      function allowed = "modules/community/helpers/can", actor: actor, do: "approve_request", object: group
+      assign can = allowed.valid
+    endif
+
+    return can
+
+  when 'create'
+
+    if relationship['l_accepted_at'] and relationship._incoming_changes['l_accepted_at'] != relationship['l_accepted_at']
+      if actor.id == relationship.l_id
+        assign can = true
+      endif
+    endif
+
+    if relationship['r_accepted_at'] and relationship._incoming_changes['r_accepted_at'] != relationship['r_accepted_at']
+      function allowed = "modules/community/helpers/can", actor: actor, do: "approve_request", object: group
+      assign can = allowed.valid
+    endif
+
+    return can
+
+  when 'accept'
+    function can = 'modules/user/helpers/can_do', requester: actor, do: do, entity: group, access_callback: 'modules/community/can/groups'
+    return can
+
+  else
+    return false
+  endcase
+%}

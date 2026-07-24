@@ -1,0 +1,38 @@
+---
+slug: groups/:id
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign group_id = context.params.id | split: '-' | last
+  function group = 'modules/community/queries/groups/find', id: group_id, with_owner: true, current_profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: group.id
+  # platformos-check-enable DeprecatedTag
+  assign group_slug = group.name | slugify | append: '-' | append: group.id
+  if context.params.id != group_slug
+    assign group_slug = group_slug | prepend: '/groups/'
+    redirect_to group_slug
+  endif
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'see_meta', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+  function can_see_content = "modules/community/helpers/can", actor: current_profile, do: "see_content", object: group
+  if can_see_content.valid
+    function list = 'modules/community/queries/activities/search_with_records', feed: 'group-public', feed_id: group.id, limit: 20, uuid: null, page: null
+    theme_render_rc 'components/templates/groups', section: 'details', group: group, current_profile: current_profile, list: list, tab: 'activity', context: context
+  else
+    function members_url = 'modules/community/helpers/link_to', action: 'members', object: group
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: members_url
+    # platformos-check-enable DeprecatedTag
+  endif
+%}

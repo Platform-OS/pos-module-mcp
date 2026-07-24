@@ -1,0 +1,25 @@
+---
+en:
+  feed:
+    dashboard: Dashboard
+    post: Post
+    see_more: See more
+    see_more_comments: Show more
+    comments:
+      one: "%{count} comment"
+      other: "%{count} comments"
+    welcome:
+      title: Welcome to our community!
+      intro: How to start?
+      events: Check out the latest <a href="/events">events</a>
+      groups: Join various <a href="/groups">groups</a> to keep updated about what’s happening within the community and business
+      members: Connect with other community <a href="%{following_url}">members</a>
+      support: If you need any support, please <a href="/contact-us">reach out to our support team</a>. We are happy to help.
+    entries:
+      edited: Edited
+    public:
+      title: Latest from the community
+      subtitle: Check out what our community talks about
+      footer:
+        title: Join the conversation
+        subtitle: Share your knowledge, learn from others, and be part of the platformOS community

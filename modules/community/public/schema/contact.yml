@@ -1,0 +1,5 @@
+name: contact
+properties:
+  - name: email
+  - name: message
+  - name: reason

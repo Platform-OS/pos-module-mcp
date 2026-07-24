@@ -1,0 +1,90 @@
+---
+metadata:
+  name: Group card
+  params:
+    variant: highlighted
+    title: Blog post title
+    summary: This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...
+    author: Jane Doe
+    authorLink: '/janedoe'
+    imgSrc: 'https://picsum.photos/300/180?random=2'
+    imgSrcSet: ''
+    avifSrcSet: ''
+    classes: 'w-80'
+    members: 2
+    readers: 20
+    comments: 12
+    tags: []
+    group: {}
+    groupJoinEndpoint: ''
+  styleguide:
+    - variant: highlighted
+      title: Blog post title
+      summary: This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...
+      author: Jane Doe
+      authorLink: '/janedoe'
+      imgSrc: 'https://picsum.photos/300/180?random=2'
+      classes: 'w-80'
+      members: 2
+      readers: 20
+      comments: 12
+      tags:
+        - tag 1
+        - tag 2
+---
+{% liquid
+  assign summary = summary | default: params.summary
+  assign readers = readers | default: params.readers
+  assign comments = comments | default: params.comments
+  assign tags = tags | default: params.tags
+  assign members = members | default: params.members
+  assign url = url | default: params.url
+  assign group = group | default: params.group
+  assign group_join_endpoint = groupJoinEndpoint | default: params.groupJoinEndpoint
+
+  function summary = 'modules/community/helpers/linkify_hashtags', input: summary
+%}
+
+{% capture content %}
+  {{ summary }}
+{% endcapture %}
+
+{% capture footer_content %}
+  <ul>
+    {% if members != blank %}
+      <li>
+        {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+        {{ members }} {{ 'modules/community/groups.members' | t: count: members | downcase }}
+        {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+      </li>
+    {% endif %}
+    {% if readers != blank %}
+      <li>
+        {% render 'modules/common-styling/icon', icon: 'eye', class: null %}
+        {{ readers }}
+      </li>
+    {% endif %}
+    {% if comments != blank %}
+      <li>
+        {% render 'modules/common-styling/icon', icon: 'messagesTyping', class: null %}
+        {{ comments }}
+      </li>
+    {% endif %}
+  </ul>
+
+  <aside>
+    {% if group_join_endpoint != blank %}
+      {% render 'modules/community/migrated/groups/join_button', group: group, compact: null %}
+    {% endif %}
+
+    {% if group.member.pending_acceptance %}
+      {% render 'modules/community/migrated/groups/accept_button', group: group %}
+    {% endif %}
+  </aside>
+{% endcapture %}
+
+{% liquid
+  # platformos-check-disable PartialCallArguments,MissingRenderPartialArguments
+  render 'modules/common-styling/content/card', url: url, image: params.image, title: params.title, content: content, footer: footer_content
+  # platformos-check-enable PartialCallArguments,MissingRenderPartialArguments
+%}

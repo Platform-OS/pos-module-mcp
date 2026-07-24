@@ -1,0 +1,44 @@
+mutation create_comment(
+  $uuid: String!
+  $commentable_uuid: String
+  $target_activity_uuid: String
+  $commentable_type: String
+  $creator_id: String!
+  $title: String
+  $body: String!
+  $removed_at: String
+) {
+  record: record_create(
+    record: {
+      table: "modules/community/comment"
+      properties: [
+        { name: "uuid" value: $uuid }
+        { name: "commentable_uuid" value: $commentable_uuid }
+        { name: "target_activity_uuid" value: $target_activity_uuid }
+        { name: "commentable_type" value: $commentable_type }
+        { name: "creator_id" value: $creator_id }
+        { name: "title" value: $title }
+        { name: "body" value: $body }
+        { name: "removed_at" value: $removed_at }
+      ]
+    }
+  ){
+    id
+    created_at
+    deleted_at
+
+    properties
+    uuid: property(name: "uuid")
+    commentable_uuid: property(name: "commentable_uuid")
+    target_activity_uuid: property(name: "target_activity_uuid")
+    commentable_type: property(name: "commentable_type")
+    creator_id: property(name: "creator_id")
+    title: property(name: "title")
+    body: property(name: "body")
+    removed_at: property(name: "removed_at")
+
+    creator: related_record(table: "modules/user/profile", join_on_property: "creator_id"){
+      id
+    }
+  }
+}

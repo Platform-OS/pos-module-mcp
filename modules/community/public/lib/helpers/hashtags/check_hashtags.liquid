@@ -1,0 +1,12 @@
+{%- liquid
+  assign output_array = '[]' | parse_json
+
+  if tags_collection.size > 0
+    for item in tags_collection
+      assign parsed_tag = item | replace: '#', '' | prepend: '#'
+      assign output_array = output_array | array_add: parsed_tag
+    endfor
+  endif
+
+  return output_array
+-%}

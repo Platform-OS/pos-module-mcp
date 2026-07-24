@@ -1,0 +1,43 @@
+---
+layout: ""
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function profiles = 'modules/community/queries/profiles/search', limit: 10, query: context.params.query, not_ids: context.params.skip, uuid: null, page: null, sort: null, id: null, ids: null, user_id: null, roles: null, with_avatar: null, with_user: null, with_profile_cover: null
+  assign results = '[]' | parse_json
+  assign response = null | hash_merge: total_entries: profiles.total_entries, results: results
+
+  if profiles.total_entries > 0
+    for profile in profiles.results
+      assign email = profile.email | default: profile.user.email
+      assign name = profile.name
+      function slug = 'modules/community/helpers/profiles/slugs/build', profile: profile, current_profile: null
+
+
+      assign p = null | hash_merge: name: name, id: profile.user_id, avatar: profile.avatar, email: email, slug: slug
+      hash_assign response['results'] = response.results | add_to_array: p
+    endfor
+  else
+    assign query = context.params.query
+    assign is_email = query | is_email_valid
+
+    if is_email
+      hash_assign response['total_entries'] = 1
+      assign user_from_email = '{}' | parse_json
+      hash_assign user_from_email['name'] = query
+      hash_assign user_from_email['id'] = ''
+      hash_assign user_from_email['avatar'] = nil
+      hash_assign user_from_email['email'] = query
+      hash_assign user_from_email['slug'] = query
+
+      assign results = '[]' | parse_json | add_to_array: user_from_email
+
+      hash_assign response['results'] = results
+    endif
+  endif
+  render 'modules/community/json/users/index', users: response
+%}

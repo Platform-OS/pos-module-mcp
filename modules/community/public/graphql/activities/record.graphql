@@ -1,0 +1,39 @@
+query search($id: ID, $limit: Int = 1 $ids: [ID!]) {
+  records(
+    per_page: $limit
+    sort: [ { created_at: { order: DESC } } ]
+    filter: {
+      id: { value: $id value_in: $ids }
+      deleted_at: { exists: false }
+    })
+  {
+    total_entries
+    results {
+      type: table
+      id
+      name: property(name: "name")
+      first_name: property(name: "first_name")
+      last_name: property(name: "last_name")
+      uuid: property(name: "uuid")
+      target_activity_uuid: property(name: "target_activity_uuid")
+      parent_id: property(name: "parent_id")
+      group_id: property(name: "group_id")
+      project_id: property(name: "project_id")
+      creator_id: property(name: "creator_id")
+      slug: property(name: "slug")
+      description: property(name: "description")
+      body: property(name: "body")
+      title: property(name: "title")
+      embeded_media: property_object(name: "embeded_media")
+      video_url: property(name: "video_url")
+
+      photo: related_record(table: "modules/community/photo", join_on_property: "uuid", foreign_property: "object_uuid") {
+        photo_width: property_int(name: "photo_width")
+        photo_height: property_int(name: "photo_height")
+        url: property_upload(name: "photo") {
+          versions
+        }
+      }
+    }
+  }
+}

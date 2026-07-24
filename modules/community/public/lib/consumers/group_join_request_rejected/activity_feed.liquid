@@ -1,0 +1,10 @@
+{% liquid
+  assign requester_ids = '[]' | parse_json | add_to_array: event.requester_id
+
+  assign notification_title = 'modules/community/push_notifications.group_join_request_rejected.title' | t
+  assign notification_body = 'modules/community/push_notifications.group_join_request_rejected.body' | t: group: event.target.name
+  function url = 'modules/community/helpers/link_to_url', object: event.target, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  function _ = 'modules/community/commands/activities/publish', uuid: event.uuid, type: "user-notifications", ids: requester_ids, at: null, notification: push_notification
+%}

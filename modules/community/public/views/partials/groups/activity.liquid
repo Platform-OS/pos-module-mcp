@@ -1,0 +1,16 @@
+{% if list.total_entries > 0 %}
+  {% liquid
+    function can_comment = 'modules/user/helpers/can_do', requester: current_profile, do: 'comment', entity: group, access_callback: 'modules/community/can/groups'
+
+    for activity in list.results
+      theme_render_rc 'components/organisms/feed-entry', payload: activity.payload, current_profile: current_profile, namespace: namespace, context: context, can_comment: can_comment
+    endfor
+
+    if list.has_next_page
+      function group_url = 'modules/community/helpers/link_to', object: group, action: 'frame'
+      render 'modules/community/load_more', page: page, url: group_url
+    endif
+  %}
+{% else %}
+  <p class="container my-8 text-lg">{{ 'modules/community/groups.no_items' | t }}</p>
+{% endif %}

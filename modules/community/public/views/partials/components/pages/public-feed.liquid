@@ -1,0 +1,80 @@
+---
+metadata:
+  name: Public Feed
+  params:
+    current_profile: {}
+    context: {}
+    list: []
+    page: 1
+    frame: false
+---
+{% liquid
+  assign context = context | default: params.context
+  assign current_profile = current_profile | default: params.current_profile
+  assign list = list | default: params.list
+  assign page = page | default: params.page | to_positive_integer: 1
+  assign frame = frame | default: params.frame
+
+  assign is_anonymous = false
+  if current_profile.id == blank
+    assign is_anonymous = true
+  endif
+%}
+
+
+<div class="pos-community-container">
+
+  <header class="pos-community-space-header">
+    <h2 class="pos-heading-2">{{ 'modules/community/feed.public.title' | t }}</h2>
+    <h3>{{ 'modules/community/feed.public.subtitle' | t }}</h3>
+  </header>
+
+  <section class="pos-app" id="pos-community-feed-posts">
+    {% if list.total_entries > 0 %}
+      {% liquid
+        for activity in list.results
+          if is_anonymous
+            assign can_reply = false
+          else
+            function can_reply = 'modules/user/helpers/can_do', requester: current_profile, do: 'reply', entity: activity.payload['modules/community/post'], access_callback: 'modules/community/can/posts'
+          endif
+          theme_render_rc 'components/organisms/feed-entry', payload: activity.payload, current_profile: current_profile, context: context, can_comment: can_reply, is_anonymous: is_anonymous
+        endfor
+      %}
+    {% endif %}
+
+    {% if list.total_entries == 0 %}
+      {% capture card_content %}
+        <div class="container bg-panel w-full h-auto">
+          <div class="flex flex-col items-center justify-center gap-4 p-6">
+            {% theme_render_rc 'components/atoms/heading', content: "No public posts yet.", level: 4 %}
+            <p>Check back later for community updates.</p>
+          </div>
+        </div>
+      {% endcapture %}
+      {% liquid
+        assign card_params = null | hash_merge: content: card_content, classes: 'text-center', variant: 'highlighted'
+        theme_render_rc 'components/atoms/card', params: card_params
+      %}
+    {% endif %}
+
+    {% liquid
+      if list.has_next_page
+        theme_render_rc 'components/molecules/load-more', page: page, url: '/public-feed.frame'
+      endif
+    %}
+  </section>
+
+</div>
+
+<footer class="pos-community-feed-cta">
+  <div class="pos-community-container">
+    <div class="pos-community-feed-cta-content">
+      <h3 class="pos-heading-2">{{ 'modules/community/feed.public.footer.title' | t }}</h3>
+      <h4 class="pos-heading-4">{{ 'modules/community/feed.public.footer.subtitle' | t }}</h4>
+    </div>
+    <aside>
+      <a href="/users/new" class="pos-button pos-button-primary">{{ 'user.forms.register.register' | t }}</a>
+    </aside>
+  </div>
+</footer>

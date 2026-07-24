@@ -1,0 +1,18 @@
+---
+slug: feed
+layout: 'modules/community/community'
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true
+  # platformos-check-disable UnreachableCode
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-enable UnreachableCode
+
+  function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+
+  function list = 'modules/community/queries/activities/search_with_records', feed: 'user-private', feed_id: current_profile.id, limit: 9, uuid: null, page: null
+
+  theme_render_rc 'components/templates/feed', feed_type: 'private', section: 'feed', profile: current_profile, list: list, current_profile: current_profile, context: context
+%}

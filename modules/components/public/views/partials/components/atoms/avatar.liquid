@@ -1,0 +1,95 @@
+---
+metadata:
+  name: Avatar
+  params:
+    imageSrc: ""
+    classes: ''
+    name: "John Doe"
+    size:
+      - xs
+      - s
+      - m
+      - l
+      - xl
+      - xxl
+      - xxxl
+  styleguide:
+    - imageSrc: "https://i.pravatar.cc/150?img=18"
+      name: "John Doe"
+      size: "xxxl"
+    - imageSrc: "https://i.pravatar.cc/150?img=59"
+      name: "John Doe"
+      size: "xxl"
+      classes: "rounded-lg"
+    - imageSrc: "https://i.pravatar.cc/150?img=47"
+      name: "Jane Doe"
+      size: "xl"
+    - imageSrc: "https://i.pravatar.cc/150?img=53"
+      name: "John Doe"
+      size: "l"
+    - imageSrc: ""
+      name: "John Doe"
+      size: "m"
+    - imageSrc: ""
+      name: "Harrison Ford"
+      size: "s"
+    - imageSrc: ""
+      name: "Mark Hamill"
+      size: "xs"
+---
+{% parse_json sizes %}
+{
+  "xxxl": "w-48 h-48 text-7xl ",
+  "xxl": "w-40 h-40 text-6xl ",
+  "xl": "w-24 h-24 text-4xl ",
+  "l": "w-12 h-12 text-xl ",
+  "m": "w-8 h-8 text-xs ",
+  "s": "w-6 h-6 text-xs ",
+  "xs": "w-5 h-5 text-xs "
+}
+{% endparse_json %}
+{% parse_json colors %}
+[
+  "bg-colorful ",
+  "bg-colorful-hover ",
+  "bg-graphic ",
+  "bg-highlighted "
+]
+{% endparse_json %}
+{% liquid
+  assign size = size | default: params.size | default: 'md'
+  assign classes = classes | default: params.classes
+  assign name = name | default: params.name
+  assign imageSrc = imageSrc | default: params.imageSrc
+
+  assign stringClasses = 'rounded-full flex items-center justify-center text-inverted '
+  assign imageClasses = 'rounded-full overflow-hidden '
+
+  assign stringClasses = classes | append: ' ' | append: stringClasses | append: sizes[size]
+  assign imageClasses = classes | append: ' ' | append: imageClasses | append: sizes[size] | append: classes
+
+  assign colorIndex = 0
+  assign names = name | split: " "
+  if names[0].size > 0 and names[1].size > 0
+    if names[0].size < names[1].size
+      assign colorIndex = names[1].size | modulo: names[0].size
+    else
+      assign colorIndex = names[0].size | modulo: names[1].size
+    endif
+    if colorIndex > 3
+      assign colorIndex = 3
+    endif
+  endif
+
+  assign stringClasses = stringClasses | append: colors[colorIndex]
+%}
+
+{% if imageSrc == blank %}
+<div class="{{stringClasses}}">
+    {{names[0] | slice: 0}}{{names[1] | slice: 0}}
+</div>
+{% else %}
+<div class="{{imageClasses}}">
+  <img src="{{imageSrc}}" class="object-cover {{sizes[size]}}" data-avatar="">
+</div>
+{% endif %}

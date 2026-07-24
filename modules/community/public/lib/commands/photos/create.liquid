@@ -1,0 +1,12 @@
+{% liquid
+  # platformos-check-disable PartialCallArguments
+  function object = 'modules/community/commands/photos/create/build', object: object, current_profile: current_profile
+  # platformos-check-enable PartialCallArguments
+  function object = 'modules/community/commands/photos/create/check', object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/photos/create' object: object, selection: 'record'
+  endif
+
+  return object
+%}

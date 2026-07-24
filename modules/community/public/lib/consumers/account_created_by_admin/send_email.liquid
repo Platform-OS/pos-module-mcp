@@ -1,0 +1,8 @@
+{% liquid
+  function profile = 'modules/user/queries/profiles/find', id: event.profile_id, uuid: null, user_id: null, first_name: null, last_name: null
+
+  # platformos-check-disable MissingPartial
+  function object = 'modules/community/commands/authentication_links/create', email: profile.user.email, host: context.location.host
+  # platformos-check-enable MissingPartial
+  function email = 'modules/community/commands/emails/account_created_by_admin', object: object
+%}

@@ -1,0 +1,56 @@
+---
+metadata:
+  name: Comments section
+  params:
+    post: {}
+    comments: []
+    context: {}
+    current_profile: {}
+    target_activity_uuid: ''
+---
+{% liquid
+  assign post = post | default: params.post
+  assign comments = comments | default: params.comments
+  assign context = context | default: params.context
+  assign current_profile = current_profile | default: params.current_profile
+  assign target_activity_uuid = target_activity_uuid | default: params.target_activity_uuid
+  assign comment_link = context.params.view_comment
+%}
+
+{% if can_comment or comments.size > 0 %}
+
+  <div
+    x-data='{...frames(), commentsCount: {{ comments.size | default: 0 }}}'
+  >
+    <section class="pos-community-post-comments">
+      <div x-data='{"hidden": {% if comment_link %}false{% else %}true{% endif %}, "many": {% if comments.size > 2 and comment_link == blank %}true{% else %}false{% endif %}}'>
+        <ul id="pos-community-post-{{ post.id }}-comments">
+          {% for comment in comments %}
+            {% theme_render_rc 'components/molecules/comment', post: post, comment: comment, index: forloop.index, context: context, current_profile: current_profile %}
+          {% endfor %}
+        </ul>
+        <div class="pos-text-center" x-show="many">
+          <button class="pos-community-post-comments-more"
+            type="button"
+            x-on:click.prevent="hidden=false; many=false"
+          >
+            {{ 'modules/community/feed.see_more_comments' | t }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    {% if can_comment %}
+      <section id="pos-community-post-{{ post.id }}-comment-form" class="pos-community-feed-comment-form">
+        {% render 'modules/community/migrated/comment/form',
+          parent_id: post.id,
+          commentable: post,
+          commentable_type: 'post',
+          target_activity_uuid: target_activity_uuid,
+          author: current_profile
+        %}
+      </section>
+    {% endif %}
+  </div>
+
+{% endif %}

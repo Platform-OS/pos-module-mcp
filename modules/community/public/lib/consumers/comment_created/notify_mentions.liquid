@@ -1,0 +1,84 @@
+{% liquid
+  if event.object.body == blank
+    return true
+  endif
+
+  function mentions = 'modules/community/helpers/extract_mentions', input: event.object.body
+
+  assign mentioned_ids = '[]' | parse_json
+  for mention in mentions
+    assign profile_id = mention[1]
+    unless profile_id == event.actor.id or mentioned_ids contains profile_id
+      assign mentioned_ids = mentioned_ids | add_to_array: profile_id
+    endunless
+  endfor
+
+  if mentioned_ids.size == 0
+    return true
+  endif
+
+  assign container_type = null
+  assign container_id = null
+  assign content_url = null
+  assign url = null
+
+  case event.target.type
+    when 'modules/community/group'
+      assign container_type = 'group'
+      assign container_id = event.target.id
+      function content_url = 'modules/community/helpers/link_to', object: event.target, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+      function url = 'modules/community/helpers/link_to_url', object: event.target, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+
+    when 'modules/community/event'
+      assign container_type = 'event'
+      assign container_id = event.target.id
+      function content_url = 'modules/community/helpers/link_to', object: event.target, type: 'event', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+      function url = 'modules/community/helpers/link_to_url', object: event.target, type: 'event', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+
+    when 'modules/community/post'
+      function post_group = 'modules/community/queries/groups/find', id: event.target.group_id, current_profile: null
+      if post_group
+        assign container_type = 'group'
+        assign container_id = post_group.id
+      else
+        function post_event = 'modules/community/queries/events/find', id: event.target.group_id, current_profile: null
+        if post_event
+          assign container_type = 'event'
+          assign container_id = post_event.id
+        endif
+      endif
+
+      if event.object.target_activity_uuid
+        function activities = 'modules/community/queries/activities/one', uuid: event.object.target_activity_uuid
+        assign activity = activities.results.first.payload
+        if activity
+          hash_assign activity['comment_id'] = event.object.id
+          function clean_body = 'modules/community/helpers/strip_mentions', input: activity.object.body
+          assign clean_body = clean_body | truncate: 50, '...'
+          function content_url = 'modules/community/activities/html/a', object: activity, type: 'activity', class: null, namespace: null, role: null, name: clean_body
+          function url = 'modules/community/helpers/link_to_url', object: activity, type: 'activity', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+        endif
+      endif
+
+      if content_url == blank
+        if post_group
+          function content_url = 'modules/community/helpers/link_to', object: post_group, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+          function url = 'modules/community/helpers/link_to_url', object: post_group, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+        elsif post_event
+          function content_url = 'modules/community/helpers/link_to', object: post_event, type: 'event', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+          function url = 'modules/community/helpers/link_to_url', object: post_event, type: 'event', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+        endif
+      endif
+  endcase
+
+  if container_type == blank
+    return true
+  endif
+
+  function recipients = 'modules/community/commands/mentions/resolve_recipients', mentioned_ids: mentioned_ids, actor_id: event.actor.id, container_type: container_type, container_id: container_id, exclude_container_members: false, actor_followers_mode: 'never', extra_exclude_ids: null
+
+  if recipients.size > 0
+    assign payload = null | hash_merge: actor_id: event.actor.id, object_id: event.object.id, source_type: 'comment', container_id: container_id, mentioned_profile_ids: recipients, content_url: content_url, url: url
+    function _ = 'modules/core/commands/events/publish', type: 'mention_created', object: payload, delay: 0, max_attempts: null
+  endif
+%}

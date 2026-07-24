@@ -1,0 +1,56 @@
+{% comment %} 
+
+  card used for groups
+
+  group - (object) group record
+
+{% endcomment %}
+
+
+
+{% liquid
+  function summary = 'modules/community/helpers/linkify_hashtags', input: group.summary
+  assign comments = group.c__posts_count | default: 0
+  assign members = group.c__full_members_count | default: group.c__members_count | default: 0
+  function url = 'modules/community/helpers/link_to', object: group
+
+  if group.member == blank and group.rel_owner == blank
+    assign join_endpoint = "/groups/" | append: group.id | append: "/join"
+  else
+    assign join_endpoint = null
+  endif
+%}
+
+{% capture footer_content %}
+  <ul>
+    {% if members != blank %}
+      <li>
+        {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+        {{ members }} {{ 'modules/community/groups.members' | t: count: members | downcase }}
+        {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+      </li>
+    {% endif %}
+    {% if comments != blank %}
+      <li>
+        {% render 'modules/common-styling/icon', icon: 'messagesTyping', class: null %}
+        {{ comments }}
+      </li>
+    {% endif %}
+  </ul>
+
+  <aside>
+    {% if join_endpoint != blank %}
+      {% render 'modules/community/migrated/groups/join_button', group: group, compact: null %}
+    {% endif %}
+
+    {% if pending_acceptance %}
+      {% render 'modules/community/migrated/groups/accept_button', group: group %}
+    {% endif %}
+  </aside>
+{% endcapture %}
+
+{% liquid
+  # platformos-check-disable PartialCallArguments,MissingRenderPartialArguments
+  render 'modules/common-styling/content/card', url: url, image: group.main_photo.photo, title: group.name, content: summary, footer: footer_content
+  # platformos-check-enable PartialCallArguments,MissingRenderPartialArguments
+%}

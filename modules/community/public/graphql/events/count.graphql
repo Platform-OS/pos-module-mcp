@@ -1,0 +1,10 @@
+query count {
+  events: records(
+    per_page: 1
+    filter: {
+      table: { value: "modules/community/event" }
+    }
+  ){
+    total_entries
+  }
+}

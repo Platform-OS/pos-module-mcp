@@ -1,0 +1,34 @@
+{% comment %}
+
+  button that toggles tag following
+
+  id - (string) id of the tag to toggle the relationship with
+  name - (string) hashtag name
+  small - (bool) if you want the small button version (default: false)
+  current_profile - (object) current profile object
+
+{% endcomment %}
+
+
+{% liquid
+  assign small = small | default: false
+  assign name = name | default: id
+%}
+
+
+
+<form action="" id="pos-community-tag{{ id }}-relationship" class="pos-community-tag-relationship">
+  <input type="hidden" name="l_id" value="{{ current_profile.id }}">
+  <input type="hidden" name="r_id" value="{{ id }}">
+  <input type="hidden" name="name" value="followship:tag">
+  <button type="submit" class="pos-button{% if small %} pos-button-small{% endif %} pos-community-tag-relationship-toggle-follow">
+    <span class="pos-community-user-tag-toggle-button-label">
+      {{ 'modules/community/relationships.tags.follow' | t }} <span class="pos-label">{{ name }}</span>
+    </span>
+  </button>
+  <button type="submit" class="pos-button{% if small %} pos-button-small{% endif %} pos-community-tag-relationship-toggle-unfollow">
+    <span class="pos-community-tag-follow-toggle-button-label">
+      {{ 'modules/community/relationships.tags.unfollow' | t }} <span class="pos-label">{{ name }}</span>
+    </span>
+  </button>
+</form>

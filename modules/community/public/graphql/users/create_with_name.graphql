@@ -1,0 +1,12 @@
+mutation create_with_name($first_name: String!, $last_name: String!, $email: String!, $password: String!) {
+  user_create(
+    user: {
+      first_name: $first_name
+      last_name: $last_name
+      email: $email
+      password: $password
+    }
+  ){
+    id
+  }
+}

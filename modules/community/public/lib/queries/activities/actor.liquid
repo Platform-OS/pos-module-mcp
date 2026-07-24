@@ -1,0 +1,13 @@
+{% liquid
+  if id == blank
+    log id, type: 'ERROR: queries/activities/actor id can not be blank'
+
+    return null
+  endif
+
+  # platformos-check-disable MissingPartial
+  graphql r = 'modules/community/activities/actor', limit: 1, id: id
+  # platformos-check-enable MissingPartial
+
+  return r.actors.results.first
+%}

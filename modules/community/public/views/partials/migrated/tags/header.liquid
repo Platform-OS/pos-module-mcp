@@ -1,0 +1,25 @@
+{% liquid
+  assign id = id | default: ''
+  assign name = name | default: ''
+  assign follower_count = follower_count | to_positive_integer: 0
+%}
+
+
+<header class="pos-app pos-community-space-header pos-community-space-detail-header pos-increaseLegibility">
+  
+  <div class="pos-community-space-detail-header-title">
+    <div>
+      {{ follower_count }} {{ 'Follower' | pluralize: follower_count }}
+      <h2 class="pos-heading-2">#{{ name }}</h2>
+    </div>
+  </div>
+
+  <nav class="pos-community-space-detail-header-nav">
+    {% render 'modules/community/migrated/tags/follow_toggle',
+      id: id,
+      name: name,
+      current_profile: current_profile
+    %}
+  </nav>
+
+</header>

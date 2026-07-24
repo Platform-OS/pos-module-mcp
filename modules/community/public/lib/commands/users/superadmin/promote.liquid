@@ -1,0 +1,13 @@
+{% liquid
+  function can_do = 'modules/user/helpers/can_do', do: 'users.manage_superadmins', requester: current_profile, entity: null, access_callback: null
+
+  if can_do
+    function result = 'modules/user/commands/profiles/roles/remove', id: id, role: 'superadmin'
+    function _ = 'modules/user/commands/profiles/roles/append', id: id, role: 'superadmin'
+
+    assign event_object = null | hash_merge: user_id: id
+    function _ = 'modules/core/commands/events/publish', type: 'user_promoted_to_superadmin', object: event_object, delay: 0, max_attempts: null
+  endif
+
+  return can_do
+%}

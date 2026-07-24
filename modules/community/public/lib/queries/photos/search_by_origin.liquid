@@ -1,0 +1,10 @@
+{% liquid
+  if profile_id == blank
+    log 'profile_id must be set', type: 'ERROR'
+    return null
+  endif
+
+  graphql r = 'modules/community/photos/search', origin_urls: origin_urls, limit: 10000, profile_id: profile_id
+
+  return r.photos
+%}

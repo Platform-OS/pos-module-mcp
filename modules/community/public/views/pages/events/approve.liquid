@@ -1,0 +1,32 @@
+---
+slug: events/:id/approve
+method: put
+layout: ''
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign event_id = context.params.id
+  function event = 'modules/community/queries/events/find', id: event_id, with_owner: true, current_profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: event, do: 'approve', requester: current_profile, access_callback: 'modules/community/can/events', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/events/approve', object: event
+  if object.valid
+    assign event_payload = null | hash_merge: event_object: event, actor_id: current_profile.id
+    function _ = 'modules/core/commands/events/publish', type: 'event_approved', object: event_payload, delay: 0, max_attempts: null
+
+    assign message = 'modules/community/events.approved' | t
+    assign flash = null | hash_merge: message: message, severity: 'success'
+  else
+    assign message = 'modules/community/errors.something_went_wrong' | t
+    assign flash = null | hash_merge: message: message, severity: 'error'
+  endif
+  function _ = 'modules/core/commands/session/set', key: 'sflash', value: flash
+
+  redirect_to '/admin/community/events'
+%}

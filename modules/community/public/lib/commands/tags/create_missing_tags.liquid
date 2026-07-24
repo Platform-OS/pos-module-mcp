@@ -1,0 +1,9 @@
+{% liquid
+  function existing_tags = 'modules/community/queries/tags/search', names: tags, page: null, not_ids: null, sort: null, name: null, query: null, limit: null, status: null, with_creator: null
+  assign existing_tags = existing_tags.results | map: 'name'
+
+  assign new_tags = tags | array_subtract: existing_tags
+  function create_tags = 'modules/community/commands/tags/create_multiple', tags: new_tags
+
+  return create_tags
+%}

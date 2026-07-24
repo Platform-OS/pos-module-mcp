@@ -1,0 +1,151 @@
+query search(
+  $limit: Int = 20
+  $keyword: String
+  $sort: RecordsSortInput = { created_at: { order: DESC } }
+) {
+  groups: records(
+    per_page: $limit
+    filter: {
+      table: { value: "group" }
+      deleted_at: { exists: false }
+      properties: { name: "meta_visible", value: "anonymous" }
+      or: [
+        { properties: { name: "name", contains: $keyword } }
+        { properties: { name: "summary", contains: $keyword } }
+        { properties: { name: "description", contains: $keyword } }
+      ]
+    }
+    sort: [$sort]
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+
+      uuid: property(name: "uuid")
+      photo: related_record(table: "modules/community/photo" join_on_property: "uuid" foreign_property: "object_uuid") {
+        photo_width: property_int(name: "photo_width")
+        photo_height: property_int(name: "photo_height")
+        photo: property_upload(name: "photo") {
+          url
+          versions
+        }
+      }
+      name: property(name: "name")
+      description: property(name: "description")
+    }
+  }
+
+  projects: records(
+    per_page: $limit
+    filter: {
+      table: { value: "project" }
+      deleted_at: { exists: false }
+      properties: { name: "c__status", value_in: ["app.statuses.projects.open", "app.statuses.projects.under_evaluation", "app.statuses.projects.closed"] }
+      or: [
+        { properties: { name: "name", contains: $keyword } }
+        { properties: { name: "summary", contains: $keyword } }
+        { properties: { name: "description", contains: $keyword } }
+      ]
+    }
+    sort: [$sort]
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+
+      uuid: property(name: "uuid")
+      photo: related_record(
+        table: "modules/community/photo"
+        join_on_property: "uuid"
+        foreign_property: "object_uuid"
+        filter: { properties: { name: "photo_type", value: "cover" } }
+      ) {
+        photo_width: property_int(name: "photo_width")
+        photo_height: property_int(name: "photo_height")
+        photo: property_upload(name: "photo") {
+          url
+          versions
+        }
+      }
+      name: property(name: "name")
+      description: property(name: "description")
+    }
+  }
+
+  profiles: records(
+    per_page: $limit
+    filter: {
+      table: { value: "profile" }
+      deleted_at: { exists: false }
+      or: [
+        { properties: { name: "name", contains: $keyword } }
+        { properties: { name: "first_name", contains: $keyword } }
+        { properties: { name: "last_name", contains: $keyword } }
+      ]
+    }
+    sort: [$sort]
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+
+      uuid: property(name: "uuid")
+      photo: related_record(table: "modules/community/photo" join_on_property: "uuid" foreign_property: "object_uuid") {
+        photo_width: property_int(name: "photo_width")
+        photo_height: property_int(name: "photo_height")
+        photo: property_upload(name: "photo") {
+          url
+          versions
+        }
+      }
+      name: property(name: "name")
+      slug: property(name: "slug")
+    }
+  }
+
+  posts: records(
+    per_page: $limit
+    filter: {
+      table: { value: "post" }
+      deleted_at: { exists: false }
+      properties: { name: "title", exists: true }
+      related_records: {
+        join: { join_on_property: "group_id", foreign_property: "id" }
+        filter: {
+          table: { value: "group" }
+          properties: { name: "meta_visible", value: "anonymous" }
+        }
+      }
+      or: [
+        { properties: { name: "title", contains: $keyword } }
+        { properties: { name: "body", contains: $keyword } }
+      ]
+    }
+    sort: [$sort]
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+
+      uuid: property(name: "uuid")
+      photo: related_record(table: "modules/community/photo" join_on_property: "uuid" foreign_property: "object_uuid") {
+        photo_width: property_int(name: "photo_width")
+        photo_height: property_int(name: "photo_height")
+        photo: property_upload(name: "photo") {
+          url
+          versions
+        }
+      }
+      name: property(name: "title")
+      group_id: property(name: "group_id")
+    }
+  }
+}

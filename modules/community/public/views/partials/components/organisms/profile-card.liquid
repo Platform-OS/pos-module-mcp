@@ -1,0 +1,75 @@
+---
+metadata:
+  name: Profile card
+  params:
+    first_name: ''
+    last_name: ''
+    imageSrc: ''
+    url: ''
+    allow_to_follow: false
+    my_profile: false
+    classes: ''
+  styleguide:
+    - first_name: 'Thomas'
+      last_name: 'May'
+      job_title: 'Bank Auditor'
+      employer: 'Citigroup'
+      location: 'London'
+      imageSrc: 'https://i.pravatar.cc/150?img=65'
+      url: '/sample'
+      classes: 'w-1/4'
+    - first_name: 'Mattheu'
+      last_name: 'Blu'
+      job_title: 'Asset manager'
+      employer: 'U.S. Bancorp.'
+      location: 'Boston'
+      imageSrc: 'https://i.pravatar.cc/150?img=69'
+      url: '/sample'
+      classes: 'w-1/4'
+---
+{% liquid
+  assign first_name = first_name | default: params.first_name
+  assign last_name = last_name | default: params.last_name
+  assign job_title = job_title | default: params.job_title
+  assign employer = employer | default: params.employer
+  assign location = location | default: params.location
+  assign image_src = image_src | default: params.imageSrc
+  assign url = url | default: params.url
+  assign allow_to_follow = allow_to_follow | default: params.allow_to_follow
+  assign my_profile = my_profile | default: params.my_profile
+  assign classes = classes | default: params.classes
+  assign profile_id = profile_id | default: params.profile_id
+
+  assign name = first_name | append: ' ' | append: last_name
+%}
+
+{% capture content %}
+<div class="flex flex-col items-center" data-tc="card-element">
+  <div class="relative">
+    <a href="{{ url }}">
+      {% theme_render_rc 'components/atoms/avatar', size: 'xxl', name: name, imageSrc: image_src %}
+    </a>
+  </div>
+  <div class="pb-2 pt-7">
+    <a href="{{ url }}" class="font-bold">{{ name }}</a>
+    {% if job_title != blank %}
+      <div>{{ job_title }}</div>
+    {% endif %}
+    {% if employer != blank %}
+      <div>{{ 'modules/community/app.at' | t }} {{ employer }}{% if location != blank %}, {{location}} {% endif %}</div>
+    {% endif %}
+  </div>
+  <div class="pt-4">
+    {% liquid
+    if my_profile
+      assign see_profile = 'modules/community/profiles.see_profile' | t
+      theme_render_rc 'components/atoms/button', content: see_profile, weight: 'secondary', href: url, size: 'small'
+    elsif allow_to_follow
+      theme_render_rc 'modules/community/components/molecules/profile-follow-button', profile_id: profile_id, size: 'small', params: null, no_text: null, classes: null, no_icon: null, gap: null
+    endif
+    %}
+  </div>
+</div>
+{% endcapture %}
+
+{% theme_render_rc 'components/atoms/card', content: content, classes: classes %}

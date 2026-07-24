@@ -1,0 +1,24 @@
+<style>
+  .debug {
+    position: absolute;
+    width: 400px;
+    z-index: 30;
+    background-color: white;
+    opacity: 98%;
+    overflow: auto;
+    height: 100%;
+  }
+</style>
+<script>
+  var nodes = document.getElementsByClassName('json');
+
+  Array.prototype.forEach.call(nodes, function(node){
+    try {
+      node.innerText = JSON.stringify(JSON.parse(node.innerText), null, 2)
+      node.classList.add("text-xs")
+      node.classList.add("overflow-auto")
+    } catch(e) {
+      console.log("some errors:", e)
+    }
+  });
+</script>

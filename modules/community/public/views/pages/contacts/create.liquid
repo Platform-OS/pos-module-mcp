@@ -1,0 +1,16 @@
+---
+slug: contacts
+method: post
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  function object = 'modules/community/commands/contacts/create', object: context.params.contact, host: context.location.host, hcaptcha_params: context.params
+  if object.valid
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: '/', notice: 'modules/community/contacts.message_sent'
+    # platformos-check-enable DeprecatedTag
+  else
+    theme_render_rc 'components/molecules/pagetitle', content: 'Contact us'
+    theme_render_rc 'components/pages/contact-us', errors: object.errors
+  endif
+%}

@@ -1,0 +1,22 @@
+---
+metadata:
+  name: Nav Card
+  params:
+    tag: "div"
+    classes: ''
+    content: This is an example nav card
+---
+{% liquid
+  assign tag = tag | default: params.tag | default: 'div'
+  assign content = content | default: params.content
+  assign classes = classes | default: params.classes
+  assign attributes = attributes | default: params.attributes
+%}
+<{{tag}}
+  {% for attribute in attributes %}
+    {{ attribute[0] | html_safe }}="{{ attribute[1] | html_safe }}"
+  {% endfor %}
+  class="{{classes}}"
+>
+  {% print content %}
+</{{tag}}>

@@ -1,0 +1,36 @@
+.tags-allowlist .tagify__dropdown__wrapper {
+  @apply
+    mt-1
+    p-4
+    border-0
+    !rounded-t-none
+    !bg-highlighted;
+}
+
+.tags-allowlist .tagify__dropdown__item {
+  transition: 0s;
+
+  @apply
+    m-1
+    py-1
+    px-1
+    inline-block
+    border
+    border-highlighted
+    rounded
+    bg-panel
+    uppercase
+    text-normal;
+}
+
+.tags-allowlist .tagify__dropdown__item:hover {
+  @apply
+    bg-interactive-hover
+    border-interactive-graphic
+    text-inverted
+    transition-colors;
+}
+
+.tagify__tag-text:before {
+  content: '#';
+}

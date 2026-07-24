@@ -1,0 +1,55 @@
+---
+method: post
+slug: onboarding
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function default_url = 'modules/community/helpers/after_sign_in_url', user_id: current_profile.user.id
+
+  if context.params.r_ids == empty
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: default_url
+    # platformos-check-enable DeprecatedTag
+  endif
+
+  function default_timezone = 'modules/core/queries/variable/get', name: 'SITE_DEFAULT_TIMEZONE', default: 'Eastern Time (US & Canada)', type: null
+  assign timezone = context.params.timezone | default: default_timezone
+
+  assign data = context.params
+  hash_assign data['l_id'] = data['l_id'] | default: current_profile.id
+  hash_assign data['type'] = 'relationship'
+  hash_assign data['created_by_id'] = current_profile.id
+
+  function can = "modules/community/helpers/can", actor: current_profile, do: 'create', object: data
+  unless can.valid
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/json/shared/not_authenticated'
+    # platformos-check-enable DeprecatedTag
+    break
+  endunless
+
+  # platformos-check-disable UnknownProperty
+  for r_id in data.r_ids
+  # platformos-check-enable UnknownProperty
+    assign relationship = data | parse_json
+    hash_assign relationship['r_id'] = r_id
+
+    function object = 'modules/community/commands/relationships/find_or_create', object: relationship
+
+    if object.valid and object.created
+      assign event_payload = null | hash_merge: l_id: object.l_id, r_id: object.r_id, relationship_id: object.id
+      function _ = 'modules/core/commands/events/publish', type: 'relationship_created', object: event_payload, delay: 0, max_attempts: null
+      function _event = 'modules/community/commands/core_events/factory/create', relation: object, _event: null
+    endif
+  endfor
+
+  assign profile_update_params = current_profile | hash_merge: timezone: timezone
+  function profile = 'modules/user/commands/profiles/update_proxy', object: profile_update_params, profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/redirect_to', url: default_url
+  # platformos-check-enable DeprecatedTag
+%}

@@ -1,0 +1,16 @@
+{% liquid
+  function profile_table = 'modules/user/helpers/table_name'
+  assign event_object = event.event_object
+  assign owner_profile = event_object.owner.profile
+  assign email = owner_profile.properties.email
+
+  function deleting_profile = 'modules/community/queries/profiles/find', id: event.actor_id, uuid: null, slug: null, user_id: null, anonymous_session_id: null, relationships: null
+
+  assign object = '{}' | parse_json
+  hash_assign object['event_owner'] = owner_profile
+  hash_assign object['event'] = event_object
+  hash_assign object['deleting_profile'] = deleting_profile
+  hash_assign object['email'] = email
+
+  function email = 'modules/community/commands/emails/event_deleted', object: object
+%}

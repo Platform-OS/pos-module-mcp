@@ -1,0 +1,10 @@
+{% liquid
+  function object = 'modules/community/commands/events/delete/build', event: event
+  function object = 'modules/community/commands/events/delete/check',  object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/events/delete', selection: 'record_delete', object: object
+  endif
+
+  return object
+%}

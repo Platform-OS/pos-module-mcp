@@ -1,0 +1,33 @@
+---
+slug: api/comments
+method: put
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function comment = 'modules/community/queries/comments/find', id: context.params['comment[id]'], creator_id: null
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: comment.id
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: comment, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/comments', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  hash_assign comment['body'] = context.params['comment[body]']
+
+  assign response = '{}' | parse_json
+
+  function object = 'modules/community/commands/comments/update', object: comment
+  if object.valid
+    function body_formatted = 'modules/community/helpers/linkify_hashtags', input: comment.body
+    function body_formatted = 'modules/community/helpers/linkify_mentions', input: comment.body
+    hash_assign response['comment_body'] = body_formatted | markdown: '{ "elements": ["b","strong","i","em","a","code","br","pre"], "attributes":{ "a": ["href"] } }'
+  else
+    hash_assign response['errors'] = object["errors"]
+  endif
+
+  echo response
+%}

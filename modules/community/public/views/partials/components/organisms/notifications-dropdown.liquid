@@ -1,0 +1,12 @@
+{% if list.total_entries > 0 %}
+  {% liquid
+    for activity in list.results
+      theme_render_rc 'components/molecules/community-notification', payload: activity.payload, current_profile: current_profile, namespace: namespace, context: context, size: 'small'
+    endfor
+  %}
+
+{% else %}
+  <article class="pos-app pos-community-notification-empty">
+    {{ 'modules/community/notifications.no_item' | t }}
+  </article>
+{% endif %}

@@ -1,0 +1,11 @@
+{% liquid
+  if object
+    if object.allow_emails == 'false'
+      return false
+    else
+      return true
+    endif
+  else
+    return false
+  endif
+%}

@@ -1,0 +1,19 @@
+label > .pos-rating-empty {
+  display: none;
+}
+
+.pos-rating:not(:hover) input:checked[type=radio] ~ label > .pos-rating-empty {
+  display: block;
+}
+
+.pos-rating:not(:hover) input:checked[type=radio] ~ label > .pos-rating-full {
+  display: none;
+}
+
+.pos-rating input:hover[type=radio] ~ label > .pos-rating-empty {
+  display: block;
+}
+
+.pos-rating input:hover[type=radio] ~ label > .pos-rating-full {
+  display: none;
+}

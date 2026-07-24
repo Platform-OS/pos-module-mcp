@@ -1,0 +1,13 @@
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/number', c: c, object: object, field_name: 'going', number: null, eq: null, gt: null, gte: null, lt: null, lte: null, ne: null, message: null, message_eq: null, message_gt: null, message_gte: null, message_lt: null, message_lte: null, message_ne: null
+  function c = 'modules/core/validations/number', c: c, object: object, field_name: 'maybe', number: null, eq: null, gt: null, gte: null, lt: null, lte: null, ne: null, message: null, message_eq: null, message_gt: null, message_gte: null, message_lt: null, message_lte: null, message_ne: null
+  function c = 'modules/core/validations/number', c: c, object: object, field_name: 'not_going', number: null, eq: null, gt: null, gte: null, lt: null, lte: null, ne: null, message: null, message_eq: null, message_gt: null, message_gte: null, message_lt: null, message_lte: null, message_ne: null
+
+  hash_assign object['valid'] = c.valid
+  hash_assign object['errors'] = c.errors
+
+  return object
+%}

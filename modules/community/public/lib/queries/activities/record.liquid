@@ -1,0 +1,34 @@
+{% liquid
+  if id == blank
+    log meta, type: 'ERROR: queries/activities/record searching for a record without ID'
+    return null
+  endif
+
+  graphql r = 'modules/community/activities/record', id: id, limit: 1
+  assign record = r.records.results.first
+  unless record
+    return null
+  endunless
+
+  assign uuid = record.uuid | default: 'no-uuid-this-is-fake-report-and-add'
+  graphql ri = 'modules/community/activities/photo', uuid: uuid
+  if ri.errors
+    log ri, type: 'showme activities/photo query'
+    break
+  endif
+
+  hash_assign record['photos'] = ri.records.results
+  # platformos-check-disable UnknownProperty
+  if record.type == 'profile' or record.type == 'modules/user/profile'
+  # platformos-check-enable UnknownProperty
+    # platformos-check-disable UnknownProperty
+    hash_assign record['name'] = record.first_name | append: " " | append: record.last_name
+    # platformos-check-enable UnknownProperty
+  else
+    # platformos-check-disable UnknownProperty
+    hash_assign record['name'] = record.name | default: record.title | default: record.first_name
+    # platformos-check-enable UnknownProperty
+  endif
+
+  return record
+%}

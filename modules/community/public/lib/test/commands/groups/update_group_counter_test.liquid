@@ -1,0 +1,12 @@
+{% liquid
+  function profile = 'modules/community/test/fixtures/profile', user_id: null
+  function group = 'modules/community/test/fixtures/group', owner_id: profile.id, contract: contract
+
+  assign object = '{}' | parse_json
+  hash_assign object['id'] = group.id
+  hash_assign object['c__members_count'] = 1
+  hash_assign object['c__posts_count'] = 1
+  function object = 'modules/community/commands/groups/update_count_cache', object: object
+
+  function contract = 'modules/tests/assertions/valid_object', contract: contract, object: object, field_name: 'object'
+%}

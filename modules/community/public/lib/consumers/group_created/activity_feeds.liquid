@@ -1,0 +1,37 @@
+{% liquid
+  function group = 'modules/community/queries/groups/find', id: event.group_id, current_profile: null
+  if group.meta_visible == 'anonymous'
+    assign group_is_public = true
+  endif
+
+  function audience = 'modules/community/commands/audience/build'
+  hash_assign audience['public']['group'] = audience['public']['group'] | add_to_array: event.group_id
+
+  if group_is_public
+    function profile = 'modules/community/queries/activities/users/audience', id: event.creator_id
+    # platformos-check-disable UnknownProperty
+    hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: profile['followers']
+    # platformos-check-enable UnknownProperty
+
+    # TAG FEED AND FOLLOWERS{% endcomment
+    # assign content = group.summary | append: ' ' | append: group.description
+    # function hashtags = 'modules/community/helpers/extract_hashtags', input: content
+    # function tag_audience = 'modules/community/queries/activities/tags/audience', names: hashtags, skip_followers: false
+
+    # hash_assign audience['public']['tag'] = audience['public']['tag'] | concat: tag_audience['tag']
+    # hash_assign audience['private']['profile'] = audience['private']['profile'] | concat: tag_audience['profile']
+  endif
+
+  assign notification_title = 'modules/community/push_notifications.new_group.title' | t
+  assign notification_body = 'modules/community/push_notifications.new_group.body' | t: actor: event.actor.name, group: event.object.name
+  function url = 'modules/community/helpers/link_to_url', object: event.object, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  function _publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+
+  # system: audit
+  function _ = 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "1", at: null
+
+  # system: items
+  function _ = 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "3", at: null
+%}

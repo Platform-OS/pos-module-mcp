@@ -1,0 +1,53 @@
+mutation groups_update(
+  $id: ID!
+  $name: String
+  $short_description: String
+  $description: String
+  $start_date: String
+  $end_date: String
+  $link: String
+  $venue: String
+  $uuid: String
+  $commentable: Boolean
+  $status: String
+  $tags: [String]
+) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/community/event"
+      properties: [
+        { name: "name", value: $name }
+        { name: "short_description", value: $short_description }
+        { name: "description", value: $description }
+        { name: "start_date", value: $start_date }
+        { name: "end_date", value: $end_date }
+        { name: "link", value: $link }
+        { name: "venue", value: $venue }
+        { name: "uuid", value: $uuid }
+        { name: "commentable", value_boolean: $commentable }
+        { name: "status", value: $status }
+        { name: "tags", value_array: $tags }
+      ]
+    }
+  ) {
+    id
+    created_at
+    type: table
+
+    name: property(name: "name")
+    short_description: property(name: "short_description")
+    description: property(name: "description")
+    start_date: property(name: "start_date")
+    end_date: property(name: "end_date")
+    link: property(name: "link")
+    venue: property(name: "venue")
+    uuid: property(name: "uuid")
+    commentable: property_boolean(name: "commentable")
+    status: property(name: "status")
+    tags: property_array(name: "tags")
+    c__going: property_int(name: "c__going")
+    c__maybe: property_int(name: "c__maybe")
+    c__not_going: property_int(name: "c__not_going")
+  }
+}

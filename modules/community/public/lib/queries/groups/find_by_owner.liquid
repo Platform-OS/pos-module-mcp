@@ -1,0 +1,10 @@
+{% liquid
+  if owner_id == blank
+    log 'Something went wrong. Owner cannot be blank.', type: 'ERROR'
+    return null
+  endif
+
+  graphql r = 'modules/community/groups/search_for_owner', id: id, limit: 1, owner_id: owner_id, name: name
+
+  return r.groups.results.first
+%}

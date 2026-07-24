@@ -1,0 +1,42 @@
+{% comment %}
+  @params
+    uuid
+{% endcomment %}
+
+{% liquid
+  function object = 'modules/community/commands/activities/publish/build', uuid: uuid, type: type, ids: ids, at: at
+  function object = 'modules/community/commands/activities/publish/check', object: object
+
+  if object.valid
+    assign feed_type = object.type
+    assign feed_ids = object.ids
+    function object = 'modules/community/commands/activities/publish/execute', object: object
+
+    if feed_type == 'user-notifications' and notification != blank and feed_ids != blank
+      # feed_ids are profile ids (relationship l_id/r_id); push subscriptions are keyed by user_id, so map profile -> user first
+      assign profile_id_batches = feed_ids | array_in_groups_of: 50
+      assign notify_user_ids = '[]' | parse_json
+
+      for batch in profile_id_batches
+        assign clean_batch = batch | compact
+        function profiles = 'modules/community/queries/profiles/search', ids: clean_batch, limit: 50, page: 1, uuid: null, id: null, user_id: null, not_ids: null, roles: null, query: null, sort: null, with_avatar: null, with_user: null, with_profile_cover: null
+
+        for profile in profiles.results
+          assign notify_user_ids = notify_user_ids | add_to_array: profile.user_id
+        endfor
+      endfor
+
+      if notify_user_ids != blank
+        assign default_icon = 'modules/community/favicon/apple-touch-icon.png' | asset_url
+        assign icon = notification.icon | default: default_icon
+        assign notification = notification | hash_merge: icon: icon
+
+        function push_result = 'modules/push_notifications/commands/notifications/broadcast', user_ids: notify_user_ids, payload: notification, ttl: null, urgency: null
+        log push_result, type: 'debug'
+      endif
+    endif
+  else
+    log object, type: 'Failed publishing event'
+  endif
+  return object
+%}

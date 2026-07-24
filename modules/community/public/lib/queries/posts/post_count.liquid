@@ -1,0 +1,9 @@
+{% comment %}
+  Counts the created posts
+{% endcomment %}
+{% liquid
+  # platformos-check-disable MissingPartial
+  graphql count = 'modules/user/profiles/count'
+  # platformos-check-enable MissingPartial
+  return count.posts.total_entries
+%}

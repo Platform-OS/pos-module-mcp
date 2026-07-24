@@ -1,0 +1,18 @@
+{%- comment -%}
+  Registry accessor (spec §17.2) — the single indirection every caller uses, so
+  caching can be added in ONE place. The manifests are code, so the built registry
+  only changes on deploy; platformOS's {% cache %} auto-invalidates on any view
+  change (= on deploy), making it the correct future cache primitive here.
+
+  Currently a direct pass-through to registry/build (the registry is small; per-
+  request build is within the pipeline budget). When profiling (§17.3) warrants
+  it, wrap the build in {% cache 'mcp_registry', expire: N %} here — no caller
+  changes. Kept uncached for now to avoid stale/escaping edge cases before the
+  suite (task-1.10) locks behavior.
+
+  @return {object} { tools, excluded, count } — see registry/build
+{%- endcomment -%}
+{% liquid
+  function reg = 'modules/mcp/commands/registry/build'
+  return reg
+%}

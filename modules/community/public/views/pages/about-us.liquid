@@ -1,0 +1,10 @@
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+
+  function page = 'modules/community/queries/static_pages/find', slug: context.params.slug, name: null, id: null
+  assign photo_type1 = page.slug | append: '-photo1'
+  assign photo_type2 = page.slug | append: '-photo2'
+  function photo1 = 'modules/community/queries/photos/search', photo_type: photo_type1, object_uuid: null, limit: null
+  function photo2 = 'modules/community/queries/photos/search', photo_type: photo_type2, object_uuid: null, limit: null
+  render 'modules/community/two_section_page', page: page, photo1: photo1.results.first, photo2: photo2.results.first
+%}

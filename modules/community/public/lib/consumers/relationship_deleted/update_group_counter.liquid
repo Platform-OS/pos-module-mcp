@@ -1,0 +1,5 @@
+{% liquid
+  if event.target.type == 'modules/community/group'
+    function _ = 'modules/community/commands/relationships/update_group_members_counter', group_id: event.target.id
+  endif
+%}

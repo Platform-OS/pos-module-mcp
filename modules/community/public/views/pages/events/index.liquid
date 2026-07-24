@@ -1,0 +1,15 @@
+---
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function filters = 'modules/community/queries/events/filters', params: context.params
+  function events = 'modules/community/queries/events/quick_search', limit: 9, page: filters.page, keyword: filters.keyword, sort: filters.sort, current_profile: current_profile, with_relationships: null, status: null
+
+  render 'modules/community/migrated/events/search', list: events, current_profile: current_profile
+%}

@@ -1,0 +1,6 @@
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+
+  function page = 'modules/community/queries/static_pages/find', slug: context.params.slug, name: null, id: null
+  render 'modules/community/simple_page', page: page, render_update_text: true
+%}

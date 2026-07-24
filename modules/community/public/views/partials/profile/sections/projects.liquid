@@ -1,0 +1,27 @@
+<section>
+
+  <header class="mb-4">
+    <h2 class="title !mb-0">{{ 'modules/community/projects.list.my_project' | t }}</h2>
+  </header>
+
+  {% if list.total_entries == 0 and skip_empty != true %}
+
+    <div class="p-8 bg-panel-highlight rounded text-center">
+      <strong class="block">{{ 'modules/community/projects.list.empty.title' | t }}</strong>
+      {{ 'modules/community/projects.list.empty.desc' | t }}<br>
+      <a href="{% render 'modules/community/helpers/link_to', object: null %}" class="mt-4 button">{{ 'modules/community/projects.list.empty.cta' | t }}</a>
+    </div>
+
+  {% else %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for record in list.results %}
+        {%- comment -%}platformos-check-disable MissingPartial{%- endcomment -%}
+        {% render 'theme/simple/projects/card', project: record, current_profile: current_profile %}
+        {%- comment -%}platformos-check-enable MissingPartial{%- endcomment -%}
+      {% endfor %}
+    </div>
+
+  {% endif %}
+
+</section>

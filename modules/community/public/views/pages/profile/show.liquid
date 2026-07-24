@@ -1,0 +1,114 @@
+---
+slug: profile(/:username)(/:section)(/:uuid)
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true, with_cover_photo: false
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign slug = context.params.username | default: current_profile.slug
+  function profile_id = 'modules/community/helpers/slugs/get_id', slug: slug
+  function profile = 'modules/user/queries/profiles/find', id: profile_id, user_id: null, uuid: null, first_name: null, last_name: null
+  function profile_cover = 'modules/community/queries/photos/search', photo_type: 'profile_cover', object_uuid: profile.uuid, limit: 1
+  hash_assign profile['profile_cover'] = profile_cover.results[0]
+
+  # platformos-check-disable UnreachableCode
+  # platformos-check-disable DeprecatedTag
+  # platformos-check-disable UnknownProperty
+  include 'modules/community/helpers/present_or_404', property: profile.id
+  # platformos-check-enable UnknownProperty
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-enable UnreachableCode
+
+  # platformos-check-disable UnknownProperty
+  if slug != profile.slug
+  # platformos-check-enable UnknownProperty
+   # platformos-check-disable UnknownProperty
+   assign url =  "/profile/" | append: profile.slug
+   # platformos-check-enable UnknownProperty
+   if context.params.section
+     assign url = url | append: '/' | append: context.params.section
+     if context.params.uuid
+       assign url = url | append: '/' | append: context.params.uuid
+     endif
+   endif
+   redirect_to url
+  endif
+
+  unless slug == current_profile.slug
+    # platformos-check-disable UnknownProperty
+    function relationships = 'modules/community/queries/relationships/search', l_id: profile.id, limit: 100, name: null, r_id: null, include_related: null, accepted: null, approved: null
+    # platformos-check-enable UnknownProperty
+    function profile = 'modules/community/queries/profiles/preload_relationships', profile: profile, relationships: relationships.results
+  endunless
+
+  assign section = context.params.section | default: 'feed'
+
+  function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+
+  case section
+  when 'feed'
+    function list = 'modules/community/queries/activities/search_with_records', feed: 'user-public', feed_id: profile.id, limit: 9, uuid: context.params.uuid, page: null
+
+  when 'groups'
+    if profile.id != current_profile.id
+      assign meta_visible = 'anonymous'
+    endif
+    function list = 'modules/community/queries/relationships/search_by_left', limit: 100, name: 'membership', include_related: false, l_id: profile.id, r_id: null
+    assign joined_group_ids = list.results | map: 'r_id'
+    function list = 'modules/community/queries/groups/search_for_member', limit: 2, member_id: profile.id, current_profile: current_profile, without_group_type: "course", meta_visible: meta_visible, group_type: null, not_ids: null, page: null
+    function suggested = 'modules/community/queries/groups/search', limit: 2, not_ids: joined_group_ids, not_type: 'course', meta_visible: 'anonymous', ask_to_join: 'yes', current_profile: current_profile, sort: null, keyword: null, owner_id: null, relation_name: null, not_name: null, with_owner: null, id: null, page: null
+    assign list = list | hash_merge: { "suggested": suggested }
+  when 'events'
+    if profile.id != current_profile.id
+      assign status = 'published'
+    else
+      assign status = null
+    endif
+    function list = 'modules/community/queries/events/search_for_member', limit: 3, member_id: profile.id, current_profile: current_profile, with_owner: true, status: status
+    assign joined_event_ids = list.results | map: 'id'
+    assign now = 'now' | to_time | strftime: '%Y-%m-%dT%H:%M:%S.%LZ'
+    assign sort = '{ "properties": { "name": "start_date", "order": "ASC" } }' | parse_json
+    function suggested = 'modules/community/queries/events/search', limit: 3, not_ids: joined_event_ids, current_profile: current_profile, from: now, sort: sort, with_owner: true, name: null, keyword: null, owner_id: null, relation_name: null, not_name: null, status: null, page: null
+    assign list = list | hash_merge: { "suggested": suggested }
+
+  when 'following'
+    if context.params.show == 'all'
+      assign following_limit = 100
+    else
+      assign following_limit = 3
+    endif
+
+    function list = 'modules/community/queries/relationships/search_by_left', limit: 300, name: 'followship:profile', include_related: false, l_id: profile.id, r_id: null
+    assign following_ids = list.results | map: 'r_id'
+    assign excluded_ids = following_ids | add_to_array: current_profile.id
+
+    function list = 'modules/community/queries/relationships/search_by_left', limit: following_limit, pagef: 1, name: 'followship:profile', r_id: null, include_related: true, l_id: profile_id
+    assign followings = list.results | map: 'r'
+    assign list = list | hash_merge: results: followings
+
+    function suggested = 'modules/user/queries/profiles/search', limit: 3, page: 1, not_ids: excluded_ids, uuid: null, id: null, ids: null, first_name: null, last_name: null, user_id: null, query: null, emails: null, sort: sort
+  when 'followers'
+    function list = 'modules/community/queries/relationships/search_by_right', limit: 3, pagef: 1, name: 'followship:profile', r_id: profile.id, include_related: true, l_id: null, not_l_id: null, accepted: null, approved: null
+    assign followers = list.results | map: 'l'
+    assign list = list | hash_merge: results: followers
+  when 'tags'
+    assign list = context.tags
+    if profile.id != current_profile.id
+      function list = 'modules/community/queries/relationships/search_by_left', limit: 100, name: 'followship:tag', l_id: profile.id, include_related: true, r_id: null
+      assign list = list.results | map: 'r'
+    endif
+  endcase
+
+  unless profile.id == current_profile.id
+    assign suggested = null
+    if section != 'tags'
+      assign list = list | hash_merge: { "suggested": null }
+    endif
+  endunless
+
+  theme_render_rc 'components/templates/feed', feed_type: 'public', section: section, profile: profile, list: list, suggested: suggested, current_profile: current_profile, context: context, show: context.params.show, uuid: context.params.uuid
+%}

@@ -1,0 +1,16 @@
+{% liquid
+  function activities = 'modules/community/queries/activities/one', uuid: payload.object.target_activity_uuid
+  function target_url = 'modules/community/activities/html/a', object: activities.results.first.payload, type: 'activity', class: 'text-interactive-text', namespace: null, role: null
+  function object_url = 'modules/community/activities/html/a', object: payload.object, type: 'group', class: 'text-interactive-text', namespace: null, role: null
+%}
+
+{% assign message = payload.type | t:
+  actor: payload.actor.name,
+  target: payload.target.name,
+  target_url: target_url,
+  object_url: object_url,
+  type: payload.target.type,
+  scope: 'modules/community/activities.types',
+  target_url: target_url
+%}
+{% return message %}

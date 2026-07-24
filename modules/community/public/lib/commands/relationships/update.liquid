@@ -1,0 +1,12 @@
+{%  liquid
+  function object = 'modules/community/commands/relationships/update/build', object: object
+  function object = 'modules/community/commands/relationships/update/check', object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/relationships/update' object: object, selection: 'record_update'
+  else
+    log object, type: 'update-relationship object'
+  endif
+
+  return object
+%}

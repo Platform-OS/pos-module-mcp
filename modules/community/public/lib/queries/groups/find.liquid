@@ -1,0 +1,20 @@
+{% liquid
+  if id == blank
+    log 'Something went wrong when finding group. Required fields: id', type: 'ERROR'
+    return null
+  else
+    assign id = id | plus: 0
+  endif
+
+  assign relationships = relationships | default: null
+  assign with_owner = with_owner | default: null
+  assign name = name | default: null
+
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r  = 'modules/community/groups/search', id: id, name: name, limit: 1, with_owner: with_owner, relationships: relationships, profile_table: profile_table
+  function groups = 'modules/community/queries/groups/add_current_profile_role_info', groups: r.groups, current_profile: current_profile
+
+  assign group = groups.results.first
+
+  return group
+%}

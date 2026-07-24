@@ -1,0 +1,9 @@
+query ac($uuid: [String!]) {
+  activities(per_page: 1 uuids: $uuid){
+    total_entries
+    has_next_page
+    results {
+      payload
+    }
+  }
+}

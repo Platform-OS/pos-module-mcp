@@ -1,0 +1,30 @@
+---
+slug: groups/:id/invites/:relationship_id/accept
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function relation = 'modules/community/queries/relationships/find_by_id', id: context.params.relationship_id, include_related: true
+  # platformos-check-disable DeprecatedTag
+  # platformos-check-disable UnknownProperty
+  include 'modules/community/helpers/present_or_404', property: relation.id
+  # platformos-check-enable UnknownProperty
+  # platformos-check-enable DeprecatedTag
+
+  assign data = null | hash_merge: id: relation.id, r_accepted_at: relation.r_accepted_at
+  hash_assign relation['_incoming_changes'] = data
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: relation, do: 'update', requester: current_profile, access_callback: 'modules/community/can/relationships/memberships', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/groups/accept_invite', object: data, relation: relation, current_profile: current_profile
+
+  function group_url = 'modules/community/helpers/link_to', object: relation.r
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/redirect_to', url: group_url
+  # platformos-check-enable DeprecatedTag
+%}

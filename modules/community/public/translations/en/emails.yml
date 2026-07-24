@@ -1,0 +1,34 @@
+---
+en:
+  emails:
+    accounts:
+      created_by_admin:
+        title: Claim your account
+        subject: "%{site_name} Invited you to become a user"
+        content: You have been invited, to set password and login please use the
+          following button.
+        claim: Claim Account
+    passwords:
+      reset:
+        subject: Reset password
+        title: Password reset request
+        cta: Reset password
+        cta_button: Go to reset password form
+        content: It seems that you requested a password reset. To proceed use the
+          following button.
+        ignore: If it wasn’t you who requested this just ignore this message.
+    contact-us:
+      subject: New message from Contact-Us form on %{host}
+    groups:
+      invite:
+        title: Join %{group_name}
+        subject: "%{site_name} %{member} invited you to %{group_name} group"
+        content: "%{member} invited you to join %{group_name} group. Please use
+          the following button to accept the invitation."
+        ignore: If you don't want to accept the invitation, please just ignore this
+          message.
+        claim: Accept
+    events:
+      event_deleted: Your event %{event_name} has been deleted.
+      event_approved: Your event %{event_name} has been approved.
+      event_rejected: Your event %{event_name} has been rejected.

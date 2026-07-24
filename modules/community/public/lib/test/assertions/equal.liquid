@@ -1,0 +1,13 @@
+{% liquid
+  hash_assign contract['total'] = contract['total'] | plus: 1
+
+  if given != expected
+    # platformos-check-disable TranslationKeyExists
+    assign msg = 'test.should.equal' | t: given: given, expected: expected
+    # platformos-check-enable TranslationKeyExists
+    # platformos-check-disable MissingPartial
+    function contract = 'test/register_error_f', contract: contract, field_name: field_name, message: msg
+    # platformos-check-enable MissingPartial
+  endif
+  return contract
+%}

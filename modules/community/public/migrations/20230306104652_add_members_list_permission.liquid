@@ -1,0 +1,13 @@
+
+{% liquid
+  comment
+    add_members_list_permission migration code goes below
+
+  #TODO: add to permissions.yml
+  function auth_permissions = 'modules/user/queries/role_permissions/find', role_name: 'authenticated'
+  assign auth_permissions = auth_permissions | add_to_array: 'profiles.list'
+
+  function result = 'modules/user/commands/role_permissions/create', role_name: 'authenticated', permissions: auth_permissions
+  log result, type: 'migration: profile.list permission is added to authenticted role'
+  endcomment
+%}

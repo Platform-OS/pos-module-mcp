@@ -1,0 +1,24 @@
+---
+method: delete
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign data = context.params
+  hash_assign data['l_id'] = data['l_id'] | default: current_profile.id
+
+  # platformos-check-disable UnknownProperty
+  function relation = 'modules/community/queries/relationships/find', name: data.name, l_id: data.l_id, r_id: data.r_id, include_related: null
+  # platformos-check-enable UnknownProperty
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: relation, do: 'delete', requester: current_profile, access_callback: 'modules/community/can/relationships', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/relationships/delete', object: relation, skip_execution: null
+
+  render 'modules/community/json/shared/show', object: object
+%}

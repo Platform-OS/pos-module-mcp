@@ -1,0 +1,56 @@
+{% doc %}
+  @param {object} profile - The profile to load relationships onto
+  @param {object} relationships - Relationship records to assign
+{% enddoc %}
+{% liquid
+  if relationships
+    assign relationships = relationships | group_by: "name"
+    hash_assign profile['relationships'] = relationships
+
+    # platformos-check-disable UnknownProperty
+    for m in profile.relationships.membership
+    # platformos-check-enable UnknownProperty
+      assign member = m
+      if member.l_accepted_at == blank
+        hash_assign member['pending_acceptance'] = true
+      endif
+
+      # platformos-check-disable UnknownProperty
+      if member.r_accepted_at == blank
+      # platformos-check-enable UnknownProperty
+        hash_assign member['pending_approval'] = true
+      endif
+
+      # platformos-check-disable UnknownProperty
+      if member.r_accepted_at and member.l_accepted_at
+      # platformos-check-enable UnknownProperty
+        hash_assign member['valid'] = true
+      endif
+    endfor
+
+    # platformos-check-disable UnknownProperty
+    for m in profile.relationships.owner
+    # platformos-check-enable UnknownProperty
+      assign member = m
+      # platformos-check-disable UnknownProperty
+      if member.l_accepted_at == blank
+      # platformos-check-enable UnknownProperty
+        hash_assign member['pending_acceptance'] = true
+      endif
+
+      # platformos-check-disable UnknownProperty
+      if member.r_accepted_at == blank
+      # platformos-check-enable UnknownProperty
+        hash_assign member['pending_approval'] = true
+      endif
+
+      # platformos-check-disable UnknownProperty
+      if member.r_accepted_at and member.l_accepted_at
+      # platformos-check-enable UnknownProperty
+        hash_assign member['valid'] = true
+      endif
+    endfor
+  endif
+
+  return profile
+%}

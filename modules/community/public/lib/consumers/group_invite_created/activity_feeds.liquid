@@ -1,0 +1,12 @@
+{% liquid
+  function audience = 'modules/community/commands/audience/build'
+
+  hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | add_to_array: event.object.id
+
+  assign notification_title = 'modules/community/push_notifications.group_invite.title' | t
+  assign notification_body = 'modules/community/push_notifications.group_invite.body' | t: actor: event.actor.name, group: event.target.name
+  function url = 'modules/community/helpers/link_to_url', object: event.target, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  render 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+%}

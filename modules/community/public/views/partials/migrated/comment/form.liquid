@@ -1,0 +1,48 @@
+{% liquid
+  assign uuid = '' | uuid
+
+  assign placeholder_defaut = 'modules/community/comments.create.placeholder' | t
+  assign placeholder = placeholder | default: placeholder_defaut
+
+  assign editor_id = 'pos-community-post-' | append: parent_id | append: '-comment-create-editor'
+%}
+
+
+<div
+  id="pos-community-post-{{ parent_id }}-comment-create"
+  class="pos-community-feed-create"
+  data-response-target="#pos-community-post-{{ parent_id }}-comments"
+  data-response-target-place="end"
+  data-post-id="{{ parent_id }}"
+>
+
+  {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+  {% render 'modules/common-styling/user/avatar', size: 'md', name: author.name, params: null %}
+  {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+  <button class="pos-community-feed-create-activate pos-form-input" disabled>{{ placeholder }}</button>
+  <form action="/comments.frame" method="post">
+    <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+    <input type="hidden" name="comment[commentable_id]" value="{{ commentable.id }}">
+    <input type="hidden" name="comment[commentable_uuid]" value="{{ commentable.uuid }}">
+    <input type="hidden" name="comment[commentable_type]" value="{{ commentable_type }}">
+    <input type="hidden" name="comment[target_activity_uuid]" value="{{ target_activity_uuid }}">
+    <input type="hidden" name="comment[uuid]" value="{{ uuid }}">
+    <input type="hidden" name="return_to" value="{{ context.location.href }}">
+
+    {%- comment -%}platformos-check-disable MissingRenderPartialArguments{%- endcomment -%}
+    {% render 'modules/common-styling/forms/markdown',
+      name: 'comment[body]',
+      id: editor_id,
+      presigned_upload: context.presigned_url,
+      mention_search_url: '/api/users/search.json',
+      minlength: 3
+    %}
+    {%- comment -%}platformos-check-enable MissingRenderPartialArguments{%- endcomment -%}
+
+    <fieldset class="pos-form-actions">
+      <button type="button" class="pos-community-feed-create-close">Cancel</button>
+      <button type="submit" class="pos-button pos-button-primary">Post</button>
+    </fieldset>
+  </form>
+
+</div>

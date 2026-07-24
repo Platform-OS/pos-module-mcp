@@ -1,0 +1,12 @@
+{%  liquid
+  function object = 'modules/community/commands/events/reject/build', object: object
+  function object = 'modules/community/commands/events/reject/check', object: object
+
+  if object.valid
+    hash_assign object['status'] = 'unpublished'
+
+    function object = 'modules/core/commands/execute', object: object, mutation_name: 'modules/community/events/update', selection: 'record'
+  endif
+
+  return object
+%}

@@ -1,0 +1,32 @@
+---
+metadata:
+  name: Badge
+  params:
+    maxValue: 1000
+    value: 1000
+  styleguide:
+    - maxValue: 20
+      value: 8
+    - maxValue: 999
+      value: 1500
+    - maxValue: 1999
+      value: 1500
+    - value: 1500
+
+---
+{% liquid
+  assign maxValue = maxValue | default: params.maxValue | default: 0
+  assign value = value | default: params.value
+
+  if maxValue > 0 and maxValue < value
+    assign value = maxValue | append: "+"
+  endif
+
+  assign classes = 'px-1 py-1 leading-3 text-xs rounded-full min-w-[20] flex flex-col items-center bg-important text-inverted'
+%}
+
+<div class="inline-block">
+  <div class="{{classes}}">
+    {{value}}
+  </div>
+</div>

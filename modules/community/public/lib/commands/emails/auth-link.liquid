@@ -1,0 +1,15 @@
+---
+metadata:
+  parameters:
+    object:
+    - url
+    - email
+    - id
+---
+{% liquid
+  assign from_email = 'modules/community/app.from_email' | t
+  assign subject = 'modules/community/emails.passwords.reset.subject' | t
+  assign object = {"to": object.email, "from": from_email, "subject": subject, "partial": "modules/community/emails/passwords/reset", "layout": "modules/community/mailer", "data": {"url": object.url, "user": {"id": object.id}}}
+  function object = 'modules/core/commands/email/send', object: object
+  return object
+%}

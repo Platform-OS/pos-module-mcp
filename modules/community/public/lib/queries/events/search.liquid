@@ -1,0 +1,8 @@
+{% liquid
+  assign page = page | to_positive_integer: 1
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r = 'modules/community/events/search', limit: limit, page: page, sort: sort, name: name, keyword: keyword, owner_id: owner_id, relation_name: relation_name, not_name: not_name, not_ids: not_ids, from: from, status: status, with_owner: with_owner, profile_table: profile_table
+
+  function events = 'modules/community/queries/events/add_current_profile_role_info', events: r.events, current_profile: current_profile
+  return events
+%}

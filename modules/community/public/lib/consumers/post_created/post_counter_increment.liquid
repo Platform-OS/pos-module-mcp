@@ -1,0 +1,8 @@
+{% liquid
+  assign profile_id = event.creator_id
+
+  function profile = 'modules/user/queries/profiles/find', id: profile_id, uuid: null, user_id: null, first_name: null, last_name: null
+
+
+  function _ = 'modules/community/commands/posts/post_count_increment', object: profile
+%}

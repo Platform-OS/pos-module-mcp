@@ -1,0 +1,3 @@
+{% assign admin_pages = [{"relative_path": "/admin/community/groups", "partial": "modules/community/admin_pages/groups", "menu": {"title": "Group management"}, "permission": "groups.manage.all"}, {"relative_path": "/admin/community/events", "partial": "modules/community/admin_pages/events", "menu": {"title": "Event management"}, "permission": "events.manage.all"}, {"relative_path": "/admin/community/hashtags", "partial": "modules/community/admin_pages/hashtags", "menu": {"title": "Hashtag management"}, "permission": "hashtags.manage"}] %}
+
+{% return admin_pages %}

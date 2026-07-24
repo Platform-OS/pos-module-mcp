@@ -1,0 +1,6 @@
+<header class="pos-app pos-community-space-header pos-community-space-detail-header pos-increaseLegibility" {% if group.main_photo.photo.versions.uncropped %}style="background-image: url('{{ group.main_photo.photo.versions.uncropped }}')"{% endif %}>
+  <h2 class="pos-heading-2">
+    <small>{{ 'modules/community/groups.relationships.manage_group' | t }}</small>
+    <a href="/groups/{{ group.id }}">{{ group.name }}</a>
+  </h2>
+</header>

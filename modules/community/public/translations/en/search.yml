@@ -1,0 +1,14 @@
+---
+en:
+  search:
+    no_items_found:
+      posts: There are currently no posts.
+      title: We couldn’t find any results matching your criteria
+      desc: Things we can try to help with that
+      refilter:
+        Adjust the filters or <a href="/search">clear them</a> and start
+        over
+      rephrase:
+        Try a different <label for="keyword">search phrase</label> and check
+        the spelling
+      browse: Browse through <a href="/search">all our products</a>

@@ -1,0 +1,33 @@
+{% liquid
+  assign output = content | default: ''
+  assign openai_secret_token = context.constants['modules/openai/openai_secret_token']
+
+  # check if post content has already hashtags. Then we don`t need to generate any
+  function existing_hashtags = 'modules/community/helpers/extract_hashtags', input: content
+
+  if existing_hashtags.size == 0 and openai_secret_token != blank
+    assign empty_array = '[]' | parse_json
+    assign post_photos = post_photos | default: empty_array
+
+    function generated_hashtags = 'modules/community/helpers/hashtags/generate_hashtags', content: content, post_photos: post_photos
+
+    if generated_hashtags != blank
+      function checked_hashtags = 'modules/community/helpers/hashtags/check_hashtags', tags_collection: generated_hashtags;
+
+      assign hashtags = checked_hashtags | join: ' '
+    endif
+  endif
+%}
+
+{%- if existing_hashtags.size == 0 and generated_hashtags != blank and openai_secret_token != blank -%}
+  {% capture newline %}
+
+  {% endcapture %}
+  {% liquid
+    assign output = content | append: newline | append: hashtags
+  %}
+{%- endif -%}
+
+{%- liquid
+  return output
+-%}

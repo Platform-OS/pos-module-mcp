@@ -1,0 +1,15 @@
+---
+metadata:
+  name: Event approve button
+  params:
+    event: {}
+    context: {}
+---
+<form action="{% render 'modules/community/helpers/link_to', action: 'approve', object: event %}" method="post" class="inline-flex">
+  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+  <input type="hidden" name="_method" value="put" />
+
+  {% liquid
+    theme_render_rc 'components/molecules/iconbutton', icon: 'check', type: 'submit' weight: 'primary', classes: 'w-11', gap: 0
+  %}
+</form>

@@ -1,0 +1,139 @@
+---
+metadata:
+  name: Search field
+  params:
+    classes: ''
+    size:
+      - sm
+      - md
+      - lg
+    button:
+      - true
+      - false
+    input_params:
+      name: input
+      placeholder: Type here
+    button_params:
+      weight: primary
+      content: Search
+      icon: ''
+  styleguide:
+    - classes: 'w-80'
+      button: true
+      size: 'lg'
+      input_params:
+        name: input
+        placeholder: Type here
+      button_params:
+        weight: primary
+        content: Search
+    - classes: 'w-80'
+      button: true
+      input_params:
+        name: input
+        placeholder: Type here
+      button_params:
+        weight: primary
+        content: Search
+    - classes: 'w-80'
+      button: true
+      size: 'sm'
+      input_params:
+        name: input
+        placeholder: Type here
+      button_params:
+        weight: primary
+        content: Search
+    - classes: 'w-80'
+      button: true
+      size: 'lg'
+      input_params:
+        name: input
+        placeholder: Type here
+      button_params:
+        weight: primary
+        icon: 'search'
+    - classes: 'w-80'
+      button: true
+      input_params:
+        name: input
+        placeholder: Type here
+      button_params:
+        weight: primary
+        icon: 'search'
+    - classes: 'w-80'
+      button: true
+      size: 'sm'
+      input_params:
+        name: input
+        placeholder: Type here
+      button_params:
+        weight: primary
+        icon: 'search'
+    - classes: 'w-80'
+      button: false
+      input_params:
+        name: input
+        placeholder: Type here
+      button_params:
+        weight: primary
+        icon: 'search'
+---
+{% liquid
+  assign size = size | default: params.size | default: 'md'
+  assign button = button | default: params.button | default: false
+  assign classes = classes | default: params.classes
+
+  assign classes = 'border border-input-border bg-input ' | append: classes
+
+  assign input_classes = 'w-full h-full pr-8 border-0 '
+  assign button_classes = 'rounded-button '
+  assign button_size = 'normal'
+
+  if size == 'lg'
+    assign classes = classes | append: ' p-2 h-16 '
+    assign string_button_classes = button_classes | append: ' w-20 h-11 '
+    assign icon_button_classes = button_classes | append: ' w-11 h-11 '
+  elsif size == 'sm'
+    assign classes = classes | append: ' pl-2 h-7 '
+    if button == true
+      assign classes = classes | append: ' rounded-r-button border-r-0 '
+    endif
+    assign input_classes = input_classes | append: ' h-6 '
+    assign string_button_classes = button_classes | append: ' w-20 h-7 '
+    assign icon_button_classes = button_classes | append: ' w-7 h-7 '
+    assign button_size = 'small'
+  else
+    if button == true
+      assign classes = classes | append: ' rounded-r-button border-r-0 '
+    endif
+    assign classes = classes | append: ' pl-2 h-11 '
+    assign string_button_classes = button_classes | append: ' w-20 h-11 '
+    assign icon_button_classes = button_classes | append: ' w-11 h-11 '
+  endif
+
+  if button == false
+    assign classes = classes | append: ' flex-row-reverse pr-2 '
+  endif
+
+  assign input_params = input_params | default: params.input_params | hash_merge: classes: input_classes
+  assign icon_params = null | hash_merge: name: 'search'
+  assign icon_button_params = null | hash_merge: classes: icon_button_classes
+
+  assign button_params = button_params | default: params.button_params | hash_merge: size: button_size, classes: string_button_classes
+  assign icon_button = button_params | hash_merge: gap: 0, name: 'search', classes: icon_button_classes
+
+%}
+<div class="inline-flex items-center focus-within:border-interactive-graphic {{classes}}">
+  {% if button_params.icon == blank or button == false %}
+    {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+  {% endif %}
+  {% theme_render_rc 'components/atoms/input', params: input_params %}
+  {% if button %}
+    {% if button_params.icon == blank %}
+      {% theme_render_rc 'components/atoms/button', params: button_params %}
+    {% else %}
+      {% theme_render_rc 'components/molecules/iconbutton', params: icon_button %}
+    {% endif %}
+  {% endif %}
+</div>

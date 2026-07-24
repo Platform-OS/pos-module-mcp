@@ -1,0 +1,20 @@
+{% liquid
+  assign default_result = '{}' | parse_json
+
+  function all_owners_relations = 'modules/community/queries/relationships/find_all', name: 'owner', r_id: group.id, include_related: null, l_id: null
+  function owner_relation = 'modules/community/queries/relationships/find', name: 'owner', l_id: profile.id, r_id: group.id, include_related: null
+  function member_relation = 'modules/community/queries/relationships/find', name: 'membership', l_id: profile.id, r_id: group.id, include_related: null
+
+  if type == 'owner'
+    if owner_relation and all_owners_relations.size > 1
+      return owner_relation
+    elsif owner_relation
+      assign default_result = default_result | hash_merge: error_reason: 'single_owner_leave'
+      return default_result
+    endif
+  elsif member_relation
+    return member_relation
+  endif
+
+  return default_result
+%}

@@ -1,0 +1,13 @@
+{% liquid
+  if user_id == blank
+    assign min = 100
+    assign max = 100000
+    assign diff = max | minus: min
+    assign user_id = "now" | date: "%N" | modulo: diff | plus: min
+  endif
+  assign profile_first_name = first_name | default: 'John'
+  assign profile_last_name = last_name | default: 'Doe'
+  assign profile_data = {"user_id": user_id, "first_name": profile_first_name, "last_name": profile_last_name}
+  function profile = 'modules/user/commands/profiles/create', object: profile_data
+  return profile
+%}

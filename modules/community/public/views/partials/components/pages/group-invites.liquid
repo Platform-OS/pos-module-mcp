@@ -1,0 +1,37 @@
+---
+metadata:
+  name: Group invitation page
+  params:
+    group: {}
+    context: {}
+---
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-user-invite.css' | asset_url }}">
+
+{% liquid
+  assign group = group | default: params.group
+  assign context = context | default: params.context
+%}
+<section>
+
+  <h3 class="pos-heading-3">{{ 'modules/community/groups.invites.index.header' | t }}</h3>
+  <div class="pos-prose">
+    {{ 'modules/community/groups.invites.index.summary' | t | markdown }}
+  </div>
+
+  {% assign skip_profile_ids = group.relationships | select: name: 'membership' | map: 'l_id' | join: ',' %}
+
+  <div x-data="invites()" x-init="skip_profile_ids = {{ skip_profile_ids | json }}" class="pos-card pos-community-user-invite-container">
+    {% theme_render_rc 'components/organisms/group-invite-widget' %}
+    <form action="{% render 'modules/community/helpers/link_to', object: group, action: 'invites' %}" method="post" x-data="{ buttonDisabled: false }" x-on:submit="buttonDisabled = true">
+      {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+      <input name="email_list" type="hidden" :value="emailList()">
+      <button type="submit" disabled :disabled="buttonDisabled" class="pos-button pos-button-primary">
+        {{ 'modules/community/groups.invites.index.send' | t }}
+      </button>
+      {% liquid 
+        function cancel_href = 'modules/community/helpers/link_to', object: group
+      %}
+      <a href="{{ cancel_href }}" class="pos-button">{{ 'modules/community/groups.invites.index.cancel' | t }}</a>
+    </form>
+  </div>
+</section>

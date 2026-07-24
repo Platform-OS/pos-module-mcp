@@ -1,0 +1,78 @@
+---
+metadata:
+  name: Dropdown
+  params:
+    label: 'LabelElement'
+    content: 'DropdownContent'
+    arrow: true
+    classes: ''
+    dropdown_classes: ''
+    label_classes: ''
+    label_attributes: []
+    dropdown_attributes: []
+  styleguide:
+    label: >
+      <div class="inline-block">
+        <div class="px-3 py-1 leading-5 rounded flex items-center align-center h-8 bg-panel cursor-default">
+          <div class="pr-2">
+            John
+          </div>
+          <div class="rounded-full overflow-hidden w-6 h-6 text-xs ">
+            <img src="https://i.pravatar.cc/150?img=13" class="object-cover h-full">
+          </div>
+        </div>
+      </div>
+    content: >
+      <ul>
+        <li class="p-2"><a href='#' class='text-normal'>Lorem ipsum dolor</a></li>
+        <li class="p-2"><a href='#' class='text-normal'>Lorem ipsum dolor</a></li>
+        <li class="p-2"><a href='#' class='text-normal'>Lorem ipsum dolor</a></li>
+        <li class="p-2"><a href='#' class='text-normal'>Lorem ipsum dolor</a></li>
+      </ul>
+    classes: ''
+    dropdown_classes: ''
+    label_classes: ''
+    arrow: true
+---
+{% liquid
+  assign label = label | default: params.label
+  assign content = content | default: params.content
+  assign classes = classes | default: params.classes
+  assign dropdown_classes = dropdown_classes | default: params.dropdown_classes
+  assign label_classes = label_classes | default: params.label_classes
+  assign label_attributes = label_attributes | default: params.label_attributes
+  assign dropdown_attributes = dropdown_attributes | default: params.dropdown_attributes
+  assign dropdown_classes = "w-full shadow-large inline-block md:block " | append: dropdown_classes | strip
+  assign arrow = arrow | default: params.arrow
+  if arrow == null
+    assign arrow = true
+  endif
+%}
+
+<div
+  x-data="{}"
+  data-pos-component="dropdown"
+  class="md:relative inline-block"
+>
+  <button
+    class="{{label_classes}}"
+    {% for attribute in label_attributes %}
+      {{ attribute[0] | html_safe }}="{{ attribute[1] | html_safe }}"
+    {% endfor %}
+    data-dropdown-trigger
+  >
+    {% print label %}
+  </button>
+  <div
+    data-dropdown-content
+    class="hidden absolute z-30 mt-3 w-screen md:w-auto sm:min-w-44 md:top-full start-0 md:start-auto end-0 changes-transform {{classes}}"
+    aria-hidden="true"
+  >
+    {% unless arrow == false %}
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="invisible absolute top-0 left-8 z-30 w-4 h-4 -mt-4 -mb-2 fill-current text-interactive-graphic" data-dropdown-arrow>
+        <polygon points="50 30, 100 100, 0 100"/>
+      </svg>
+    {% endunless %}
+    {% theme_render_rc 'components/atoms/card', content: content, classes: dropdown_classes, attributes: dropdown_attributes %}
+  </div>
+</div>

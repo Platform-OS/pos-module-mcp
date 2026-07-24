@@ -1,0 +1,11 @@
+{% liquid
+  assign group_name_suffix = 4 | random_string
+  assign group_name = "test group-" | append: group_name_suffix
+  assign group_uuid = '' | uuid
+  assign group_data = {"name": group_name, "summary": "sumamry", "description": "test description, and long description very long", "content_types": ["post"], "uuid": group_uuid}
+  function group = 'modules/community/commands/groups/create', object: group_data, owner_id: owner_id
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/valid_object', contract: contract, object: group, field_name: 'group'
+  # platformos-check-enable DeprecatedTag
+  return group
+%}

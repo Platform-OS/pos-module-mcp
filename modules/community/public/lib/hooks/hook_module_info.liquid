@@ -1,0 +1,7 @@
+{% comment %}
+  Implements hook_module_info.
+{% endcomment %}
+{% liquid
+  assign info = {"name": name, "machine_name": machine_name, "type": type, "version": version}
+  return info
+%}

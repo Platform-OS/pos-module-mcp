@@ -1,0 +1,46 @@
+---
+slug: events/:id
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign event_id = context.params.id | split: '-' | last
+  function event = 'modules/community/queries/events/find', id: event_id, with_owner: true, current_profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: event.id
+  # platformos-check-enable DeprecatedTag
+  assign event_slug = event.name | slugify | append: '-' | append: event.id
+  if context.params.id != event_slug
+    assign event_slug = event_slug | prepend: '/events/'
+    redirect_to event_slug
+  endif
+
+  function can_view_event = 'modules/user/helpers/can_do', requester: current_profile, do: 'view', entity: event, access_callback: 'modules/community/can/events'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: can_view_event
+  # platformos-check-enable DeprecatedTag
+
+  function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+
+  # TODO: maybe we could do one query for going and maybe
+  function feed = 'modules/community/queries/activities/search_with_records', feed: 'group-public', feed_id: event.id, limit: 20, uuid: null, page: null
+  function going = 'modules/community/queries/relationships/search_by_right', limit: 20, name: 'event:going', r_id: event_id, include_related: true, l_id: null, not_l_id: null, accepted: null, approved: null
+  assign going_profiles = going.results | map: 'l'
+
+  function maybe = 'modules/community/queries/relationships/search_by_right', limit: 20, name: 'event:maybe', r_id: event_id, include_related: true, l_id: null, not_l_id: null, accepted: null, approved: null
+  assign maybe_profiles = maybe.results | map: 'l'
+
+  function not_going = 'modules/community/queries/relationships/search_by_right', limit: 20, name: 'event:not-going', r_id: event_id, include_related: true, l_id: null, not_l_id: null, accepted: null, approved: null
+  assign not_going_profiles = not_going.results | map: 'l'
+
+  assign participants = null | hash_merge: going: going_profiles, maybe: maybe_profiles, not_going: not_going_profiles
+  function linkified_short_description = 'modules/community/helpers/linkify_hashtags', input: event.short_description
+  function linkified_description = 'modules/community/helpers/linkify_hashtags', input: event.description
+  assign event = event | hash_merge: description: linkified_description, short_description: linkified_short_description
+  theme_render_rc 'components/pages/event-details', event: event, current_profile: current_profile, feed: feed, participants: participants, context: context
+%}

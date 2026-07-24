@@ -1,0 +1,37 @@
+{
+  "name": "components",
+  "version": "1.0.0",
+  "description": "Liquid component library module for platformOS",
+  "targets": {
+    "default": {
+      "source": "./components.js",
+      "distDir": "../modules/components/public/assets"
+    },
+    "styleguide": {
+      "source": "./styleguide.js",
+      "distDir": "../modules/components/public/assets"
+    }
+  },
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "scripts": {
+    "start": "parcel watch --host localhost",
+    "build": "parcel build --no-source-maps --no-cache"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Platform-OS/pos-module-components.git"
+  },
+  "author": "platformOS",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Platform-OS/pos-module-components/issues"
+  },
+  "homepage": "https://github.com/Platform-OS/pos-module-components#readme",
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "parcel": "^2.13.3",
+    "postcss": "^8.4.16",
+    "postcss-import": "^14.1.0",
+    "tailwindcss": "^3.4.17"
+  }
+}

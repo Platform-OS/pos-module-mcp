@@ -1,0 +1,24 @@
+{% liquid
+  if id == blank
+    log '(users) ID cannot be blank when searching for user audience'
+    return null
+  endif
+
+  assign audience = '{ "followers": [] }' | parse_json
+
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r = 'modules/community/activities/users/audience', id: id, limit: 1, profile_table: profile_table
+  assign relationships = r.profiles.results.first.relationships | group_by: 'name'
+
+  for r in relationships['followship:profile']
+    # platformos-check-disable UnknownProperty
+    unless r.l_id == id
+    # platformos-check-enable UnknownProperty
+      # platformos-check-disable UnknownProperty
+      hash_assign audience['followers'] = audience['followers'] | add_to_array: r.l_id
+      # platformos-check-enable UnknownProperty
+    endunless
+  endfor
+
+  return audience
+%}

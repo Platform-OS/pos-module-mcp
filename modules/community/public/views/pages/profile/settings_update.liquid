@@ -1,0 +1,26 @@
+---
+slug: settings_update
+method: put
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  if current_profile == blank
+    redirect_to '/'
+  else
+    assign allow_emails = context.params.profile.allow_emails
+    assign allow_notifications = context.params.profile.allow_notifications
+
+    graphql g = 'modules/community/profile/update_settings', id: current_profile.id, allow_emails: allow_emails, allow_notifications: allow_notifications
+
+    # platformos-check-disable UnknownProperty
+    if g.record.properties.allow_emails and g.record.properties.allow_notifications
+    # platformos-check-enable UnknownProperty
+      assign flash = null | hash_merge: message: 'Notification settings updated!', severity: 'success', from: context.location.pathname
+    else
+      assign flash = null | hash_merge: message: 'Could not update notification settings!', severity: 'error', from: context.location.pathname
+    endif
+
+    function _ = 'modules/core/commands/session/set', key: 'sflash', value: flash
+    redirect_to '/settings' 
+  endif
+%}

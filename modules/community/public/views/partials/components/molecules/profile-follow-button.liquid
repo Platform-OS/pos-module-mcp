@@ -1,0 +1,57 @@
+---
+metadata:
+  name: Profile follow button
+  params:
+    profile_id:
+    size:
+      - normal
+      - small
+    no_icon:
+      - true
+      - false
+    no_text:
+      - true
+      - false
+---
+{% liquid
+  assign size = size | default: params.size | default: 'normal'
+  assign profile_id = profile_id | default: params.profile_id
+
+  unless no_text == true
+    assign content_follow = 'modules/community/relationships.posts.follow' | t
+    assign content_unfollow = 'modules/community/relationships.posts.unfollow' | t
+  endunless
+%}
+<form action="#" data-id="{{ profile_id }}"
+  x-data="relationship('profileIds')"
+  x-ref="form"
+  x-on:submit.prevent
+  x-init="initManual()"
+  x-init="initManual();"
+  class="leading-none {{classes}}">
+  <input type="hidden" name="r_id" value="{{ profile_id }}">
+  <input type="hidden" name="name" value="followship:profile">
+  {% liquid
+    assign attributes = null | hash_merge: title: 'Follow or unfollow user'
+    hash_assign attributes['x-cloak'] = ''
+    hash_assign attributes['x-show'] = 'exists === false'
+    hash_assign attributes['@click'] = 'toggle()'
+
+    if no_icon
+      theme_render_rc 'components/atoms/button', content: content_follow, weight: 'primary', attributes: attributes, size: size
+    else
+      theme_render_rc 'components/molecules/iconbutton', icon: 'userAdd', content: content_follow, weight: 'primary', attributes: attributes, classes: classes, size: size, alignment: 'left', gap: gap
+    endif
+
+    assign attributes = null | hash_merge: title: 'Follow or unfollow user'
+    hash_assign attributes['x-cloak'] = ''
+    hash_assign attributes['x-show'] = 'exists === true'
+    hash_assign attributes['@click'] = 'toggle()'
+
+    if no_icon
+      theme_render_rc 'components/atoms/button', icon: 'userRemove', content: content_unfollow, attributes: attributes, size: size
+    else
+      theme_render_rc 'components/molecules/iconbutton', icon: 'userRemove', content: content_unfollow, weight: 'secondary', classes: classes, attributes: attributes, size: size, alignment: 'left'  , gap: gap
+    endif
+  %}
+</form>

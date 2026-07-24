@@ -1,0 +1,24 @@
+---
+en:
+  comments:
+    create:
+      placeholder: Comment on this post
+    add: Add comment
+    edit: Edit comment
+    empty_state: You haven't added any comments yet. <br> Add your first one
+    read_more: Read more
+    post: Post
+    comment: Comment
+    create_failed: Creation failed
+    write_comment: Write a comment…
+    removed_comment: Removed comment
+    form:
+      creator_id: creator_id
+      body: Body
+      body_help:
+        "You can use formatting: [link](https://example.com) _italic_
+        **bold** `code`"
+      title: Title
+      uuid: uuid
+      commentable_id: commentable_id
+      commentable_type: commentable_type

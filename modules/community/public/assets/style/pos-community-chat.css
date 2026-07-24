@@ -1,0 +1,38 @@
+/*
+  styling for the inbox
+
+  layout
+  new message panel
+*/
+
+
+
+/* layout
+============================================================================ */
+#pos-chat-inbox {
+  width: 100%;
+  max-width: 1432px;
+  height: calc(100vh - 87px - 2.5rem * 2);
+  margin-inline: auto;
+
+  background-color: #fff;
+  border-radius: var(--pos-radius-panel);
+}
+
+  @media (max-width: 768px) {
+    #pos-chat-inbox {
+      width: calc(100% - var(--pos-padding-page) * 2);
+    }
+  }
+
+
+
+/* new message panel
+============================================================================ */
+.pos-chat-conversation-input {
+  border-color: var(--pos-color-frame);
+  border-radius: var(--pos-radius-button);
+  background-color: var(--pos-color-highlight-background);
+
+  color: var(--pos-color-highlight-text);
+}

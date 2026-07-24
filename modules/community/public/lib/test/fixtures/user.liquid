@@ -1,0 +1,12 @@
+{% liquid
+  unless email
+    assign email = 6 | random_string | append: 'testuser@example.com'
+  endunless
+
+  assign password = password | default: 'password'
+  # platformos-check-disable MissingPartial
+  graphql r = 'users/create', email: email, password: password
+  # platformos-check-enable MissingPartial
+
+  return r.user_create
+%}

@@ -1,0 +1,34 @@
+{% liquid
+  assign name = name | default: params.name
+  assign img_src = img_src | default: params.imgSrc
+  assign actor_url = actor_url | default: params.actor_url
+  assign message = message | default: params.message
+  assign date = date | default: params.date
+  assign icon = icon | default: params.icon
+%}
+
+<article class="pos-app pos-community-notification">
+
+    {% if actor_url %}
+      <a href="{{ actor_url }}">
+    {% endif %}
+      {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+      {% render 'modules/common-styling/user/avatar', size: 'm', name: name, params: null %}
+      {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+    {% if actor_url %}
+      </a>
+    {% endif %}
+
+    <div class="pos-community-notification-content">
+      {% if actor_url %}
+        <a href="{{ actor_url }}">{{ name }}</a>
+      {% else %}
+        {{ name }}
+      {% endif %}
+
+      {% print message %}
+
+      <aside>{% print date %}</aside>
+    </div>
+
+</article>

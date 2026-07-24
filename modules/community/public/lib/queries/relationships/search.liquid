@@ -1,0 +1,13 @@
+{% liquid
+  assign limit = limit | default: nil
+  assign name = name | default: nil
+  assign l_id = l_id | default: nil
+  assign r_id = r_id | default: nil
+  assign include_related = include_related | default: nil
+  assign accepted = accepted | default: nil
+  assign approved = approved | default: nil
+
+  assign relation_tables = '["modules/community/group", "modules/community/post", "modules/community/event", "modules/user/profile"]' | parse_json
+  graphql r = 'modules/community/relationships/search', limit: limit, name: name, l_id: l_id, r_id: r_id, include_related: include_related, accepted: accepted, approved: approved, relation_tables: relation_tables
+  return r.records
+%}

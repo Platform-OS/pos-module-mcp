@@ -1,0 +1,20 @@
+{% liquid
+  assign empty_array = "" | split: ','
+  assign tags = tags | default: empty_array
+  assign post_count = post_count | default: 0
+  assign created_tags = empty_array
+  for tag in tags
+    assign object = null | parse_json | hash_merge: name: tag, post_count: post_count
+    function object = 'modules/community/commands/tags/create/build', object: object
+    function object = 'modules/community/commands/tags/create/check', object: object
+
+    if object.valid
+      function object = 'modules/core/commands/execute', mutation_name: 'modules/community/tags/create' object: object, selection: 'record'
+      if object.valid
+        assign created_tags = created_tags | array_add: tag
+      endif
+    endif
+  endfor
+
+  return created_tags
+%}

@@ -1,0 +1,27 @@
+---
+metadata:
+  name: Event Create
+  params:
+    object: {}
+    current_profile: {}
+    context: {}
+---
+{% liquid
+  assign context = context | default: params.context
+  assign object = object | default: params.object
+  assign current_profile = current_profile | default: params.current_profile
+  assign errors = object.errors | default: params.object.errors
+%}
+
+<header class="pos-app pos-community-space-header">
+
+  <div class="pos-community-space-detail-header-title">
+    <h2 class="pos-heading-2">
+      <small>Create new</small>
+      Event
+    </h2>
+  </div>
+
+</header>
+
+{% theme_render_rc 'components/organisms/event-form', action: '/events', event: object, errors: errors, current_profile: current_profile, context: context %}

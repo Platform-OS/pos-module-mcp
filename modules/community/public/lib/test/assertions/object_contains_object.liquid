@@ -1,0 +1,28 @@
+{% liquid
+  hash_assign contract['total'] = contract['total'] | plus: 1
+
+  for property in object_contains
+    assign key = property[0]
+    assign value = property[1]
+
+    if given[key] == blank
+      # platformos-check-disable TranslationKeyExists
+      assign message = 'test.should.have_key' | t: field_name: field_name
+      # platformos-check-enable TranslationKeyExists
+      # platformos-check-disable MissingPartial
+      function contract = 'test/register_error_f', contract: contract, field_name: key, message: message
+      # platformos-check-enable MissingPartial
+    else
+      if given[key] != value
+        # platformos-check-disable TranslationKeyExists
+        assign message = 'test.should.have_key_with_value' | t: value: value
+        # platformos-check-enable TranslationKeyExists
+        # platformos-check-disable MissingPartial
+        function contract = 'test/register_error_f', contract: contract, field_name: key, message: message
+        # platformos-check-enable MissingPartial
+      endif
+    endif
+  endfor
+
+  return contract
+%}

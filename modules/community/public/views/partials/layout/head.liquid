@@ -1,0 +1,39 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="authenticity_token" name="csrf-param">
+<meta content="{{ context.authenticity_token }}" name="csrf-token">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="app:version" content="product-marketplace-template@1005">
+{%- capture meta_description -%}{%- yield meta_description -%}{%- endcapture -%}
+{%- capture meta_image -%}{%- yield meta_image -%}{%- endcapture -%}
+{%- liquid
+  assign default_description = 'modules/community/seo.meta_description' | t: default: ''
+  function social_sharing_image = 'modules/community/queries/photos/search', photo_type: 'social_sharing_image', object_uuid: null, limit: null
+  # platformos-check-disable MissingAsset
+  assign default_share_image = 'images/home/hero.jpg' | asset_url
+  # platformos-check-enable MissingAsset
+  assign share_image = meta_image | default: social_sharing_image.results.first.photo.versions.md | default: default_share_image
+  function favicon = 'modules/community/queries/photos/search', photo_type: 'favicon', object_uuid: null, limit: null
+  assign default_favicon = 'modules/community/favicon/favicon.ico' | asset_url
+  assign favicon = favicon.results.first.photo.versions.sm | default: default_favicon
+-%}
+
+<link rel="icon" href="{{ favicon }}" sizes="32x32">
+<link rel="icon" href="{{ 'modules/community/favicon/favicon.svg' | asset_url }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ 'modules/community/favicon/apple-touch-icon.png' | asset_url }}">
+
+{% if meta == blank %}
+  <title>{{ 'modules/community/app.title' | t }}</title>
+  <meta property="og:title" content="{{ 'modules/community/app.title' | t | strip_html }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ context.location.url }}" />
+  <meta property="og:image" content="{{ share_image }}" />
+  <meta property="og:locale" content="{{ lang }}" />
+  <meta property="og:description" content="{{ meta_description | default: default_description | strip_html }}" />
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content='{{ 'modules/community/app.title' | t | strip_html }}' />
+  <meta name="twitter:description" content='{{ meta_description | default: default_description | strip_html }}' />
+  <meta name="twitter:image" content="{{ share_image }}" />
+{% else %}
+  {% print meta %}
+{% endif %}

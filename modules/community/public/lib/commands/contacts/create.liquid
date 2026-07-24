@@ -1,0 +1,11 @@
+{%  liquid
+  function object = 'modules/community/commands/contacts/create/build', object: object
+  function object = 'modules/community/commands/contacts/create/check', object: object, hcaptcha_params: hcaptcha_params
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/contacts/create' object: object, selection: 'record'
+    function email = 'modules/community/commands/emails/new_support_ticket', host: host, object: object
+  endif
+
+  return object
+%}

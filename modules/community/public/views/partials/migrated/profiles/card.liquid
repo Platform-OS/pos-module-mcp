@@ -1,0 +1,38 @@
+{% liquid
+  assign name = first_name | append: ' ' | append: last_name
+%}
+
+
+<div class="pos-card pos-card-user">
+
+  <a href="{{ url }}" class="pos-card-user-person">
+    {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+    {% render 'modules/common-styling/user/avatar', size: '2xl', name: name, params: null %}
+    {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+    {{ name }}
+  </a>
+
+  <div class="pos-card-user-job pos-supplementary">
+    {% if job_title != blank %}
+      {{ job_title }}
+    {% endif %}
+    {% if employer != blank %}
+      {{ 'modules/community/app.at' | t }} {{ employer }}{% if location != blank %}, {{ location }} {% endif %}
+    {% endif %}
+  </div>
+
+  <nav class="pos-card-user-actions">
+    <ul>
+      {% if my_profile %}
+        <li><a href="{{ url }}" class="pos-button pos-button-small">{{ 'modules/community/profiles.see_profile' | t }}</a></li>
+      {% endif %}
+
+      {% if allow_to_follow %}
+        <li>
+          {% render 'modules/community/migrated/profiles/follow_toggle' profile: profile, small: true, show_label: null, show_icon: null %}
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+</div>

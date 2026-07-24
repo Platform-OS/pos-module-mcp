@@ -1,0 +1,14 @@
+---
+slug: events/new
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+  theme_render_rc 'components/pages/event-create', object: null, context: context, current_profile: current_profile
+%}

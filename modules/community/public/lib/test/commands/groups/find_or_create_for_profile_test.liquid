@@ -1,0 +1,14 @@
+{% liquid
+  assign profile = '{"id": "5"}' | parse_json
+
+  function group = 'modules/community/commands/groups/find_or_create_for_profile', profile: profile
+
+  function contract = 'modules/tests/assertions/presence', contract: contract, object: group, field_name: 'id'
+
+
+  function group2 = 'modules/community/commands/groups/find_or_create_for_profile', profile: profile
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'id', given: group2.id, expected: group.id
+  # platformos-check-enable DeprecatedTag
+%}

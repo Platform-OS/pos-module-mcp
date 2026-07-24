@@ -1,0 +1,24 @@
+---
+layout: ""
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function profiles = 'modules/community/queries/profiles/search', limit: 10, query: context.params.query, not_ids: context.params.skip, uuid: null, page: null, sort: null, id: null, ids: null, user_id: null, roles: null, with_avatar: null, with_user: null, with_profile_cover: null
+  assign results = '[]' | parse_json
+  assign response = null | hash_merge: total_entries: profiles.total_entries, results: results
+
+  if profiles.total_entries > 0
+    for profile in profiles.results
+      assign name = profile.name
+      function slug = 'modules/user/helpers/profiles/slugs/build', profile: profile, current_profile: null
+
+      assign p = null | hash_merge: name: name, id: profile.id, avatar: profile.avatar, slug: slug
+      hash_assign response['results'] = response.results | add_to_array: p
+    endfor
+  endif
+  render 'modules/community/json/users/index', users: response
+%}

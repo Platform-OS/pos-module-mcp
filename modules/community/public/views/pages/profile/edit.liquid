@@ -1,0 +1,23 @@
+---
+layout: modules/community/community
+---
+
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', with_cover_photo: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile, allow_uncompleted: true
+  # platformos-check-enable DeprecatedTag
+
+  function _ = 'modules/community/helpers/extend_context', photo_presign: true, group: null
+
+  function fields = 'modules/community/queries/profiles/profile_fields'
+
+  function push_subscriptions = 'modules/push_notifications/queries/subscriptions/search',
+    user_id: current_profile.user_id,
+    active: true,
+    limit: 100,
+    page: 1
+%}
+
+{% theme_render_rc 'components/organisms/profile-form', object: current_profile, context: context, profile_fields: fields, push_subscriptions: push_subscriptions.results %}

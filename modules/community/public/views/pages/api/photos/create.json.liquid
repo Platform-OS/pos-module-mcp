@@ -1,0 +1,25 @@
+---
+slug: api/photos
+method: post
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign data = context.params.photo
+  function origin_url = 'modules/community/commands/photos/convert_s3_url', from: data.direct_url
+  hash_assign data['origin_url'] = origin_url
+  function object = 'modules/community/commands/photos/create', object: data, current_profile: current_profile
+
+  if object.valid
+    if object.photo_type == 'avatar'
+      function profile = 'modules/user/queries/profiles/find', id: current_profile.id, uuid: null, user_id: null, first_name: null, last_name: null
+    endif
+  endif
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/json/shared/show', object: object
+  # platformos-check-enable DeprecatedTag
+%}

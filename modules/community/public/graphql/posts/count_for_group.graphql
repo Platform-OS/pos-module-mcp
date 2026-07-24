@@ -1,0 +1,17 @@
+query search(
+  $group_id: [String!]
+) {
+  posts: records(
+    per_page: 1
+    filter: {
+      table: { value: "modules/community/post" }
+      deleted_at: { exists: false }
+      properties: [
+        { name: "group_id", value_in: $group_id }
+        { name: "removed_at", exists: false }
+      ]
+    }
+  ) {
+    total_entries
+  }
+}

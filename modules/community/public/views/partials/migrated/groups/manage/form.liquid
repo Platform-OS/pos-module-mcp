@@ -1,0 +1,167 @@
+{% liquid
+  assign current_profile = current_profile | default: params.current_profile
+  assign object = object | default: params.object | hash_merge: type: 'group'
+
+  if object.id
+    assign method = 'put'
+    function form_url = 'modules/community/helpers/link_to', object: object, action: 'edit'
+  else
+    assign method = 'post'
+    assign form_url = '/groups'
+  endif
+  assign uuid = '' | uuid
+  assign group_uuid = object.uuid | default: uuid
+%}
+
+{% if object.errors.size > 0 %}
+  <script>
+    document.addEventListener('pos-modules-toast-ready', () => {
+      new window.pos.modules.toast('error', '{{ 'modules/community/app.form_errors_notice' | t }}');
+    });
+  </script>
+{% endif %}
+
+<form action="{{ form_url }}" method="post" data-photo-upload-base class="pos-form pos-form-simple">
+
+  <h3 class="pos-heading-3">{{ 'modules/community/groups.form.group_edit' | t }}</h3>
+
+  <div class="pos-card">
+
+    {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+    <input type="hidden" name="_method" value="{{ method }}">
+    {% if object.id %}
+      <input type="hidden" name="id" value="{{ object.id }}">
+      <input type="hidden" name="group[id]" value="{{ object.id }}">
+    {% endif %}
+    <input type="hidden" name="group[uuid]" value="{{ group_uuid }}">
+    {% if context.params.return_to %}
+      <input type="hidden" name="return_to" value="{{ context.params.return_to }}">
+    {% endif %}
+
+    <fieldset x-data="charCounter()">
+      <label for="name">
+        <strong>{{ 'modules/community/groups.form.name' | t }}</strong>
+        <small>{{ 'modules/community/groups.form.name_tip' | t }} <span x-text="charsLeft"></span> {{ 'modules/community/groups.form.chars' | t }}</small>
+      </label>
+      <input type="text" name="group[name]" value="{{ object.name }}" id="name" maxlength="100" required x-ref="content" x-bind="input" {% render 'modules/common-styling/forms/error_input_handler', name: 'styleguide-example-error', errors: object.errors['name'] %}>
+      {% render 'modules/common-styling/forms/error_list', name: 'group[name]', errors: object.errors['name'] %}
+    </fieldset>
+
+    {% comment %}
+      to do: this section needs to be updated to get out of alpine and tailwind
+    {% endcomment %}
+    <fieldset>
+      <label for="summary">
+        <strong>{{ 'modules/community/groups.form.summary' | t }}</strong>
+        <small>{{ 'modules/community/groups.form.summary_tip' | t }}</small>
+      </label>
+      {% liquid
+        assign input_attrs = null | hash_merge: style: ''
+        hash_assign input_attrs['required'] = ''
+        hash_assign input_attrs['maxlength'] = '100'
+        hash_assign input_attrs['data-single-line'] = 'true'
+        hash_assign input_attrs['id'] = 'summary'
+
+        assign input_params = null | hash_merge: id: 'summary', name: 'group[summary]', value: object.summary, attributes: input_attrs, classes: 'w-full h-11'
+        assign validation = '{}' | parse_json
+        if object.errors['summary']
+          hash_assign validation['passed'] = false
+          hash_assign validation['messages'] = object.errors['summary']
+        endif
+        assign fieldset_params = null | hash_merge: input_params: input_params, description_params: description_params, validation: validation, classes: "mb-2"
+        theme_render_rc 'components/molecules/hashtag-textarea-field', params: fieldset_params
+      %}
+    </fieldset>
+
+    <fieldset>
+      <label>
+        <strong>{{ 'modules/community/groups.form.photo' | t }}</strong>
+        <small>{{ 'modules/community/groups.form.photo_desc' | t }}</small>
+      </label>
+      {% liquid
+        assign photo = photos[0] | default: object.main_photo
+        assign photos = '[]' | parse_json
+        assign photos = photos | add_to_array: photo | compact
+      %}
+      {%- comment -%}platformos-check-disable MissingRenderPartialArguments{%- endcomment -%}
+      {% render 'modules/common-styling/forms/upload',
+        id: 'group[cover]',
+        presigned_upload: context.presigned_url,
+        name: 'group[cover]',
+        files: object.cover,
+        allowed_file_types: ["image/*"],
+        max_number_of_files: 1
+      %}
+      {%- comment -%}platformos-check-enable MissingRenderPartialArguments{%- endcomment -%}
+    </fieldset>
+
+    {% comment %}
+      to do: this section needs to be updated to get out of alpine and tailwind
+    {% endcomment %}
+    <fieldset>
+      <label for="description">
+        <strong>{{ 'modules/community/groups.form.description' | t }}</strong>
+        <small>{{ 'modules/community/groups.form.description_tip' | t }}</small>
+      </label>
+      {% liquid
+        assign input_attributes = null | hash_merge: rows: '5', id: 'description', style: 'overflow-wrap: anywhere;'
+        assign input_params = null | hash_merge: name: 'group[description]', required: true, type: 'textarea', value: object.description, attributes: input_attributes, classes: 'w-full'
+        assign validation = '{}' | parse_json
+        if object.errors['description']
+          hash_assign validation['passed'] = false
+          hash_assign validation['messages'] = object.errors['description']
+        endif
+        assign fieldset_params =null | hash_merge: input_params: input_params, validation: validation
+
+        theme_render_rc 'components/molecules/hashtag-textarea-field', params: fieldset_params
+      %}
+    </fieldset>
+
+    <fieldset>
+      <label for="code_of_conduct">
+        <strong>{{ 'modules/community/groups.form.code_of_conduct' | t }}</strong>
+        <small>{{ 'modules/community/groups.form.code_of_conduct_tip' | t }}</small>
+      </label>
+      <textarea name="group[code_of_conduct]" id="code_of_conduct" required rows="5" {% render 'modules/common-styling/forms/error_input_handler', name: 'styleguide-example-error', errors: object.errors['code_of_conduct'] %}>{{ object.code_of_conduct }}</textarea>
+      {% render 'modules/common-styling/forms/error_list', name: 'group[code_of_conduct]', errors: object.errors['code_of_conduct'] %}
+    </fieldset>
+
+    <input type="hidden" id="group_content_type_post" name="group[content_types][]" value="post">
+
+  </div>
+
+
+  <h3 class="pos-heading-3">{{ 'modules/community/groups.form.privacy' | t }}</h3>
+
+  <fieldset class="pos-card">
+
+    <ul class="pos-community-spaces-admin-form-selection">
+      {% for gt in context.group_templates %}
+        <li>
+          {% liquid
+            assign group_type = gt[0]
+          %}
+          <fieldset>
+            <input type="radio" name="group[group_type]" id="group[group_type][{{ group_type }}]" value="{{ group_type }}" {% if object.group_type == group_type %}checked{% endif %} required>
+            {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+            <label for="group[group_type][{{ group_type }}]" class="cursor-pointer">{{ 'modules/community/groups.types.' | append: group_type | t }}</label>
+            {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+          </fieldset>
+          {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+          <div class="pos-supplementary">{{ 'modules/community/groups.types.' | append: group_type | append: '_desc' | t }}</div>
+          {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+        </li>
+      {% endfor %}
+    </ul>
+
+  </fieldset>
+
+  <fieldset class="pos-form-actions">
+    {% liquid
+      function cancel_url = 'modules/community/helpers/link_to', object: object
+    %}
+    <a href="{{ cancel_url }}" class="pos-button">{{ 'modules/community/app.cancel' | t }}</a>
+    <button type="submit" class="pos-button pos-button-primary">{% if object.id %}{{ 'modules/community/groups.form.update' | t }}{% else %}{{ 'modules/community/groups.form.submit' | t }}{% endif %}</button>
+  </fieldset>
+
+</form>

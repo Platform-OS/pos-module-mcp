@@ -1,0 +1,81 @@
+/* fonts */
+:root {
+  --pos-fonts-default: sans-serif;
+}
+
+
+/* colors */
+:root {
+  /* general elements */
+  --prominent: 20, 20, 20;
+  --normal: 55, 65, 81;
+  --supplementary: 107, 114, 128;
+  --graphic: 64,85, 104;
+  --inverted: 255, 255, 255;
+  --interactive-graphic: 33, 115, 196;
+  --interactive-text: 33, 115, 196;
+  --interactive-hover: 25, 79, 144;
+  --interactive-disabled: 217, 235, 252;
+
+  /* prominent elements */
+  --colorful: 255, 255, 255;
+  --colorful-hover: 247, 248, 250;
+  --colorful-foreground: 55, 65, 81,;
+  --colorful-supplementary: 107, 114, 128;
+  --gradient1-from: 58, 141, 222;
+  --gradient1-to: 56, 212, 48;
+  --gradient2-from: 58, 141, 222;
+  --gradient2-to: 56, 212, 48;
+  --ribbon: 33, 115, 196;
+  --ribbon-text: 255, 255, 255;
+
+  /* backgrounds */
+  --panel: 255, 255, 255;
+  --base: 247, 248, 250;
+  --highlighted: 239, 242, 246;
+  --divider: 226, 232, 240;
+  --shadow: 0, 0, 0;
+
+  /* primary buttons */
+  --button-primary: 20, 20, 20;
+  --button-primary-hover: 55, 65, 81;
+  --button-primary-stroke: 20, 20, 20;
+  --button-primary-stroke-hover: 55, 65, 81;
+  --button-primary-foreground: 255, 255, 255;
+  --button-primary-foreground-hover: 255, 255, 255;
+
+  /* secondary buttons */
+  --button-secondary0: 255, 255, 255;
+  --button-secondary: 247, 248, 250;
+  --button-sedondary-hover0: 255, 255, 255;
+  --button-secondary-hover: 255, 255, 255;
+  --button-secondary-stroke: 182, 189, 202;
+  --button-secondary-stroke-hover: 128, 134, 145;
+  --button-secondary-foreground: 33, 115, 196;
+  --button-secondary-foreground-hover: 25, 79, 144;
+
+  --button-secondary-border-width: 1px;
+
+  /* input fields */ 
+  --input-border: 107, 114, 128;
+  --input: 255, 255, 255;
+  --input-foreground: 55, 65, 81;
+
+  /* utility */
+  --important: 185, 28, 28;
+  --important-hover: 202, 58, 49;
+  --important-disabled: 254, 202, 202;
+  --confirmation: 15, 123, 10;
+  --confirmation-hover: 9, 143, 105;
+  --confirmation-disabled: 187, 221, 211;
+  --warning: 243, 177, 78;
+  --warning-hover: 255, 190, 91;
+  --warning-disabled: 255, 233, 200;
+}
+
+
+/* buttons shape */
+:root {
+  --radius-button: 22px;
+  --radius-surface: 4px;
+}

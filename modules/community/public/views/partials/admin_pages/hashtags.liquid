@@ -1,0 +1,114 @@
+<div class="container">
+  {% theme_render_rc 'components/atoms/heading', content: 'Hashtag management', level: 2, classes: 'pb-8' %}
+
+  {% capture card_content %}
+    <form action="/admin/community/hashtags" method="GET" id="hashtags-filter" data-hashtag-filter="" x-ref="form">
+      <div class="flex flex-col md:flex-row items-center gap-4 justify-between">
+        <div class="flex gap-4 w-full md:w-auto">
+          {% liquid
+            assign search_placeholder = 'modules/community/tags.filters.search' | t
+            assign input_params = null | hash_merge: name: 'query', value: filters.query, placeholder: search_placeholder
+            assign button_params = null | hash_merge: type: 'submit', icon: 'search', weight: 'primary'
+            theme_render_rc 'components/molecules/search-field', input_params: input_params, button_params: button_params, button: true, classes: 'w-full'
+          %}
+
+          {% assign select_options = [{"label": "Reset", "value": ""}, {"label": "Post count (asc)", "value": "post_count_asc"}, {"label": "Post count (desc)", "value": "post_count_desc"}, {"label": "Followers (asc)", "value": "follower_count_asc"}, {"label": "Followers (desc)", "value": "follower_count_desc"}] %}
+            {% liquid
+            theme_render_rc 'components/molecules/select', name: 'sort', value: context.params.sort, id: 'filter_sort', options: select_options, classes: 'rounded-none w-full', placeholder: 'Sort by'
+            %}
+
+        </div>
+      </div>
+    </form>
+  {% endcapture %}
+  {% theme_render_rc 'components/atoms/card', content: card_content, classes: 'mb-6' %}
+
+  {% capture content %}
+  <table class="w-full">
+    <thead class="hidden md:block">
+      <tr class="uppercase text-sm flex flex-row">
+        <th class="flex-1 font-normal">name</th>
+        <th class="flex-1 font-normal">created by</th>
+        <th class="flex-1 font-normal">post count</th>
+        <th class="flex-1 font-normal">followers</th>
+        <th class="flex-1 font-normal">status</th>
+        <th class="flex-1">Change status</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for tag in hashtags.results %}
+      <tr class="flex flex-col md:flex-row mb-4 bg-highlighted md:bg-panel rounded">
+        <td class="flex-1">
+          <a href="/hashtag/{{ tag.name }}" target="_blank">{{ tag.name }}</a>
+        </td>
+        <td class="flex-1">
+          {% if tag.creator.properties.slug %}
+            <a href="/profile/{{ tag.creator.properties.slug }}" target="_blank">{{ tag.creator.properties.name }}</a>
+          {% else %}
+            <i class="text-supplementary text-sm">unknown / system</i>
+          {% endif %}
+        </td>
+        <td class="flex-1">
+          {{ tag.post_count }}
+        </td>
+        <td class="flex-1">
+          {{ tag.follower_count }}
+        </td>
+        <td class="flex-1">
+          {% liquid
+            assign status = 'success'
+            if tag.status != 'published'
+              assign status = 'error'
+            endif
+            theme_render_rc 'components/molecules/chip', variant: status, content: tag.status
+          %}
+        </td>
+        <td class="flex-1">
+          <form class="flex" action="/hashtag/admin/toggle-status" method="post" data-hashtag-toggle="">
+            <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+            <input type="hidden" name="id" value="{{ tag.id }}">
+            <input type="hidden" name="return_to" value="{{ context.location.url }}">
+            {% liquid
+              assign is_checked = false
+
+              if tag.status == 'published'
+                assign is_checked = true
+              endif
+
+              theme_render_rc 'components/atoms/toggle', checked: is_checked
+            %}
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endcapture %}
+  {% theme_render_rc 'components/atoms/card', content: content %}
+</div>
+
+<div class="container pt-5 flex flex-row-reverse">
+  {% liquid
+    if hashtags.total_pages > 1
+      assign url_params = context.params | hash_merge: page: ''
+      assign url_template = "{?query,sort,page}"
+      assign pager_url = url_template | expand_url_template: url_params
+      theme_render_rc 'components/molecules/pagination', count: hashtags.total_pages, active: page, url: pager_url
+    endif
+  %}
+</div>
+
+<script>
+  const hashtagActions = document.querySelectorAll('[data-hashtag-toggle]');
+  hashtagActions.forEach((form) => {
+    form.querySelector('input[type="checkbox"]')?.addEventListener('change', () => {
+      setTimeout(() => {
+        form.submit();
+      }, 160);
+    });
+  });
+  const hashtagFilter = document.querySelector('[data-hashtag-filter]');
+  hashtagFilter?.querySelector('select')?.addEventListener('change', () => {
+    hashtagFilter.submit();
+  });
+</script>

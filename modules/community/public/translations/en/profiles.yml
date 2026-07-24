@@ -1,0 +1,55 @@
+---
+en:
+  profiles:
+    members: Members
+    index:
+      empty:
+        title: There are no members to show
+        desc: If you set any filters in the search section try a different set.
+    following:
+      empty:
+        title: This user is not following anyone
+        desc: Check back later, or explore their profile for more information.
+    followers:
+      empty:
+        title: This user has no followers
+        desc: Check back later, or explore their profile for more information.
+    edit: Edit profile
+    my_profile: Profile
+    see_profile: See my profile
+    user_info: User info
+    user_info_desc: Fill out your user info to set up your profile.
+    work: Work
+    work_desc: Fill out the work section to help your community to find meaningful connections.
+    username: Username
+    username_desc: Other users can tag you with this name.
+    first_name: First Name
+    last_name: Last Name
+    profile_photo: Profile Photo
+    location: Location
+    location_desc: Help to connect with others by sharing your country.
+    incomplete: Fill your profile
+    linkedin_link: LinkedIn link
+    bio: Bio
+    bio_desc: What should the other community members know about you?
+    job_title: Job title
+    employer: Employer
+    experience: Experience
+    education: Education
+    skills: Skills
+    interest: Interest
+    interest_desc: List your topics of interest separated with coma.
+    member_since: Joined
+    at_employer: at
+    nav:
+      activity: Activity Feed
+      settings: Settings
+      groups: Groups
+      my_groups: My Groups
+      events: Events
+      my_events: My Events
+      following: Following
+      followers: Followers
+      tags: Hashtags
+    suggested_profiles: Suggested users to follow
+    save: Save profile

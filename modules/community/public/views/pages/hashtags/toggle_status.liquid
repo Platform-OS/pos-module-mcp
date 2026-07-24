@@ -1,0 +1,29 @@
+---
+slug: hashtag/admin/toggle-status
+method: 'post'
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', requester: current_profile, do: 'hashtags.manage', entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function hashtag = 'modules/community/queries/tags/find', id: context.params.id
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property: hashtag.id
+  # platformos-check-enable DeprecatedTag
+
+  assign new_status = 'unpublished'
+  if hashtag.status == 'unpublished'
+    assign new_status = 'published'
+  endif
+
+  hash_assign hashtag['status'] = new_status
+  function _ = 'modules/community/commands/tags/update', object: hashtag
+
+  assign redirect_url = context.params.return_to | default: '/admin/community/hashtags'
+  redirect_to redirect_url
+%}

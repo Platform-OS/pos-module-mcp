@@ -1,0 +1,70 @@
+{% liquid
+  assign c = '{}' | parse_json
+
+  if object and do
+    assign object_type = object.type | replace: 'modules/community/', '' | replace: 'modules/user/', ''
+    case object_type
+    when 'relationship'
+      case object.name
+      when 'membership', 'owner'
+        function valid = 'modules/community/can/relationships/memberships', actor: actor, relationship: object, do: do, entity: object, requester: actor
+      else
+        function valid = 'modules/community/can/relationships', do: do, entity: object, requester: actor
+      endcase
+    when 'group'
+      function valid = 'modules/community/can/groups', requester: actor, entity: object, do: do
+    when 'post'
+      function valid = 'modules/community/can/posts', do: do, entity: object, requester: actor
+    when 'profile'
+      function valid = 'modules/community/can/profiles', actor: actor, profile: object, do: do
+    when 'item_review', 'organization_review'
+      # platformos-check-disable MissingPartial
+      function valid = 'modules/community/can/reviews', actor: actor, review: object, do: do
+      # platformos-check-enable MissingPartial
+    when 'process'
+      # platformos-check-disable MissingPartial
+      function valid = 'modules/community/can/processes', actor: actor, process: object, do: do
+      # platformos-check-enable MissingPartial
+    when 'project'
+      # platformos-check-disable MissingPartial
+      function valid = 'modules/community/can/projects', actor: actor, project: object, do: do
+      # platformos-check-enable MissingPartial
+    when 'project_offer'
+      # platformos-check-disable MissingPartial
+      function valid = 'modules/community/can/project_offers', actor: actor, project_offer: object, do: do
+      # platformos-check-enable MissingPartial
+    when 'photo'
+      function valid = 'modules/community/can/photos', do: do, entity: object, requester: actor
+    when 'document'
+      function valid = 'modules/community/can/documents', do: do, entity: object, requester: actor
+    when 'organization'
+      # platformos-check-disable MissingPartial
+      function valid = 'modules/community/can/organizations', actor: actor, organization: object, do: do
+      # platformos-check-enable MissingPartial
+    when 'comment'
+      function valid = 'modules/community/can/comments', do: do, entity: object, requester: actor
+    when 'site'
+      # platformos-check-disable MissingPartial
+      function valid = 'modules/community/can/site', actor: actor, site: object, do: do
+      # platformos-check-enable MissingPartial
+    else
+      assign valid = false
+    endcase
+  else
+    assign valid = false
+  endif
+%}
+
+{% capture msg -%}
+Profile#{{ actor.id | default: 'noID' }} cannot {{ do }} {{ object.type | default: 'type-unknown' }}#{{ object.id | default: 'noID'}}
+{%- endcapture %}
+
+{% liquid
+  unless valid
+    hash_assign c['errors'] = '{ "permission_denied": [] }' | parse_json
+    hash_assign c['errors']['permission_denied'][0] = msg
+  endunless
+  hash_assign c['valid'] = valid
+
+  return c
+%}

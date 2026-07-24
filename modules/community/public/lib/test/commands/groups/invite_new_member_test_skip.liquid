@@ -1,0 +1,64 @@
+{% assign invited_data = {"user_id": "789", "first_name": "Invited User", "last_name": "Test", "email": "invited@server.com"} %}
+{% assign admin_data = {"user_id": "456", "first_name": "Group Admin", "last_name": "Test", "email": "admin@server.com"} %}
+{% liquid
+#
+# Given
+#
+
+assign group = '{"id": "123"}' | parse_json
+assign emails = '["%{email}"]' | replace: '%{email}', invited_data.email | parse_json
+
+function invited_profile = 'modules/user/queries/profiles/find', user_id: invited_data.user_id, id: null, uuid: null, first_name: null, last_name: null
+if invited_profile != empty
+  graphql _ = 'modules/user/profiles/delete', id: invited_profile.id
+endif
+function invited_profile = 'modules/user/commands/profiles/create', object: invited_data
+
+function admin_profile = 'modules/user/queries/profiles/find', user_id: admin_data.user_id, id: null, uuid: null, first_name: null, last_name: null
+if admin_profile != empty
+  graphql _ = 'modules/user/profiles/delete', id: admin_profile.id
+endif
+function admin_profile = 'modules/user/commands/profiles/create', object: admin_data
+
+#
+# When
+#
+function invites = 'modules/community/commands/groups/invite_many/create', group: group, emails: emails, current_profile: admin_profile
+
+#
+# Then
+#
+
+# assert that operation was successful
+# platformos-check-disable DeprecatedTag
+include 'modules/tests/assertions/valid_object', contract: contract, object: invites, field_name: 'invites'
+# platformos-check-enable DeprecatedTag
+
+# assert that invite exists
+function relation = 'modules/community/queries/relationships/find', name: 'membership', l_id: invites.items[0].l_id, r_id: invites.items[0].r_id, include_related: null
+unless relation
+  # platformos-check-disable DeprecatedTag,MissingPartial
+  include 'test/register_error', contract: contract, field_name: 'invites', message: 'expected invite does not exist'
+  # platformos-check-enable DeprecatedTag,MissingPartial
+endunless
+
+# assert that invited received a notification
+# TODO Notifications are published by a `background` tag in the modules/core/public/lib/commands/events/publish.liquid file.
+# That async behaviour makes this test fail, as notification is not published by the time the test fetches the list.
+assign invited_profile_id = invites.items[0].l_id
+function notifications = 'modules/community/queries/activities/search', feed: 'user-notifications', feed_id: invited_profile_id, limit: 10, page: null
+# platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+include 'modules/tests/assertions/equal', contract: contract, given: notifications.total_entries, expected: 1, field_name: 'notifications.total_entries'
+# platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+assign expected_object = null | hash_merge: type: 'group_invite_created', group_id: group.id, inviting_profile_id: admin_profile.id, invited_profile_id: invited_profile_id
+# platformos-check-disable DeprecatedTag
+include 'modules/tests/assertions/object_contains_object', contract: contract, given: notifications.results[0].payload, object_contains: expected_object field_name: 'notifications.payload'
+# platformos-check-enable DeprecatedTag
+
+# assert that administrator has not received any notification
+function notifications = 'modules/community/queries/activities/search', feed: 'user-notifications', feed_id: admin_profile.id, limit: 10, page: null
+# platformos-check-disable DeprecatedTag,ValidRenderPartialArgumentTypes
+include 'modules/tests/assertions/equal', contract: contract, given: notifications.total_entries, expected: 0, field_name: 'notifications.total_entries'
+# platformos-check-enable DeprecatedTag,ValidRenderPartialArgumentTypes
+
+%}

@@ -1,0 +1,28 @@
+<link rel="stylesheet" href="{{ 'modules/community/style/app.css' | asset_url }}">
+<style>
+  [contenteditable=true]:empty:before {
+    content: attr(placeholder);
+    pointer-events: none;
+    display: block;
+  }
+  hashtag {
+    color: rgb(var(--interactive-text));
+  }
+  .hashtag__autosuggest [data-option] {
+    cursor: pointer;
+  }
+  .hashtag__autosuggest [data-option][data-selected] {
+    background-color: rgb(var(--interactive-text));
+    color: rgb(var(--inverted));
+  }
+  .hashtag__input {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+</style>
+<link rel="stylesheet" href="{{ 'modules/components/components.css' | asset_url }}">

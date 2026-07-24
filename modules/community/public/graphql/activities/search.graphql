@@ -1,0 +1,14 @@
+query ac($feed_id: ID!, $feed: String!, $limit: Int = 100, $page: Int = 1) {
+  activities: streams(
+    feed_id: $feed_id,
+    feed_type: $feed,
+    per_page: $limit,
+    page: $page
+  ){
+    total_entries
+    has_next_page
+    results {
+      payload
+    }
+  }
+}

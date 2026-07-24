@@ -1,0 +1,6 @@
+{% liquid
+  assign page = page | to_positive_integer: 1
+
+  graphql r = 'modules/community/tags/search', name: name, names: names, query: query, limit: limit, page: page, not_ids: not_ids, status: status, sort: sort, with_creator: with_creator
+  return r.tags
+%}

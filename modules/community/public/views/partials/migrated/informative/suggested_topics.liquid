@@ -1,0 +1,19 @@
+<div
+  class="pos-card pos-community-hashtagstofollow"
+>
+  <h3 class="pos-heading-3 pos-community-informative-heading">
+    <small>{{ 'modules/community/suggested_topics.suggested' | t }}</small>
+    {{ 'modules/community/suggested_topics.title' | t }}
+  </h3>
+  <ul>
+    {% for topic in list %}
+      <li>
+        <a href="/hashtag/{{ topic.name }}">
+          #{{ topic.name }}
+        </a>
+
+        {% render 'modules/community/migrated/tags/follow_toggle', id: topic.id, name: topic.name, small: true, current_profile: current_profile %}
+      </li>
+    {% endfor %}
+  </ul>
+</div>

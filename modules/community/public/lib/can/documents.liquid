@@ -1,0 +1,19 @@
+{% liquid
+  assign can = false
+
+  assign document = entity
+
+  case do
+  when 'delete'
+    function can_delete = "modules/community/helpers/can", actor: requester, do: "edit", object: document.object
+    if can_delete.valid or document.creator_id == requester.id or document.creator_id == requester.representative.id
+      return true
+    endif
+  when 'show'
+    if document.creator_id == requester.id or document.creator_id == requester.representative.id
+      return true
+    endif
+  endcase
+
+  return can
+%}

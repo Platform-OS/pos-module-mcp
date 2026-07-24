@@ -1,0 +1,100 @@
+query (
+  $limit: Int = 20
+  $page: Int = 1
+  $sort: RecordsSortInput = { created_at: { order: DESC } }
+  $keyword: String!
+  $with_relationships: Boolean = false
+  $status: [String!] = ["published"]
+  $from: String
+  $with_owner: Boolean = false
+) {
+  events: records(
+    per_page: $limit
+    page: $page
+    filter: {
+      table: { value: "modules/community/event" }
+      properties: [
+        { name: "status", value_in: $status }
+        { name: "end_date", range: { gte: $from } }
+      ]
+      or: [
+        { properties: { name: "name", contains: $keyword } }
+        { properties: { name: "short_description", contains: $keyword } }
+        { properties: { name: "description", contains: $keyword } }
+        { properties: { name: "venue", contains: $keyword } }
+        { properties: { name: "c__names", contains: $keyword } }
+      ]
+    }
+    sort: [$sort]
+  ) {
+    total_entries
+    total_pages
+    has_previous_page
+    has_next_page
+    results {
+      ...event
+    }
+  }
+}
+
+fragment event on Record {
+  id
+  created_at
+  type: table
+
+  uuid: property(name: "uuid")
+  name: property(name: "name")
+  short_description: property(name: "short_description")
+  description: property(name: "description")
+  start_date: property(name: "start_date")
+  end_date: property(name: "end_date")
+  link: property(name: "link")
+  venue: property(name: "venue")
+  commentable: property_boolean(name: "commentable")
+  status: property(name: "status")
+  c__going: property_int(name: "c__going")
+  c__maybe: property_int(name: "c__maybe")
+  c__not_going: property_int(name: "c__not_going")
+
+  photo: related_record(
+    table: "modules/community/photo"
+    join_on_property: "uuid"
+    foreign_property: "object_uuid"
+  ) {
+    id
+    photo_width: property_int(name: "photo_width")
+    photo_height: property_int(name: "photo_height")
+    photo: property_upload(name: "photo") {
+      url
+      versions
+    }
+  }
+
+  owner: related_record(
+    table: "modules/community/relationship"
+    join_on_property: "id"
+    foreign_property: "r_id"
+    filter: { properties: { value: "owner", name: "name" } }
+  ) @include(if: $with_owner) {
+    id
+    properties
+    profile: related_record(table: "modules/user/profile", join_on_property: "l_id") {
+      id
+      first_name: property(name: "first_name")
+      last_name: property(name: "last_name")
+      name: property(name: "name")
+      slug: property(name: "slug")
+    }
+  }
+
+  relationships: related_records(
+    table: "modules/community/relationship"
+    join_on_property: "id"
+    foreign_property: "r_id"
+  ) @include(if: $with_relationships) {
+    id
+    name: property(name: "name")
+    r_id: property(name: "r_id")
+    l_id: property(name: "l_id")
+  }
+}

@@ -1,0 +1,78 @@
+{% liquid
+  assign tags = tags | default: empty
+  assign event_tz = 'now' | to_time: current_profile.timezone | strftime: '(%Z)'
+  assign date_parsed = date | localize: 'long', current_profile.timezone | append: ' ' | append: event_tz
+
+  if type == 'local'
+    assign icon = 'location'
+  else
+    assign icon = 'globe'
+  endif
+%}
+
+<article class="pos-card pos-card-content pos-community-event-card">
+
+  <span class="pos-tag pos-community-event-card-type pos-community-event-card-type-{{ type }}">
+    {% render 'modules/common-styling/icon', icon: icon, class: null %}
+    {{ type }}
+  </span>
+
+  {% if url != blank %}
+    <a href="{{ url }}" class="pos-card-content-permalink" data-pos-preload="hover">
+  {% endif %}
+  {% if image.versions %}
+    <picture class="pos-card-content-image-container">
+      <source srcset="{{ image.versions.m_avif }} 1x, {{ image.versions.lg_avif }} 2x" type="image/avif">
+      <img src="{{ image.versions.m }}" srcset="{{ image.versions.m }} 1x, {{ image.versions.lg }} 2x" alt="" width="368" height="192" loading="lazy" class="pos-card-content-image">
+    </picture>
+  {% elsif image %}
+    <picture class="pos-card-content-image-container">
+      <img src="{{ image }}" alt="" width="368" height="192" loading="lazy" class="pos-card-content-image">
+    </picture>
+  {% else %}
+    <div class="pos-card-content-image-container-empty"></div>
+  {% endif %}
+  {% if date %}
+    <time datetime="{{ date }}">{{ date_parsed }}</time>
+  {% endif %}
+  {% if title %}
+    <h3 class="pos-heading-4 pos-card-content-title">{{ title }}</h3>
+  {% endif %}
+  {% if url != blank %}
+    </a>
+  {% endif %}
+
+  {{ summary | html_safe | truncatewords: 10 }}
+
+  {% if location %}
+    <address>
+      {{ location }}
+    </address>
+  {% endif %}
+
+  {% for tag in tags %}
+    <a href="/events?tags[]={{ tag }}">
+      {% liquid
+        assign tagtext = "#" | append: tag
+        theme_render_rc 'components/molecules/chip', content: tagtext, variant: 'clickable', classes: 'mt-1'
+      %}
+    </a>
+  {% endfor %}
+
+  <footer class="pos-card-content-footer">
+    <ul>
+      <li>
+        {% render 'modules/common-styling/icon', icon: 'users', class: null %}
+        {{ members }} going
+      </li>
+    </ul>
+
+    {% if owner != blank %}
+      <div>
+        {% function owner_url = 'modules/community/helpers/link_to', object: owner, type: 'profile' %}
+        created by <a href="{{ owner_url }}">{{ owner.name }}</a>
+      </div>
+    {% endif %}
+  </footer>
+
+</article>

@@ -1,0 +1,13 @@
+---
+en:
+  projects:
+    showing: Showing
+    results:
+      one: result
+      other: results
+    list:
+      my_project: Challenges
+      empty:
+        title: There are no projects to show
+        desc: You can create a new project or align the filters to see more.
+        cta: Create a project

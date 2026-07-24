@@ -1,0 +1,61 @@
+---
+metadata:
+  name: Group invite widget
+  params:
+---
+
+<label for="pos-community-user-invite-email">{{ 'modules/community/groups.invites.index.email' | t }}</label>
+
+<div class="flex flex-wrap justify-between relative" x-on:click="showSuggestions = true" x-on:click.outside="showSuggestions = false">
+
+  <input type="text" id="pos-community-user-invite-email" autocomplete="off" x-model="query" x-on:keyup.debounce="loadSuggestions($event)" x-ref="queryInput" class="pos-form-input">
+  <button x-on:click="clear()" class="absolute w-4 h-4 bottom-3.5 right-4">
+    {% render 'modules/common-styling/icon', icon: 'x', class: null %}
+  </button>
+
+  <ul class="pos-community-user-invite-popover absolute top-full left-0 right-0" x-cloak x-show="showSuggestions">
+    <template x-for="entry in suggestions.items">
+      <li class="relative flex items-center gap-4" x-on:click="register(entry); $refs.queryInput.click(); $refs.queryInput.click();">
+
+        <div x-show="entry.photo" class="rounded-full overflow-hidden w-12 h-12 flex items-center">
+          <img :src="entry.photo" x-show="entry.photo" :alt="entry.name" class="object-cover h-full w-full" data-avatar loading="eager" width="48" height="48">
+        </div>
+
+        <div x-show="!entry.photo" class="p-3 rounded-full bg-interactive-disabled">
+          {% render 'modules/common-styling/icon', icon: 'user', class: 'w-6 text-interactive-text' %}
+        </div>
+
+        <div class="overflow-hidden">
+          <div class="overflow-hidden text-ellipsis overflow-ellipsis" x-text="entry.name" x-title="entry.name"></div>
+          <div x-html="entry.profileLink" x-on:click.stop></div>
+          <div x-text="entry.displayName"></div>
+        </div>
+      </li>
+    </template>
+  </ul>
+
+</div>
+
+<ul x-cloak class="pos-community-user-invite-selected">
+  <template x-for="entry in selected.items">
+    <li>
+      <div x-show="entry.photo" class="rounded-full overflow-hidden w-12 h-12 flex items-center">
+        <img :src="entry.photo" x-show="entry.photo" :alt="entry.name" class="object-cover h-full w-full" data-avatar loading="eager" width="48" height="48">
+      </div>
+
+      <div x-show="!entry.photo" class="p-3 rounded-full bg-interactive-disabled">
+        {% render 'modules/common-styling/icon', icon: 'user', class: 'w-6 text-interactive-text' %}
+      </div>
+
+      <div class="overflow-hidden">
+        <div class="overflow-hidden text-ellipsis overflow-ellipsis" x-text="entry.name" x-title="entry.name"></div>
+        <div x-html="entry.profileLink"></div>
+        <div x-text="entry.displayName"></div>
+      </div>
+
+      <button class="pos-community-user-invite-selected-remove" x-on:click="remove(entry); $refs.queryInput.click(); $refs.queryInput.focus();">
+        {% render 'modules/common-styling/icon', icon: 'x', class: null %}
+      </button>
+    </li>
+  </template>
+</ul>

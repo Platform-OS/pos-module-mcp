@@ -1,0 +1,187 @@
+{% liquid
+  assign rtl_languages = 'ar,arc,dv,fa,ha,he,khw,ks,ku,ps,ur,yi'  | split: ','
+  if rtl_languages contains lang
+    assign direction = 'rtl'
+  else
+    assign direction = 'ltr'
+  endif
+%}
+
+<!DOCTYPE html>
+<html dir="{{ direction }}" lang="{{ context.language }}">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <style>
+
+      /* universal reset */
+      table {
+        width: 100%;
+
+        border-spacing: 0;
+      }
+
+      h1, h2 {
+        margin: 0;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      /* page settings */
+      .body {
+        margin: 0;
+        padding: 0;
+
+        background-color: #f3f4f6;
+
+        font-size: 16px;
+        color: #374151;
+      }
+
+      .content > tr > td {
+        padding: 36px 20px;
+
+        background-color: #f3f4f6;
+
+        text-align: center;
+      }
+
+      .container {
+        max-width: 80ch;
+        margin-left: auto;
+        margin-right: auto;
+
+        text-align: left;
+      }
+
+      /* header and footer */
+      .running {
+        background-color: #ffffff;
+      }
+
+      .running > tr > td {
+        padding: 24px 20px;
+
+        background-color: #ffffff;
+      }
+
+      /* boxes */
+      .card {
+        width: 100%;
+        margin-top: 24px;
+        margin-bottom: 24px;
+
+        border-radius: 4px;
+        box-shadow: 0px 0px 5px #e5e5e5;
+        background-color: #ffffff;
+      }
+
+      .card > tr > td {
+        padding: 24px;
+
+        border-radius: 4px;
+        background-color: #ffffff;
+      }
+
+      .cta {
+        text-align: center;
+      }
+
+      /* typography */
+      .title {
+        margin-bottom: 24px;
+
+        line-height: 32px;
+        font-size: 30px;
+        font-weight: 700;
+      }
+
+      .subtitle {
+        margin-bottom: 8px;
+
+        line-height: 28px;
+        font-size: 20px;
+        font-weight: 500;
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: #374151;
+      }
+
+      p {
+        font-size: 16px;
+      }
+
+      /* links and buttons */
+      a {
+        color: #1d4ed8;
+      }
+
+      a:hover {
+        color: #3466e3;
+      }
+
+      .button {
+        display: inline-block;
+
+        border-radius: 4px;
+        border-width: 11px 16px 9px;
+        border-style: solid;
+        border-color: #1d4ed8;
+        background-color: #1d4ed8;
+
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+
+        color: #fff;
+      }
+
+      .button:hover {
+        border-color: #3466e3;
+        background-color: #3466e3;
+      }
+
+    </style>
+
+  </head>
+
+  <body class="body">
+
+    <table class="running">
+      <tr>
+        <td>
+          <div class="container">
+            <a href="{{ homepage }}" class="logo">Community Solution</a>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="content">
+      <tr>
+        <td>
+          <div class="container">
+            {{ content_for_layout }}
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="running">
+      <tr>
+        <td>
+          <div class="container">
+            <a href="{{ homepage }}" class="logo">Community Solution</a>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+
+</html>

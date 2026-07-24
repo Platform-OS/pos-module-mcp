@@ -1,0 +1,26 @@
+{% liquid
+  function object = 'modules/community/commands/photos/create_from_remote/build', object: object, current_profile: current_profile
+  function object = 'modules/community/commands/photos/create_from_remote/check', object: object
+
+  if object.valid
+
+    for i in (0..3)
+      # platformos-check-disable LiquidHTMLSyntaxError
+      try_rc
+        function res = 'modules/core/commands/execute', mutation_name: 'modules/community/photos/create_from_remote' object: object, selection: 'record'
+      catch err
+        log object, type: 'ERROR:'
+        log err, type: 'ERROR:'
+      endtry_rc
+      # platformos-check-enable LiquidHTMLSyntaxError
+
+      if res
+        assign object = res
+        break
+      endif
+    endfor
+
+  endif
+
+  return object
+%}

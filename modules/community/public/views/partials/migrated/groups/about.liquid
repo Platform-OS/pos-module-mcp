@@ -1,0 +1,18 @@
+{% liquid
+  assign group_type = group_type | default: params.group_type | capitalize
+  assign code_of_conduct = code_of_conduct | default: params.code_of_conduct
+  assign can_see_content = can_see_content | default: params.can_see_content | default: false
+%}
+
+<article class="pos-card">
+
+  <div class="pos-supplementary">{{ group_type }} {{ 'modules/community/groups.group' | t }}</div>
+
+  {% if code_of_conduct and can_see_content %}
+    <div class="pos-prose">
+      <h3 class="pos-heading-3">{{ 'modules/community/groups.code_of_conduct' | t }}</h3>
+      {{ code_of_conduct | markdown }}
+    </div>
+  {% endif %}
+
+</article>

@@ -1,0 +1,31 @@
+/*
+  styling for the user login and register forms
+
+  layout
+  content
+*/
+
+
+
+/* layout
+============================================================================ */
+.pos-user-content .pos-form-simple {
+  padding: var(--pos-padding-card);
+
+  border-radius: var(--pos-radius-panel);
+  background-color: var(--pos-color-content-background);
+}
+
+@media (min-width: 768px) {
+  .pos-user-content {
+    min-width: 486px;
+  }
+}
+
+
+
+/* content
+============================================================================ */
+.pos-user-content button[type="submit"] {
+  align-self: start;
+}

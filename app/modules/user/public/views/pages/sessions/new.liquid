@@ -1,0 +1,14 @@
+---
+layout: 'modules/community/blank'
+---
+
+
+{% liquid
+  function current_profile = 'modules/user/helpers/current_profile'
+  
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_redirect', requester: current_profile, do: 'sessions.create', return_url: '/', entity: null, access_callback: null
+  # platformos-check-enable DeprecatedTag
+
+  render 'modules/user/sessions/new', values: null, errors: null
+%}

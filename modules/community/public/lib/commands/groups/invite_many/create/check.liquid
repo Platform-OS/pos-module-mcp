@@ -1,0 +1,18 @@
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+  assign object = '{}' | parse_json
+  hash_assign object['items'] = invites
+
+  function c = 'modules/core/validations/length', c: c, object: object, field_name: 'items', allow_blank: false, minimum: 1, value: null, is: null, message_is: null, message_minimum: null, message_maximum: null, maximum: null
+
+  for invite in invites
+    function c = 'modules/core/validations/equal', c: c, given: invite.name, expected: 'membership', field_name: 'name', key: null, message: null, not_verbose: null
+    function c = 'modules/core/validations/presence', c: c, object: invite, field_name: 'created_by_id', key: 'modules/core/validation.blank'
+    function c = 'modules/core/validations/presence', c: c, object: invite, field_name: 'l_id', key: 'modules/core/validation.blank'
+    function c = 'modules/core/validations/presence', c: c, object: invite, field_name: 'r_accepted_at', key: 'modules/core/validation.blank'
+  endfor
+
+  assign object = object | hash_merge: c
+
+  return object
+%}

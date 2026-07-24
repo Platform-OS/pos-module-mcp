@@ -1,0 +1,13 @@
+<div class="bg-warning p-4 flex items-center justify-between">
+  <p class="text-md font-medium">
+      You are browsing the website as <strong>{{ context.current_user.email }}</strong>.
+  </p>
+
+  <form action="/sessions/impersonations" method="post">
+    <input type="hidden" name="_method" value="delete" />
+    <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+    <input type="hidden" name="redirect_to" value="/admin/users/{{ context.current_user.id }}/edit" />
+
+    {% theme_render_rc 'components/atoms/button', type: 'submit', content: "LOG BACK", weight: 'primary' %}
+  </form>
+</div>

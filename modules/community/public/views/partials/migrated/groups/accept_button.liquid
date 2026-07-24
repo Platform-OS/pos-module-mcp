@@ -1,0 +1,17 @@
+{% comment %}
+  Button used to accept an invitation to a group by the invited person
+
+  group - (object) group related information including approve_request and the group member
+{% endcomment %}
+
+
+<form action="{% render 'modules/community/helpers/link_to', object: group.member %}" method="post">
+  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+  <input type="hidden" name="_method" value="put">
+  <input type="hidden" name="return_to" value="{% render 'modules/community/helpers/link_to', object: group %}">
+  <input type="hidden" name="notice_key" value="modules/community/groups.joined">
+
+  <button type="submit" class="pos-button">
+    {{ group.approve_request | t: scope: 'modules/community/groups.accept_and_join' }}
+  </button>
+</form>

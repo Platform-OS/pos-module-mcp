@@ -1,0 +1,10 @@
+{% liquid
+  if group_id == blank
+    log "ERROR: group can't be blank posts/count_for_group"
+    return null
+  endif
+
+  graphql r  = 'modules/community/posts/count_for_group', group_id: group_id
+
+  return r.posts
+%}

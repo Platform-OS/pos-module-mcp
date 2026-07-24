@@ -1,0 +1,70 @@
+query search(
+  $id: ID
+  $limit: Int = 20
+  $object_uuid: String
+  $with_object: Boolean = false
+  $origin_urls: [String!]
+  $profile_id: [String!]
+  $photo_type: String
+  $sort: [RecordsSortInput!] = [{ created_at: { order: DESC } }]
+) {
+  photos: records(
+    per_page: $limit
+    sort: $sort
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/photo" }
+      properties: [
+        { name: "object_uuid", value: $object_uuid }
+        { name: "origin_url", value_in: $origin_urls }
+        { name: "profile_id", value_in: $profile_id }
+        { name: "photo_type", value: $photo_type }
+      ]
+    }
+  ) {
+    results {
+      id
+      type: table
+
+      photo_width: property_int(name: "photo_width")
+      photo_height: property_int(name: "photo_height")
+      origin_url: property(name: "origin_url")
+      photo_type: property(name: "photo_type")
+      profile_id: property(name: "profile_id")
+      photo: property_upload(name: "photo") {
+        file_name
+        url
+        versions
+      }
+      file: property_upload(name: "photo") {
+        file_name
+        url
+        versions
+      }
+
+      object: related_record(
+        table: [
+          "modules/community/comment"
+          "modules/community/group"
+          "modules/community/post"
+        ]
+        join_on_property: "object_uuid"
+        foreign_property: "uuid"
+      ) @include(if: $with_object) {
+        id
+        type: table
+
+        creator_id: property(name: "creator_id")
+
+        content_types: property_array(name: "content_types")
+        ask_to_join: property(name: "ask_to_join")
+        meta_visible: property(name: "meta_visible")
+        content_visible: property(name: "content_visible")
+        approve_request: property(name: "approve_request")
+        post_content: property(name: "post_content")
+        add_comments: property(name: "add_comments")
+        invite_member: property(name: "invite_member")
+      }
+    }
+  }
+}

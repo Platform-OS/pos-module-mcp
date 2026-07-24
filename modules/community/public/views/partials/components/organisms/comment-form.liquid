@@ -1,0 +1,99 @@
+---
+metadata:
+  name: Comment form
+  params:
+   commentable: post
+   commentable_type: 'post'
+   images: false
+   context: {}
+   current_profile: {}
+   presigned_url: ''
+   action: '/comments.frame'
+   target_activity_uuid: ''
+  styleguide:
+   commentable: post
+   commentable_type: 'post'
+   images: false
+   context: {}
+   current_profile:
+    id: 0,
+    name: 'John Doe'
+    avatar:
+      photo:
+        versions:
+          sm: 'https://i.pravatar.cc/100'
+   presigned_url: ''
+   action: ''
+---
+
+{% liquid
+  if images == null and params.images == null
+    assign images = true
+  endif
+  assign uuid = '' | uuid
+  assign images = images | default: params.images
+  assign target_activity_uuid = target_activity_uuid | default: params.target_activity_uuid
+  assign commentable = commentable | default: params.commentable
+  assign commentable_type = commentable_type | default: params.commentable_type
+  assign context = context | default: params.context
+  assign current_profile = current_profile | default: params.current_profile
+  assign presigned_url = presigned_url | default: params.presigned_url
+  assign action = action | default: params.action | default: '/comments.frame'
+  assign default_placeholder = 'modules/community/comments.write_comment' | t
+  assign placeholder = placeholder | default: params.placeholder | default: default_placeholder
+
+  assign js_submit = "insert({where: 'beforeend', target: 'comments-" | append: commentable.id | append: "'}); commentsCount++;"
+%}
+
+{% if target_activity_uuid %}
+  <form
+    action="{{ action }}"
+    method="post"
+    data-comment-new-post
+    data-photo-upload-base
+    x-ref="form"
+    data-tc="commentForm-object-{{ commentable.id }}"
+    x-on:submit.prevent='{{ js_submit }}'
+  >
+    {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+    <input type="hidden" name="comment[commentable_id]" value="{{ commentable.id }}">
+    <input type="hidden" name="comment[commentable_uuid]" value="{{ commentable.uuid }}">
+    <input type="hidden" name="comment[commentable_type]" value="{{ commentable_type }}">
+    <input type="hidden" name="comment[target_activity_uuid]" value="{{ target_activity_uuid }}">
+    <input type="hidden" name="comment[uuid]" value="{{ uuid }}">
+    <input type="hidden" name="return_to" value="{{ context.location.href }}">
+
+    {% liquid
+      if current_profile.first_name and current_profile.last_name
+        assign name = current_profile.first_name | append: ' ' | append: current_profile.last_name
+      else
+        assign name = current_profile.slug
+      endif
+      assign name = current_profile.name | default: name
+
+      # platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments
+      render 'modules/common-styling/user/avatar', size: 'md', name: name, params: null
+      # platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments
+
+      assign post_input_attrs = '{}' | parse_json
+      hash_assign post_input_attrs['x-on:keydown.enter'] = 'if (!$event.shiftKey) { $event.preventDefault(); $event.target.blur(); ' | append: js_submit | append: ' }'
+    %}
+    <div class="pos-community-feed-comment-form-input">
+      {% theme_render_rc 'components/molecules/hashtag-textarea', name: 'comment[body]', required: true, placeholder: placeholder, attributes: post_input_attrs, classes: 'flex-1 min-h-[2.75rem]' %}
+      <button type="submit" class="pos-button pos-button-primary" x-bind:disabled="spinner">{{ 'modules/community/comments.post' | t }}</button>
+    </div>
+
+    {% if images %}
+      <div data-comment-photo-upload class="absolute top-0 right-16 w-8 h-8 mt-1 me-5 text-interactive cursor-pointer" title="images">
+        {% liquid
+          theme_render_rc 'components/molecules/iconbutton', icon: 'camera', gap: 0, size: 'small', weight: 'secondary'
+        %}
+      </div>
+    {% endif %}
+  </form>
+{% endif %}
+{% liquid
+  if images
+    render 'modules/community/photos/uppy_form', object_uuid: uuid, presigned_url: presigned_url, photo_type: 'main', max_number_of_files: null, existing_photos: null, object_id: null, note: null, disabled: null, editor_enabled: null
+  endif
+%}

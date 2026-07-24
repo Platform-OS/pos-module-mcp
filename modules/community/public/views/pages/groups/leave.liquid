@@ -1,0 +1,33 @@
+---
+slug: groups/:id/leave
+method: delete
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function group = 'modules/community/queries/groups/find', id: context.params.id, with_owner: true, current_profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'leave', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/community/commands/groups/leave', group: group, profile: current_profile
+  if object.valid
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', notice: context.params.notice_key
+    # platformos-check-enable DeprecatedTag
+  else
+    if object.errors.first
+      assign error_key = object.errors.first | prepend: 'appgroups.'
+      # platformos-check-disable DeprecatedTag
+      include 'modules/community/helpers/redirect_to', error: error_key
+      # platformos-check-enable DeprecatedTag
+    else
+      # platformos-check-disable DeprecatedTag
+      include 'modules/community/helpers/redirect_to', error: context.params.error_key
+      # platformos-check-enable DeprecatedTag
+    endif
+  endif
+%}

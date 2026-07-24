@@ -1,0 +1,30 @@
+---
+layout: modules/components/styleguide
+slug: styleguide/tokens/colors
+---
+{% liquid
+  function current_user = 'modules/user/queries/user/current'
+  include 'modules/user/helpers/can_do_or_unauthorized', requester: current_user, do: 'styleguide.view'
+
+  function theme_variables = 'modules/theme-manager/lib/queries/theme_settings/load'
+  function component_groups = 'modules/components/lib/queries/components/get_all'
+%}
+{% content_for 'pagetitle' %}Colors - Component Library{% endcontent_for %}
+<div class="flex antialiased bg-gray-100 min-h-screen">
+  {% render 'modules/components/_styleguide_components/sidebar', component_groups: component_groups %}
+
+  <div class="flex-1">
+    <section class="p-4" data-styleguide-component="colors">
+      <div class="flex flex-wrap gap-4">
+        {% for color in theme_variables.colors %}
+        <div class="w-full md:w-1/6">
+          <div class="w-full h-10 bg-{{color.name}} border-white border rounded-md shadow-lg" style="background-color: rgb({{color.value}});"></div>
+          <div class="mb-6" data-color="{{color.value}}">
+            {{color.name}} <br> rgb({{color.value}}); <br> <span data-color-hex=""></span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>

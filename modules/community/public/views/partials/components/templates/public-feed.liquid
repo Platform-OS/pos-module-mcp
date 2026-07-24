@@ -1,0 +1,15 @@
+---
+metadata:
+  name: Public Feed template
+  params:
+    context: {}
+    current_profile: {}
+    list: []
+---
+{% liquid
+  assign context = context | default: params.context
+  assign current_profile = current_profile | default: params.current_profile
+  assign list = list | default: params.list
+%}
+
+{% theme_render_rc 'components/pages/public-feed', list: list, current_profile: current_profile, context: context, page: 1 %}

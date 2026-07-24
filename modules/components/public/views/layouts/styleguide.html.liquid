@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{% yield 'pagetitle' %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {% function headscripts = 'modules/core/queries/headscripts/get' %}
+    {{ headscripts }}
+    <link rel="stylesheet" href="{{ 'modules/components/styleguide.css' | asset_url }}">
+  </head>
+
+  <body>
+    <main class="main max-w-screen">
+      {{content_for_layout}}
+    </main>
+  <script src="{{ 'modules/components/styleguide.js' | asset_url }}"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{% liquid
+  if id == blank
+    return null
+  endif
+
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r  = 'modules/community/tags/search', id: id, limit: 1
+
+  return r.tags.results.first
+%}

@@ -1,0 +1,135 @@
+{%- comment -%}
+  Observability baseline (spec §20) — aggregate metrics computed from the ledger,
+  the single source of truth for what agents did. Scans the ledger (paged) and
+  returns counts and rates plus the chain-verification status (the page-immediately
+  alert signal). Latency percentiles are included when duration_ms is present;
+  otherwise reported as unavailable (recording a sub-second timer is a separate
+  concern — the counts/rates below are exact regardless).
+
+  @param {integer} max_pages - safety cap on pages scanned (default 100 = 10k rows)
+  @return {object} { total, by_outcome, by_tool, by_decision, denials, denial_rate,
+                     schema_rejections, rate_limited, chain, latency }
+{%- endcomment -%}
+{% liquid
+  assign table = 'modules/mcp/mcp_ledger'
+  assign per_page = 100
+  assign cap = max_pages | default: 100
+
+  assign total = 0
+  assign denials = 0
+  assign schema_rejections = 0
+  assign rate_limited = 0
+  assign by_outcome = '{}' | parse_json
+  assign by_tool = '{}' | parse_json
+  assign by_decision = '{}' | parse_json
+  assign durations = '[]' | parse_json
+
+  for page in (1..100)
+    if page > cap
+      break
+    endif
+    graphql res = 'modules/mcp/ledger/list', table: table, page: page, per_page: per_page
+    assign rows = res.records.results
+    assign n = rows | size
+    if n == 0
+      break
+    endif
+
+    for r in rows
+      assign total = total | plus: 1
+
+      assign oc = r.execution_outcome | default: 'unknown'
+      assign prev_oc = by_outcome[oc] | default: 0
+      hash_assign by_outcome[oc] = prev_oc | plus: 1
+
+      assign tn = r.tool_name | default: '(none)'
+      assign prev_tn = by_tool[tn] | default: 0
+      hash_assign by_tool[tn] = prev_tn | plus: 1
+
+      assign ad = r.authz_decision | default: 'unknown'
+      assign prev_ad = by_decision[ad] | default: 0
+      hash_assign by_decision[ad] = prev_ad | plus: 1
+
+      if r.authz_decision == 'deny'
+        assign denials = denials | plus: 1
+      endif
+
+      assign ec = r.error_code | plus: 0
+      if ec == -32602
+        assign schema_rejections = schema_rejections | plus: 1
+      endif
+      if ec == -32002
+        assign rate_limited = rate_limited | plus: 1
+      endif
+
+      unless r.duration_ms == blank
+        assign dm = r.duration_ms | plus: 0
+        assign durations = durations | array_add: dm
+      endunless
+    endfor
+
+    if n < per_page
+      break
+    endif
+  endfor
+
+  # Rates (guard divide-by-zero).
+  assign denial_rate = 0
+  assign rollbacks = by_outcome['rolled_back'] | default: 0
+  assign pending_approvals = by_outcome['pending_approval'] | default: 0
+  assign suspends = by_outcome['suspended'] | default: 0
+  assign rollback_rate = 0
+  # "Blocked" = every call the governance layer stopped: policy denials + schema/
+  # arg rejections + rate-limits. Broader than `denials` (policy-deny only) so the
+  # panel reflects what was actually prevented. NOT + suspends: a suspend entry
+  # already carries authz_decision:deny, so it is counted in `denials` — adding it
+  # again would double-count (suspends is surfaced separately as a subset highlight).
+  assign blocked = denials | plus: schema_rejections | plus: rate_limited
+  assign blocked_rate = 0
+  if total > 0
+    assign denial_rate = denials | times: 1.0 | divided_by: total
+    assign rollback_rate = rollbacks | times: 1.0 | divided_by: total
+    assign blocked_rate = blocked | times: 1.0 | divided_by: total
+  endif
+
+  # Latency percentiles when data exists.
+  assign latency = '{}' | parse_json
+  assign dcount = durations | size
+  if dcount > 0
+    assign sorted = durations | sort
+    assign i50 = dcount | times: 50 | divided_by: 100
+    assign i95 = dcount | times: 95 | divided_by: 100
+    if i50 >= dcount
+      assign i50 = dcount | minus: 1
+    endif
+    if i95 >= dcount
+      assign i95 = dcount | minus: 1
+    endif
+    hash_assign latency['p50_ms'] = sorted[i50]
+    hash_assign latency['p95_ms'] = sorted[i95]
+    hash_assign latency['samples'] = dcount
+  else
+    hash_assign latency['available'] = false
+  endif
+
+  function chain = 'modules/mcp/commands/ledger/verify_chain'
+
+  assign out = '{}' | parse_json
+  hash_assign out['total'] = total
+  hash_assign out['by_outcome'] = by_outcome
+  hash_assign out['by_tool'] = by_tool
+  hash_assign out['by_decision'] = by_decision
+  hash_assign out['denials'] = denials
+  hash_assign out['denial_rate'] = denial_rate
+  hash_assign out['blocked'] = blocked
+  hash_assign out['blocked_rate'] = blocked_rate
+  hash_assign out['suspends'] = suspends
+  hash_assign out['rollbacks'] = rollbacks
+  hash_assign out['rollback_rate'] = rollback_rate
+  hash_assign out['pending_approvals'] = pending_approvals
+  hash_assign out['schema_rejections'] = schema_rejections
+  hash_assign out['rate_limited'] = rate_limited
+  hash_assign out['chain'] = chain
+  hash_assign out['latency'] = latency
+  return out
+%}

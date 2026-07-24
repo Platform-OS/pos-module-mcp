@@ -1,0 +1,73 @@
+---
+metadata:
+  name: Alert
+  params:
+    tag: "div"
+    severity:
+      - info
+      - error
+      - success
+      - warning
+    variant:
+      - normal
+      - small
+      - secondary
+    icon:
+      - true
+      - false
+    content: Fill your profile
+    classes: ''
+---
+{% parse_json icons %}
+{
+  "success": { "name": "checkBadge", "color": "text-confirmation" },
+  "error": { "name": "warningCloud", "color": "text-important" },
+  "info": { "name": "info", "color": "text-graphic" },
+  "warning": { "name": "warning", "color": "text-warning" }
+}
+{% endparse_json %}
+{% liquid
+  assign tag = tag | default: params.tag | default: 'div'
+  assign icon = icon | default: params.icon | default: true
+  assign severity = severity | default: params.severity | default: 'info'
+  assign variant = variant | default: params.variant | default: 'normal'
+  assign content = content | default: params.content
+  assign attributes = attributes | default: params.attributes
+  assign wrapper_classes = classes | default: params.classes | default: 'w-96 max-w-full'
+
+  assign classes = 'px-2 py-1 leading-5 rounded-md shadow-card flex items-center align-center w-full h-10 '
+
+  if variant == 'normal'
+    if severity == 'error'
+      assign classes = classes | append: ' border border-important bg-important-disabled'
+    elsif severity == 'success'
+      assign classes = classes | append: ' border border-confirmation bg-confirmation-disabled'
+    elsif severity == 'warning'
+      assign classes = classes | append: ' border border-warning bg-warning-disabled'
+    else
+      assign classes = classes | append: ' bg-highlighted'
+    endif
+    assign icon_classes = 'w-6 h-6 mr-2 ' | append: icons[severity].color
+  elsif variant == 'secondary'
+    assign classes = classes | append: ' border bg-inverted'
+    assign icon_classes = 'w-6 h-6 mr-2 ' | append: icons[severity].color
+  else
+    assign classes = classes | append: ' text-xs text-supplementary'
+    assign icon_classes = 'w-4 h-4 mr-2 ' | append: icons[severity].color
+  endif
+
+
+  assign icon_params = '{}' | parse_json | hash_merge: name: icons[severity].name, class: icon_classes
+%}
+<div class="inline-block {{wrapper_classes}}"
+  {% for attribute in attributes %}
+    {{ attribute[0] | html_safe }}="{{ attribute[1] | html_safe }}"
+  {% endfor %}
+>
+  <{{tag}} class="{{classes}}" data-tc="alert">
+      {% if icon == true %}
+        {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+      {% endif %}
+      {{content | html_safe}}
+  </{{tag}}>
+</div>

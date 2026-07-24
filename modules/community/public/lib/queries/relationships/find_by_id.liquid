@@ -1,0 +1,12 @@
+{% liquid
+  if id == blank
+    log 'Something went wrong. ID cannot be blank.', type: 'ERROR'
+    return null
+  endif
+
+
+  assign relation_tables = '["modules/community/group", "modules/community/post", "modules/community/event", "modules/user/profile"]' | parse_json
+  graphql r = 'modules/community/relationships/search', limit: 1, id: id, include_related: include_related, relation_tables: relation_tables
+
+  return r.records.results.first
+%}

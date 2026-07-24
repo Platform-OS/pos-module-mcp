@@ -1,0 +1,101 @@
+---
+metadata:
+  name: Profile banner
+  params:
+    profile: {}
+    current_profile: {}
+  styleguide:
+    profile:
+      created_at: 2023-01-06T10:28:15.624Z
+      id: '0'
+      name: John Doe
+      avatar:
+        photo:
+          versions:
+            md: https://i.pravatar.cc/300
+
+    current_profile:
+      id: '999'
+      name: 'Current user'
+---
+{%- liquid
+  assign profile = profile | default: params.profile
+  assign current_profile = current_profile | default: params.current_profile
+  assign profile_cover_photo = profile.profile_cover.photo.url
+
+  assign name = profile.first_name | append: ' ' | append: profile.last_name
+  unless name
+    assign name = profile.name
+  endunless
+
+  content_for 'meta_image'
+    print profile.avatar.photo.versions.lg
+  endcontent_for
+  content_for 'meta_description'
+    print name | append: ' - ' | append: profile.bio | truncate: 200
+  endcontent_for
+-%}
+
+{% if profile_cover_photo %}
+  <div class="w-full absolute z-[-1] left-0 bg-cover bg-center"
+       style="height: 288px; top: -2.5rem; background-image: url('{{ profile_cover_photo }}')"
+       data-tc="cover-photo-container">
+  </div>
+{% endif %}
+
+
+{% capture card_content %}
+  {% theme_render_rc 'components/atoms/avatar', name: name, size: 'xxl', imageSrc: profile.avatar.photo.versions.m, classes: '-mt-28 mx-auto mb-6 relative top-2' %}
+  <a href="{% render 'modules/community/helpers/link_to', object: profile %}" data-tc="user-name">
+  {% theme_render_rc 'components/atoms/heading', content: name, level: 2 , classes: " max-w-full overflow-hidden" %}
+  </a>
+
+  {% if profile.first_name and profile.name %}
+    <div class="text-supplementary">@{{ profile.name }}</div>
+  {% endif %}
+
+  {% if profile.bio %}
+    <div class="md:subtitle md:max-w-3xl md:mx-auto mt-4">{{ profile.bio }}</div>
+  {% endif %}
+
+  <ul class="mt-6 flex items-center justify-center flex-wrap gap-8">
+    {% if profile.location %}
+      <li class="flex items-center gap-2">
+        {% theme_render_rc 'components/atoms/icon', icon: 'pin', class: 'w-6 text-supplementary' %}
+        {{ profile.location }}
+      </li>
+    {% endif %}
+    <li class="flex items-center gap-2">
+      {% theme_render_rc 'components/atoms/icon', icon: 'dateFav', class: 'w-6 text-supplementary' %}
+      {{ 'modules/community/profiles.member_since' | t }} {{ profile.created_at | l: 'date_compact' }}
+    </li>
+    {% if profile.linkedin_url %}
+      <li class="flex items-center gap-2">
+        <a href="{{ profile.linkedin_url }}" rel="noopener external noreferrer" target="_blank">
+          {% theme_render_rc 'components/atoms/icon', icon: 'linkedin', class: 'w-6 text-supplementary hover:text-interaction-hover transition-colors' %}
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+
+  {% if profile.job_title or profile.employer %}
+    <aside class="mt-6 !-mx-4 pt-4 border-t">
+      {{ profile.job_title }} {% if profile.job_title and profile.employer %}<span class="text-supplementary">{{ 'modules/community/profiles.at_employer' | t }}</span>{% endif %} {{ profile.employer }}
+    </aside>
+  {% endif %}
+
+  <div class="mt-4 md:mt-0 flex justify-center gap-2 md:absolute md:top-4 md:right-4">
+    {% if profile.id != current_profile.id %}
+      {% liquid
+        assign chat_url = '/inbox/?to_uuid=' | append: profile.uuid
+        theme_render_rc 'components/atoms/button', href: chat_url, icon: 'commentText', content: 'Message', weight: 'secondary', size: 'small'
+      %}
+      {% theme_render_rc 'modules/community/components/molecules/profile-follow-button', profile_id: profile.id, size: 'small', no_icon: true, params: null, no_text: null, classes: null, gap: null %}
+    {% else %}
+      {% theme_render_rc 'components/atoms/button', href: '/profile/edit', content: 'Edit profile', weight: 'secondary', size: 'small' %}
+    {% endif %}
+
+  </div>
+{% endcapture %}
+
+{% theme_render_rc 'components/atoms/card', tag: 'header', content: card_content, classes: 'relative mt-20 text-center' %}

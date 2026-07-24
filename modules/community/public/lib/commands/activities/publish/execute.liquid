@@ -1,0 +1,9 @@
+{% liquid
+  graphql r = 'modules/community/activities/publish', args: object
+
+  comment
+  check for errors
+  endcomment
+
+  return r
+%}

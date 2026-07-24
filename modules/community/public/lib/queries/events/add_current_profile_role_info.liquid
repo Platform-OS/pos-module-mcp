@@ -1,0 +1,17 @@
+{% liquid
+  if current_profile
+    for e in events.results
+      assign event = e
+
+      assign member = current_profile.relationships.membership | detect: r_id: event.id
+      hash_assign event['member'] = member
+
+      # platformos-check-disable UnknownProperty
+      assign owner = current_profile.relationships.owner | detect: r_id: event.id
+      # platformos-check-enable UnknownProperty
+      hash_assign event['rel_owner'] = owner
+    endfor
+  endif
+
+  return events
+%}

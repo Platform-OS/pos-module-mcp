@@ -1,0 +1,19 @@
+---
+slug: groups/:id/activity
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true, followships: true
+
+  assign group_id = context.params.id | split: '-' | last
+  function group = 'modules/community/queries/groups/find', id: group_id, with_owner: false, current_profile: null
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'see_content', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function list = 'modules/community/queries/activities/search', feed: 'group-public', feed_id: group.id, limit: 100, page: null
+  function presigned_url = 'modules/community/queries/photos/presigned_url'
+  assign group_photo = group.main_photo.photo.versions.uncropped
+
+  render 'modules/community/migrated/groups/header', group: group, current_profile: current_profile, image_src: group_photo, params: null
+  render 'modules/community/groups/activity', group: group, current_profile: current_profile, list: list, namespace: null, page: null
+%}

@@ -1,0 +1,15 @@
+{% comment %} set_login_attempts_unlock_minutes GraphQL queries go below {% endcomment %}
+{% liquid
+  function current_value = 'modules/core/queries/variable/find', name: "LOGIN_ATTEMPTS_UNLOCK_AFTER_MINS", type: "integer", default: null
+%}
+{% unless current_value > 0 %}
+  {% graphql r %}
+  mutation {
+    constant_set(name: "LOGIN_ATTEMPTS_UNLOCK_AFTER_MINS", value: "5"){
+      name
+      value
+    }
+  }
+  {% endgraphql %}
+  {% log r, type: 'migrations/set_login_attempts_unlock_minutes' %}
+{% endunless %}

@@ -1,0 +1,25 @@
+{% liquid
+  if r_id == blank
+    log 'Something went wrong. Right-ID cannot be blank.', type: 'ERROR'
+    return null
+  endif
+
+  if name == blank
+    log 'Something went wrong. Name cannot be blank.', type: 'ERROR'
+    return null
+  endif
+
+  if keyword == blank
+    assign keyword = ''
+  endif
+
+  if limit == blank
+    assign limit = 100
+  endif
+
+  assign page = page | to_positive_integer: 1
+
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r = 'modules/community/relationships/search_group', limit: limit, page: page, name: name, l_id: l_id, r_id: r_id, not_l_id: not_l_id, include_related: include_related, accepted: accepted, approved: approved, keyword: keyword, profile_table: profile_table
+  return r.records
+%}

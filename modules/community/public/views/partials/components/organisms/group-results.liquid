@@ -1,0 +1,35 @@
+---
+metadata:
+  name: Group quick search results
+  params:
+    records: {}
+    limit: 3
+---
+{% if records.results.size > 0 %}
+  <div class='flex justify-between pb-2'>
+    {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+    {% assign title = 'group' | t: scope: 'modules/community/quick_search.type' %}
+    {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+    {% theme_render_rc 'components/atoms/heading', content: title, level: 2 %}
+    {% if records.total_entries > limit %}
+      <a href="/groups" class="font-bold">
+        {{ 'modules/community/quick_search.see_more' | t }}
+      </a>
+    {% endif %}
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6 mb-10">
+    {% for record in records.results %}
+      {% liquid
+        assign group_avif_src_set = record.photo.photo.versions.m_avif | replace: ' ', '%20' | append: ', ' | append: record.photo.photo.versions.lg_avif | append: ' 2x'
+        assign group_img_src_set = record.photo.photo.versions.lg | replace: ' ', '%20' | append: ' 2x'
+        assign group_url = "/groups/" | append: record.id
+        assign group_summary = record.description | truncatewords: 7
+        assign group_members = record.c__members_count | default: 0
+        assign group_comments = record.c__posts_count | default: 0
+        assign group = {"title": record.name, "summary": group_summary, "imgSrc": record.photo.photo.versions.m, "imgSrcSet": group_img_src_set, "avifSrcSet": group_avif_src_set, "variant": "default", "animation": false, "classes": "w-full", "members": group_members, "comments": group_comments, "titleClasses": "text-interactive-text pb-2", "url": group_url}
+        assign group = group | hash_merge: tags: record.tags
+        theme_render_rc 'components/organisms/group-card', params: group
+      %}
+    {% endfor %}
+  </div>
+{% endif %}

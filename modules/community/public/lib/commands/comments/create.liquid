@@ -1,0 +1,13 @@
+{%  liquid
+  # platformos-check-disable PartialCallArguments
+  function object = 'modules/community/commands/comments/create/build', object: object, current_profile: current_profile
+  # platformos-check-enable PartialCallArguments
+  function object = 'modules/community/commands/comments/create/check', object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/comments/create' object: object, selection: 'record'
+    hash_assign object['creator'] = current_profile
+  endif
+
+  return object
+%}

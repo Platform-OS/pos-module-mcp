@@ -1,0 +1,9 @@
+{% liquid
+  if id == blank
+    return null
+  endif
+
+  graphql r  = 'modules/community/photos/search', id: id, limit: 1, with_object: with_object
+
+  return r.photos.results.first
+%}

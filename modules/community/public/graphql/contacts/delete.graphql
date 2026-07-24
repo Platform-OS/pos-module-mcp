@@ -1,0 +1,6 @@
+mutation delete($id: ID!) {
+  record_delete(
+    table: "modules/community/contact"
+    id: $id
+  ){ id }
+}

@@ -1,0 +1,18 @@
+{% comment %} TODO: factor out and make it abstract {% endcomment %}
+{% liquid
+  if id == blank
+    log '(events) ID cannot be blank when searching for audience'
+    return null
+  endif
+
+  graphql r = 'modules/community/activities/events/audience', id: id, limit: 1000
+  assign event = r.events.results.first
+  assign audience = '{ "owners": [], "members": [] }' | parse_json
+
+  assign relationships = event.relationships | group_by: 'name'
+
+  hash_assign audience['owners'] = relationships.owner | map: 'l_id'
+  hash_assign audience['members'] = relationships.membership | map: 'l_id'
+
+  return audience
+%}

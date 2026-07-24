@@ -1,0 +1,10 @@
+{%  liquid
+  function object = 'modules/community/commands/posts/accept/build', object: object, post: post
+  function object = 'modules/community/commands/posts/accept/check', object: object, current_profile: current_profile
+
+  if object.valid
+    function object = 'modules/core/commands/execute', mutation_name: 'modules/community/posts/update' object: object, selection: 'record'
+  endif
+
+  return object
+%}

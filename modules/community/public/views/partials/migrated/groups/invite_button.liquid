@@ -1,0 +1,14 @@
+{% liquid
+  if label
+    assign label = label
+  else
+    assign label = 'modules/community/groups.invite_new_member' | t
+  endif
+%}
+
+
+{% if can_invite %}
+  <a href="{% render 'modules/community/helpers/link_to', object: group, action: 'invites' %}">
+    {% print label %}
+  </a>
+{% endif %}

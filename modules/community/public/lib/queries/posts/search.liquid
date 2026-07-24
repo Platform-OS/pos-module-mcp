@@ -1,0 +1,10 @@
+{% liquid
+
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r = 'modules/community/posts/search', limit: limit, group_ids: group_ids, creator_id: creator_id, tags: tags, profile_table: profile_table
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/handle_graphql_response', r: r, name: 'queries/posts/search'
+  # platformos-check-enable DeprecatedTag
+
+  return r.posts
+%}

@@ -1,0 +1,22 @@
+{% comment %} new approach {% endcomment %}
+{% render 'modules/common-styling/init', reset: true %}
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-config.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-button.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-layout.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-header.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-navigation.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-chat.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-user.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-user-forms.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-tag.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-notification.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-spaces.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-event.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-feed.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'modules/community/style/pos-community-informative.css' | asset_url }}">
+{% if context.page.slug == 'inbox' %}
+    <link rel="stylesheet" href="{{ 'modules/chat/style/pos-chat-inbox.css' | asset_url }}">
+    <link rel="stylesheet" href="{{ 'modules/community/style/pos-community-chat.css' | asset_url }}">
+{% endif %}
+
+<script src="{{ 'modules/community/js/community.js' | asset_url }}" defer></script>

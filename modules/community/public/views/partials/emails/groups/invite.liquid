@@ -1,0 +1,16 @@
+<h1 class="title">{{ 'modules/community/emails.groups.invite.title' | t: group_name: data.group_name, member: data.member }}</h1>
+
+<p>{{ 'modules/community/emails.groups.invite.content' | t: member: data.member, group_name: data.group_name }}</p>
+<p>{{ 'modules/community/emails.groups.invite.ignore' | t }}</p>
+
+<table class="card cta">
+  <tr>
+    <td>
+
+      <a href="{{ data.url }}" class="button">
+        {{ 'modules/community/emails.groups.invite.claim' | t }}
+      </a>
+
+    </td>
+  </tr>
+</table>

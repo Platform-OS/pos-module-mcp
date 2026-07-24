@@ -1,0 +1,35 @@
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+
+  function c = 'modules/core/validations/uniqueness', c: c, object: object, field_name: 'uuid', table: 'modules/community/event', key: 'modules/community/events.validation.uuid', exclude_name: null, scope_name: null
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'name', key: 'modules/community/events.validation.name.presence'
+  function c = 'modules/core/validations/length', c: c, object: object, field_name: 'name', maximum: 35, message_maximum: 'modules/community/events.validation.name.length', value: null, is: null, message_is: null, message_minimum: null, allow_blank: false, minimum: null
+  function c = 'modules/core/validations/uniqueness', c: c, object: object, field_name: 'name', table: 'modules/community/event', key: 'modules/community/events.validation.name.uniqueness', exclude_name: null, scope_name: null
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'start_date', key: 'modules/community/events.validation.start_date.presence'
+  function c = 'modules/core/validations/date', c: c, object: object, field_name: 'start_date', can_be_past: false, can_be_future: null, date: null, gt: null, gte: null, lt: null, lte: null, message_can_be_future: null, message_can_be_past: null, message_gt: null, message_gte: null, message_lt: null, message_lte: null
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'description', key: 'modules/community/events.validation.description.presence'
+  function c = 'modules/core/validations/length', c: c, object: object, field_name: 'description', minimum: 10, message_minimum: 'modules/community/events.validation.description.length', value: null, is: null, message_is: null, message_maximum: null, allow_blank: false, maximum: null
+  function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'short_description', key: 'modules/community/events.validation.short_description.presence'
+  function c = 'modules/core/validations/length', c: c, object: object, field_name: 'short_description', maximum: 140, message_maximum: 'modules/community/events.validation.short_description.length', value: null, is: null, message_is: null, message_minimum: null, allow_blank: false, minimum: null
+
+  if object.link == blank and object.venue == blank
+    function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'link', key: 'modules/community/events.validation.link'
+    function c = 'modules/core/validations/presence', c: c, object: object, field_name: 'venue', key: 'modules/community/events.validation.venue'
+  endif
+
+  if object.start_date != blank and object.end_date != blank
+    assign sd = object.start_date | to_time
+    assign ed = object.end_date | to_time
+    if ed < sd
+      assign message = 'modules/community/events.validation.end_date.past' | t
+      # platformos-check-disable DeprecatedTag
+      include 'modules/core/helpers/register_error', contract: c, field_name: 'end_date', message: message, key: null
+      # platformos-check-enable DeprecatedTag
+    endif
+  endif
+
+  hash_assign object['valid'] = c.valid
+  hash_assign object['errors'] = c.errors
+
+  return object
+%}

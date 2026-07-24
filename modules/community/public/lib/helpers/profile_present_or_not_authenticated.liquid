@@ -1,0 +1,12 @@
+{% liquid
+  assign allow_anonymous = allow_anonymous | default: false
+
+  if allow_anonymous
+    return true
+  elsif profile.id == blank
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/json/shared/not_authenticated'
+    # platformos-check-enable DeprecatedTag
+    break
+  endif
+%}

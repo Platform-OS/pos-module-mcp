@@ -1,0 +1,19 @@
+query search(
+  $id: ID!
+  $limit: Int = 1
+) {
+  records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      deleted_at: { exists: false }
+    }
+  ) {
+    total_entries
+    results {
+      id
+      type: table
+      properties
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{% liquid
+  if object.valid
+    echo object
+  else
+    response_status 422
+    assign res = '{ "errors": {} }' | parse_json
+    hash_assign res['errors'] = object.errors
+
+    echo res
+  endif
+%}

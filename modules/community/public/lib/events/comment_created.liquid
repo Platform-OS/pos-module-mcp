@@ -1,0 +1,18 @@
+---
+metadata:
+  event:
+    creator_id
+    comment_id
+    commentable_id
+---
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'creator_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'comment_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'commentable_id', key: 'modules/core/validation.blank'
+
+  function _ = 'modules/community/commands/activities/enhance_event', event: event, object_id: event.comment_id, actor_id: event.creator_id, target_id: event.commentable_id
+
+  return c
+%}

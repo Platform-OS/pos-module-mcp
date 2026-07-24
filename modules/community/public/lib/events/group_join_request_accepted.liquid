@@ -1,0 +1,18 @@
+---
+metadata:
+  event:
+    requester_id
+    group_admin_id
+    group_id
+---
+{% liquid
+  assign c = '{ "errors": {}, "valid": true }' | parse_json
+
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'requester_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'group_admin_id', key: 'modules/core/validation.blank'
+  function c = 'modules/core/validations/presence', c: c, object: event, field_name: 'group_id', key: 'modules/core/validation.blank'
+
+  function _ = 'modules/community/commands/activities/enhance_event', event: event, object_id: event.requester_id, actor_id: event.group_admin_id, target_id: event.group_id
+
+  return c
+%}

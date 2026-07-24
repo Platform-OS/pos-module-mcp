@@ -1,0 +1,56 @@
+---
+metadata:
+  name: Hashtag feed
+  params:
+    current_profile: {}
+    hashtag: {}
+    context: {}
+    list: []
+    page: 1
+---
+{% liquid
+  assign context = context | default: params.context
+  assign current_profile = current_profile | default: params.current_profile
+  assign hashtag = hashtag | default: params.hashtag
+  assign list = list | default: params.list
+%}
+
+{% render 'modules/community/migrated/tags/header',
+  name: hashtag.name,
+  id: hashtag.id,
+  follower_count: hashtag.follower_count,
+  current_profile: current_profile
+%}
+
+{% unless hashtag.status == 'unpublished' %}
+  <h3 class="pos-heading-3">Posts</h3>
+  <small id="post_count" data-post-count="{{ list.total_entries }}">{{ list.total_entries }} {{ 'Result' | pluralize: list.total_entries }}</small>
+{% endunless %}
+
+<section class="pos-app" id="pos-community-feed-posts">
+
+  {% liquid
+    if hashtag.status == 'unpublished'
+      theme_render_rc 'components/molecules/alert', content: 'This hashtag has been unpublished by an administrator', classes: 'w-full mt-6'
+    endif
+  %}
+
+  {% if list.total_entries > 0 %}
+    {% liquid
+      for activity in list.results
+        theme_render_rc 'components/organisms/feed-entry', payload: activity.payload, current_profile: current_profile, context: context, can_comment: false
+      endfor
+    %}
+  {% endif %}
+
+  {% if list.has_next_page %}
+    <button
+      id="pos-community-load-feed-more"
+      class="pos-button"
+      data-load-content="/profile.frame/tag/{{ hashtag.name }}?page={{ page | plus: 1 }}"
+      data-load-where="last"
+      data-load-target="#pos-community-feed-posts"
+      disabled
+    >{{ 'modules/community/app.show_more' | t }}</button>
+  {% endif %}
+</section>

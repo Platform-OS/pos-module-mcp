@@ -1,0 +1,141 @@
+---
+en:
+  static-pages:
+    attr:
+      title: Title
+      terms-of-service: Terms and Conditions applied to your marketplace
+      privacy-policy: Privacy Policy applied to your marketplace
+      shipping-delivery-policy: Shipping & Delivery Policy applied to your marketplace
+      cancelation-refund-policy: Shipping & Delivery Policy applied to your marketplace
+      markdown_tip:
+        Use Markdown to style your text. Add the rules and the guidelines
+        of acceptable behavior and other useful sections to which users must agree
+        in order to access your website.
+      about_us_tip:
+        Use Markdown to style your text. Add your story, vision and/or
+        experience here.
+      title_tip:
+        Rename the title of this simple text page. This appears in the footer,
+        you can't modify its position.
+      picture_tip: Supported formats JPEG, GIF or PNG
+      store_name_tip:
+        This name appears on the browser tabs and in the place of the
+        logo if you don't have any.
+      store_description_tip:
+        The meta description is the short text that appears under
+        your website's name on the search engine results pages. It provides users
+        a brief summary of the content on your page so that users know if the page
+        will answer their question.
+      logo_tip: Supported formats JPEG, GIF or PNG. Recommended size of 150 × 30 px.
+      favicon_tip:
+        The small icon in the browser tab, usually a smaller version of
+        your logo. Recommended in PNG format, with the size of 196 x 196 px.
+      social_share_tip:
+        When you share a link to your store on social media, this
+        picture will be used if another relevant image can’t be found.
+      faq_category_tip:
+        Category covers the topic of the Questions&Answers listed
+        under.
+      faq_question_tip: Add typical user questions related to your store.
+      faq_answer_tip: Use Markdown to style your text.
+      section1_title: First section
+      section2_title: Second section
+      page_title: Page title
+      contact_information: Contact information
+      about-us:
+        section1_title: Description about your business
+        section1_image_title: Picture next to the description
+        section2_title: Description about your business
+        section2_image_title: Picture next to the description
+    save: Save changes
+    statuses:
+      published: Published
+      published_label: Make this page available for your visitors.
+      unpublished: Unpublished
+      unpublished_label:
+        Hide this page from your visitors. No one will be able to
+        access it.
+      title: Page Visibility
+      must_be_published:
+        "%{page_name} is a required page, and it's always visible
+        for your user after you published your whole site."
+    homepage:
+      create_new_edit_form:
+        Create a new template file in your theme called "dashboard/pages/edit_homepage.liquid"
+        to make you homepage editable.
+    list:
+      title: Pages
+      table:
+        name: Page Name
+        status: Status
+        updated_at: When
+        edit_link: Edit
+    shipping-delivery-policy:
+      last-updated: This Shipping & Delivery Policy was last updated on %{updated_at}
+    cancelation-refund-policy:
+      last-updated: This Cancelation & Refund Policy was last updated on %{updated_at}
+    terms-of-service:
+      last-updated: These Terms of Service were last updated on %{updated_at}
+    home:
+      show_all: Show All
+      title: Community Solution
+    about-us:
+      attr:
+        business: Description about your business
+        picture: Picture next to the description
+      pagetitle: About Us
+      our-story: Our mission
+      our-story-subtitle: is to help people bring digital projects to life
+      our-story-paragraph:
+        PlatformOS was founded in 2014 by Adam Broadway in San
+        Francisco,
+      our-story-paragraph2:
+        I’ve been fortunate enough to be surrounded by truly breathtaking
+        tech talent living in San Francisco. This place is a melting pot full of diverse,
+        intelligent, and entrepreneurial innovators who continue to push how we engage
+        with the world we live in. The ideas, problem-solving, disruption and execution
+        of these ideas into real products, services and ecosystems has made Silicon
+        Valley the tech hub of the modern world.
+      our-team: Our team
+      our-team-subtitle: This is sample text of the webpage to emphasize design elements over content. It helps to outline the visual elements of a document, eg. typography, font, or layout. It's also called placeholder or filler text.
+      person1-name: Person one
+      person2-name: Person two
+      person3-name: Person three
+      person1-position: Position one
+      person2-position: Position two
+      person3-position: Position three
+      person1-description: This is sample text of the webpage to emphasize design elements over content. It helps to outline the visual elements of a document, eg. typography, font, or layout. It's also called placeholder or filler text.
+      person2-description: This is sample text of the webpage to emphasize design elements over content. It helps to outline the visual elements of a document, eg. typography, font, or layout. It's also called placeholder or filler text.
+      person3-description: This is sample text of the webpage to emphasize design elements over content. It helps to outline the visual elements of a document, eg. typography, font, or layout. It's also called placeholder or filler text.
+    terms:
+      terms-of-service: TERMS OF SERVICE
+      last-updated: These Terms of Service were last updated on %{updated_at}
+      content: |-
+        PlatformOS ("platformOS," "we," "us," and/or "our") provides its services (described below) to you through its mobile applications and other software made available by platformOS ("Software") and its website located at http://www.platformOS.com (the "Site") (collectively, such services, Software and the Site, collectively, the "Service(s)"), subject to the following Terms of Service (as amended from time to time, these "Terms of Service"). We reserve the right, at our sole discretion, to change or modify portions of these Terms of Service at any time without further notice. You should periodically visit this page to review the current Terms of Service so you are aware of any revision to which you are bound. If we do this, we will post the changes to these Terms of Service on this page and will indicate at the top of this page the date these terms were last revised. We will also notify you, either through the Services user interface, in an email notification or through other reasonable means. Any such changes will become effective for existing users no earlier than ten (10) days after they are posted, except that changes addressing new functions of the Services or changes made for legal reasons will be effective immediately. Your continued use of the Service after the date any such changes become effective constitutes your acceptance of the new Terms of Service. If you do not agree to abide by these or any future Terms of Service, do not use or access (or continue to use or access) the Service.
+
+        PLEASE READ THESE TERMS OF SERVICE CAREFULLY AS THEY CONTAIN AN AGREEMENT TO ARBITRATE AND OTHER IMPORTANT INFORMATION REGARDING YOUR LEGAL RIGHTS, REMEDIES AND OBLIGATIONS. THE AGREEMENT TO ARBITRATE REQUIRES (WITH LIMITED EXCEPTION) THAT YOU SUBMIT CLAIMS YOU HAVE AGAINST US TO BINDING AND FINAL ARBITRATION, AND FURTHER (1) YOU WILL ONLY BE PERMITTED TO PURSUE CLAIMS AGAINST COMPANY ON AN INDIVIDUAL BASIS, NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY CLASS OR REPRESENTATIVE ACTION OR PROCEEDING, AND (2) YOU WILL ONLY BE PERMITTED TO SEEK RELIEF (INCLUDING MONETARY, INJUNCTIVE, AND DECLARATORY RELIEF) ON AN INDIVIDUAL BASIS. PLEASE INDICATE YOUR ACCEPTANCE TO THESE TERMS OF SERVICE IN ACCORDANCE WITH THE INSTRUCTIONS PROVIDED BY platformOS. INDICATING ACCEPTANCE ESTABLISHES A BINDING AND EXECUTED WRITTEN AGREEMENT BETWEEN YOU AND platformOS. IF YOU DO NOT ACCEPT THESE TERMS OF SERVICE, YOU CANNOT USE THE SERVICE.
+
+        In addition, when using certain services, you shall be subject to any additional terms, policies or guidelines applicable to such services that may be posted on the Service from time to time, including, without limitation,
+
+        You agree that platformOS, in its sole discretion, may suspend or terminate your account (or any part thereof) or use of the Service and remove and discard any items or content within the Service, for any reason, including, without limitation, for lack of use or if pOS MARKETPLACE believes that you have violated or acted inconsistently with the letter or spirit of these Terms of Service. Any suspected fraudulent, abusive or illegal activity that may be grounds for termination of your use of Service, may be referred to appropriate law enforcement authorities. platformOS may also in its sole discretion and at any time discontinue providing the Service, or any part thereof, with or without notice. You agree that any termination of your access to the Service under any provision of these Terms of Service may be effected without prior notice, and acknowledge and agree that pOS MARKETPLACE may immediately deactivate or delete your account and all related information and files in your account and/or bar any further access to such files or the Service. Further, you agree that pOS MARKETPLACE shall not be liable to you or any third-party for any termination of your access to the Service.
+
+        ### User Disputes
+        You agree that you are solely responsible for your interactions (including any purchase and sale transactions) with any other user in connection with the Service and platformOS will have no liability or responsibility with respect thereto. platformOS reserves the right, but has no obligation, to become involved in any way with disputes between you and any other user of the Service.
+    contact-us:
+      attr:
+        city: City
+        country: Country
+        address: Address
+        postcode: Post code / ZIP (Optional)
+        phone-number: Phone number
+        contact-email: Contact email
+      contact-email: contact@example.com
+    faq:
+      attr:
+        section_title: Section title
+        question: Question
+        answer: Answer
+        add_section: Add new section
+        delete_section: Delete section
+        add_question: Add new question
+        delete_question: Delete question & answer

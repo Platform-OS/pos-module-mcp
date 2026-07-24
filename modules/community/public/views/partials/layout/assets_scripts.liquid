@@ -1,0 +1,20 @@
+<script src="{{ 'modules/community/js/app.js' | asset_url }}" defer></script>
+<script src="{{ 'modules/components/components.js' | asset_url }}" defer></script>
+{% if context.page.layout == 'admin' %}
+  <script src="{{ 'modules/community/js/admin.js' | asset_url }}" defer></script>
+{% endif %}
+<script src="{{ 'modules/community/scripts/hashtags.js' | asset_url }}" defer></script>
+
+<script>
+
+  (async() => {
+
+    {% comment %} embeding videos and social media content on feed {% endcomment %}
+    let postEmbed = document.querySelector('input[name="post[embeded_media]"');
+    if(postEmbed){
+        await import('{{ 'modules/community/js/feed/embed.js' | asset_url }}');
+    }
+  
+  })();
+
+</script>

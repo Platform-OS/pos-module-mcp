@@ -1,0 +1,54 @@
+{% liquid
+  assign members = members | default: params.members
+  assign owners = owners | default: params.owners
+  assign group = group | default: params.group
+  assign context = context | default: params.context
+  if owners.total_entries > 1
+    assign show_remove_admin = true
+    assign show_remove_group = true
+  endif
+%}
+
+{% render 'modules/community/migrated/groups/manage/header', group: group %}
+{% render 'modules/community/migrated/groups/manage/navigation', group: group %}
+
+
+<form action="" method="GET" class="pos-form pos-community-spaces-admin-filters">
+  <fieldset class="pos-form-fieldset-combined">
+    <input type="text" name="keyword" placeholder="{{ 'modules/community/quick_search.name' | t }}">
+    <button type="submit" class="pos-button">
+      <span class="pos-label">{{ 'modules/community/quick_search.name' | t }}</span>
+      {% render 'modules/common-styling/icon', icon: 'search', class: null %}
+    </button>
+  </fieldset>
+</form>
+
+
+<section class="pos-table pos-community-spaces-admin-table">
+  <header>
+    {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+    <div>{{ 'modules/community/groups.relationships.admins_count' | t: count: owners.total_entries }}</div>
+    {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+    <div class="pos-table-number">{{ 'modules/community/groups.relationships.l_accepted_at' | t }}</div>
+    <div></div>
+  </header>
+  <div class="pos-table-content pos-card">
+    {% render 'modules/community/migrated/groups/relationships_list', group: group, list: owners, show_remove_admin: show_remove_admin, show_remove_group: show_remove_group, current_profile: current_profile, show_make_admin: null %}
+  </div>
+</section>
+
+
+<section class="pos-table pos-community-spaces-admin-table">
+  <header>
+    {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+    <div>{{ 'modules/community/groups.relationships.members_count' | t: count: members.total_entries }}</div>
+    {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+    <div class="pos-table-number">{{ 'modules/community/groups.relationships.l_accepted_at' | t }}</div>
+    <div></div>
+  </header>
+  <div class="pos-table-content pos-card">
+    {% render 'modules/community/migrated/groups/relationships_list', group: group, list: members, show_make_admin: true, show_remove_group: true, current_profile: current_profile, show_remove_admin: null %}
+  </div>
+</section>
+
+{% render 'modules/common-styling/pagination', total_pages: members.total_pages %}

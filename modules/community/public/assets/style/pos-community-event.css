@@ -1,0 +1,197 @@
+/*
+  components related to events
+
+  
+  card
+  details header
+  members banner
+  event description and details
+*/
+
+
+
+/* card
+============================================================================ */
+.pos-community-event-card {
+  position: relative;
+}
+
+.pos-community-event-card-type {
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 2;
+  display: flex;
+  gap: .5em;
+
+  color: var(--pos-color-content-text-supplementary);
+}
+
+/* event type label */
+.pos-community-event-card-type svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+  .pos-community-event-card-type-local svg {
+    fill: var(--pos-color-confirmation);
+  }
+
+  .pos-community-event-card-type-local svg {
+    fill: var(--pos-color-confirmation);
+  }
+
+  .pos-community-event-card-type-online svg {
+    fill: var(--pos-color-interactive);
+  }
+
+/* event date */
+.pos-community-event-card time {
+  margin-block-end: calc(var(--pos-gap-card-elements) * -1);
+
+  color: var(--pos-color-content-text-supplementary);
+}
+
+/* event location */
+.pos-community-event-card address {
+  margin-block-start: var(--pos-gap-card-elements)
+}
+
+
+/* details header
+============================================================================ */
+@media (max-width: 900px) {
+  .pos-community-space-detail-header .pos-community-event-card-type {
+    align-self: start;
+    position: static;
+  }
+}
+
+
+.pos-community-space-detail-header-title a:not(.pos-button) {
+  color: inherit;
+}
+
+.pos-community-space-detail-header-title a:not(.pos-button):hover {
+  text-decoration: underline;
+}
+
+.pos-community-event-header-owner {
+  margin-block-end: .7rem;
+  font-size: .75rem;
+}
+
+.pos-community-event-header .pos-heading-2 {
+  margin-block-start: .15rem;
+}
+
+
+/* members banner
+============================================================================ */
+.pos-event-participants {
+  padding: var(--pos-padding-card);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-radius: 0 0 var(--pos-radius-panel) var(--pos-radius-panel);
+}
+
+.pos-event-participants-presence {
+  display: flex;
+}
+
+  .pos-event-participants-presence .pos-button:focus-visible {
+    position: relative;
+    z-index: 2;
+  }
+
+  .pos-event-participants-presence > :not(:first-child):not(:last-child) .pos-button {
+    border-radius: 0;
+    margin-inline: -1px;
+  }
+
+  .pos-event-participants-presence > :first-child .pos-button {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .pos-event-participants-presence > :last-child .pos-button {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+
+.pos-event-participants-button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: .5em;
+
+  font-size: .75rem;
+}
+
+  .pos-event-participants-button:hover {
+    color: var(--pos-color-interactive-hover);
+  }
+
+  .pos-event-participants-button:focus-visible {
+    outline: 2px solid var(--pos-color-focus);
+    outline-offset: 2px;
+    border-radius: var(--pos-radius-button);
+  }
+
+.pos-event-participants-avatars {
+  display: flex;
+}
+
+.pos-event-participants-avatars .pos-avatar {
+  border: 2px solid var(--pos-color-page-background);
+
+  scale: 1;
+
+  transition: scale .1s ease-in-out;
+}
+
+  .pos-event-participants-button:hover .pos-avatar,
+  .pos-event-participants-button:focus-visible .pos-avatar {
+    scale: 1.08;
+  }
+
+.pos-event-participants-avatars > *:not(:first-child) {
+  margin-inline-start: -.6rem;
+}
+
+
+/* event description and details
+============================================================================ */
+.pos-event-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pos-gap-card-card);
+}
+
+  @media (max-width: 1199px) {
+    .pos-event-details {
+      flex-direction: column;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .pos-event-details > .pos-card {
+      max-width: 50%;
+      flex-grow: 1;
+    }
+  }
+
+.pos-event-details-info li {
+  display: flex;
+  align-items: center;
+  gap: .5em;
+}
+
+  .pos-event-details-info svg {
+    width: 1rem;
+    height: 1rem;
+
+    fill: var(--pos-color-content-text-supplementary);
+  }

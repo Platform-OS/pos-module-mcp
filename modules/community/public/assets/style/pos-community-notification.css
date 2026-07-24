@@ -1,0 +1,61 @@
+/*
+  notifications
+
+  layout
+  empty state
+*/
+
+
+
+/* layout */
+/* ================================================================================ */
+.pos-community-notification {
+  padding: calc(var(--pos-padding-card) / 2);
+  display: grid;
+  grid-template-columns: min-content auto;
+  align-items: start;
+  gap: var(--pos-gap-section-elements);
+}
+
+  .pos-community-notification:not(:first-child) {
+    border-block-start: 1px solid var(--pos-color-frame);
+  }
+
+.pos-community-notification aside {
+  white-space: nowrap;
+
+  font-size: .75em;
+  color: var(--pos-color-content-text-supplementary);
+}
+
+  .pos-community-notification aside a {
+    color: inherit;
+  }
+
+
+.pos-community-header-notifications-title {
+  padding: calc(var(--pos-padding-card) / 2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-block-end: 1px solid var(--pos-color-frame);
+  background-color: var(--pos-color-highlight-background);
+
+  line-height: 1em;
+  text-box-trim: trim-both;
+  font-weight: 600;
+  color: var(--pos-color-highlight-text);
+}
+
+
+.pos-community-notification .pos-avatar {
+  margin-block-start: .2em;
+}
+
+
+/* empty state */
+/* ================================================================================ */
+.pos-community-notification-empty {
+  padding: calc(var(--pos-padding-card) / 2);
+}

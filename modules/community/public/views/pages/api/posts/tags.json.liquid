@@ -1,0 +1,6 @@
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  function tags = 'modules/community/queries/posts/tags', query: context.params.query, limit: 10
+
+  echo tags
+%}

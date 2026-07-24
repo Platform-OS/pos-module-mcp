@@ -1,0 +1,10 @@
+@import "./components/elements.css";
+@import "./components/select.css";
+@import "./components/checkbox.css";
+@import "./components/rating.css";
+@import "./components/accordion.css";
+@import "./components/toggle.css";
+@import "./components/tabs.css";
+
+@import "tailwindcss/utilities";
+

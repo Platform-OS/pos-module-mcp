@@ -1,0 +1,7 @@
+{% comment %}
+  Counts the created hashtags
+{% endcomment %}
+{% liquid
+  graphql count = 'modules/community/tags/count'
+  return count.tags.total_entries
+%}

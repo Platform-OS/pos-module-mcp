@@ -1,0 +1,16 @@
+---
+metadata:
+  name: Group join button
+  params:
+    group: {}
+---
+<form action="/groups/{{ group.id }}/join" method="post" data-tc="joinGroupForm">
+  <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token  }}">
+  <input type="hidden" name="return_to" value="/groups/{{ group.id }}">
+  <input type="hidden" name="notice_key" value="modules/community/groups.joined">
+
+  {% liquid
+    assign button_label = group.approve_request | t: scope: 'modules/community/groups.join_button'
+    theme_render_rc 'components/atoms/button', content: button_label, type: 'submit', size: 'small'
+  %}
+</form>

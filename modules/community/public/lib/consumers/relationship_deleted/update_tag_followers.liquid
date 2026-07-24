@@ -1,0 +1,16 @@
+{% liquid
+
+  if event.target.type == 'tag' or event.target.type == 'modules/community/tag'
+    assign tag_id = event.target.id
+    function followers = 'modules/community/queries/relationships/count', r_id: tag_id, name: 'followship:tag', l_id: null
+    assign followers_count = followers.total_entries
+    function tag = 'modules/community/queries/tags/find', id: tag_id
+    assign object = tag
+    hash_assign object['follower_count'] = followers_count
+
+    function res = 'modules/community/commands/tags/update', object: object
+    if res.valid != true
+      log res, type: 'ERROR: relationship_created/update_tag_followers'
+    endif
+  endif
+%}

@@ -1,0 +1,32 @@
+<div class="card-lg text-center">
+  <a href="/profile/{{ user.slug }}" class="inline-block">
+    {%- comment -%}platformos-check-disable MissingPartial{%- endcomment -%}
+    {% render 'components/atoms/avatar', profile: user, size: 192, class: 'w-24 md:w-48 h-24 md:h-48 mx-auto text-2xl md:text-4xl', alt: post.creator.name %}
+    {%- comment -%}platformos-check-enable MissingPartial{%- endcomment -%}
+  </a>
+
+  {% if follow_toggle != false %}
+    <div class="-mt-6 min-h-[2rem]">
+      {% theme_render_rc 'components/molecules/profile-follow-button', profile_id: current_profile.id %}
+    </div>
+  {% endif %}
+
+  <div class="mt-4">
+    <a href="/profile/{{ user.slug }}">
+      {% liquid
+        if user.first_name
+          assign name = user.first_name | append: ' ' | append: user.last_name
+        elsif user.name
+          assign name = user.name
+        else
+          assign name = user.slug
+        endif
+      %}
+
+      {{ name }}
+    </a>
+
+    {% if user.job_title != blank %}<div class="mt-2 sidenote">{{ user.job_title }}</div>{% endif %}
+    {% if user.employer != blank %}<div class="mt-0.5 sidenote">{% if user.job_title != blank %} <span class="text-content-sidenote">{{ 'modules/community/app.at' | t }}</span> {% endif %} {{ user.employer }}</div>{% endif %}
+  </div>
+</div>

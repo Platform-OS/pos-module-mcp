@@ -1,0 +1,31 @@
+query audience(
+  $id: ID
+  $limit: Int = 500
+  $profile_table: String!
+) {
+  profiles: records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: $profile_table }
+    }
+    sort: [{ created_at: { order: DESC } }]
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+
+      user_id: property(name: "user_id")
+      uuid: property(name: "uuid")
+      slug: property(name: "slug")
+      properties
+      relationships: related_records(table: "modules/community/relationship" join_on_property: "id" foreign_property: "r_id") {
+        r_id: property(name: "r_id")
+        l_id: property(name: "l_id")
+        name: property(name: "name")
+      }
+    }
+  }
+}

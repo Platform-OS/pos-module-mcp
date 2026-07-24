@@ -1,0 +1,17 @@
+---
+layout: modules/components/styleguide
+slug: styleguide/:component_id
+---
+{% liquid
+  function current_user = 'modules/user/queries/user/current'
+  include 'modules/user/helpers/can_do_or_unauthorized', requester: current_user, do: 'styleguide.view'
+
+  function component_groups = 'modules/components/lib/queries/components/get_all'
+  function component = 'modules/components/lib/queries/components/get', id: context.params.component_id
+  assign component = component.results.first
+%}
+{% content_for 'pagetitle' %}{{component.metadata.name}} - Component Library{% endcontent_for %}
+<div class="flex antialiased bg-gray-100">
+  {% render 'modules/components/_styleguide_components/sidebar', component_groups: component_groups %}
+  {% include 'modules/components/_styleguide_components/view', component: component, example_position: 'right' %}
+</div>

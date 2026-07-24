@@ -1,0 +1,25 @@
+{% doc %}
+  @param {number} limit
+  @param {number} [page]
+  @param {string} [sort]
+  @param {string} [keyword]
+  @param {string} [owner_id]
+  @param {string} [relation_name]
+  @param {string} [meta_visible]
+  @param {string} [not_name]
+  @param {string} [not_type]
+  @param {object} [not_ids]
+  @param {string} [ask_to_join]
+  @param {boolean} [with_owner]
+  @param {string} [id]
+  @param {boolean} [featured]
+  @param {object} [current_profile]
+{% enddoc %}
+{% liquid
+  assign page = page | to_positive_integer: 1
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r = 'modules/community/groups/search', limit: limit, page: page, sort: sort, keyword: keyword, owner_id: owner_id, relation_name: relation_name, meta_visible: meta_visible, not_name: not_name, not_type: not_type, not_ids: not_ids, ask_to_join: ask_to_join, with_owner: with_owner, profile_table: profile_table, id: id, featured: featured
+
+  function groups = 'modules/community/queries/groups/add_current_profile_role_info', groups: r.groups, current_profile: current_profile
+  return groups
+%}

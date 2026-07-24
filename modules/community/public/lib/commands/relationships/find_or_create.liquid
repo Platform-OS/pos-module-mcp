@@ -1,0 +1,13 @@
+{% liquid
+  function relation = 'modules/community/queries/relationships/find', name: object.name, l_id: object.l_id, r_id: object.r_id, include_related: null
+  if relation
+    return relation
+  endif
+
+  function relation = 'modules/community/commands/relationships/create', name: object.name, l_id: object.l_id, r_id: object.r_id, l_at: object.l_accepted_at, r_at: object.r_accepted_at, created_by_id: object.created_by_id
+  if relation.valid
+    hash_assign relation['created'] = true
+  endif
+
+  return relation
+%}

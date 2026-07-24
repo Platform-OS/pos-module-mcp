@@ -1,0 +1,12 @@
+<div class="p-2 md:w-1/2">
+  <div class="h-full pt-5 overflow-hidden bg-panel border rounded-lg shadow-sm">
+    {% theme_render_rc 'components/atoms/avatar', size: 96, profile: user, class: 'w-24 h-24 mx-auto text-2xl' %}
+    <div class="p-4">
+      <h2 class="mb-1 font-medium truncate">
+        <a href="/profile/{{user.slug}}">
+          {{ user.first_name }} {{ user.last_name  }}
+        </a>
+      </h2>
+    </div>
+  </div>
+</div>

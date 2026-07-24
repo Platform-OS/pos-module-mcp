@@ -1,0 +1,13 @@
+{% liquid
+  assign notified_ids = '[]' | parse_json | add_to_array: event.event_object.owner.profile.id
+
+  function audience = 'modules/community/commands/audience/build'
+  hash_assign audience['notifications']['profile'] = notified_ids
+
+  assign notification_title = 'modules/community/push_notifications.event_rejected.title' | t
+  assign notification_body = 'modules/community/push_notifications.event_rejected.body' | t: event: event.event_object.name
+  function url = 'modules/community/helpers/link_to_url', object: event.event_object, type: 'event', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  function publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+%}

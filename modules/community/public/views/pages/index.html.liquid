@@ -1,0 +1,23 @@
+---
+layout: 'modules/community/application'
+---
+
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/anonymous_or_redirect', profile: current_profile, return_to: '/dashboard', error: null
+  # platformos-check-enable DeprecatedTag
+%}
+
+{% assign groups = [{"title": "Support Team", "summary": "All about UX", "imgSrc": "https://picsum.photos/500/300?random=1", "variant": "default", "animation": false, "classes": "w-full", "readers": "1.2K", "comments": "600", "titleClasses": "text-interactive-text pb-2"}, {"title": "Partners", "summary": "All about UX", "imgSrc": "https://picsum.photos/500/300?random=2", "variant": "default", "animation": false, "classes": "w-full", "readers": "1.2K", "comments": "600", "titleClasses": "text-interactive-text pb-2"}, {"title": "Innovation center", "summary": "All about UX", "imgSrc": "https://picsum.photos/500/300?random=3", "variant": "default", "animation": false, "classes": "w-full", "readers": "1.2K", "comments": "600", "titleClasses": "text-interactive-text pb-2"}] %}
+
+{% assign topics = [{"title": "Ideas, suggestions", "readers": "1.2K", "comments": "6", "icon": "userCircle", "classes": "h-full flex flex-col"}, {"title": "Documentation", "readers": "1.2K", "comments": "6", "icon": "bookFlipPage", "classes": "h-full flex flex-col"}, {"title": "Support", "readers": "1.2K", "comments": "6", "icon": "instagram", "classes": "h-full flex flex-col"}, {"title": "Become a Partner", "readers": "1.2K", "comments": "6", "icon": "thumbUp", "classes": "h-full flex flex-col"}] %}
+
+{% assign posts = [{"title": "Title", "content": "This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...", "author": "Jane Doe"}, {"title": "Title", "content": "This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...", "author": "Jane Doe"}, {"title": "Title", "content": "This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...", "author": "Jane Doe"}] %}
+
+{% assign shields = [{"info_text1": "120k", "info_text2": "People", "classes": "w-full mr-2 mb-4 xs:mb-0"}, {"info_text1": "1,5k", "info_text2": "Groups", "icon": "multipleUsersNetwork", "classes": "w-full mr-2 mb-4 xs:mb-0"}, {"info_text1": "200", "info_text2": "Topics", "icon": "bookFlipPage", "classes": "w-full mr-2 mb-4 xs:mb-0"}, {"info_text1": "330k", "info_text2": "Questions", "icon": "questionCircle", "classes": "w-full mr-2 mb-4 xs:mb-0"}, {"info_text1": "560k Answers", "info_text2": "Tracking", "icon": "commentText", "classes": "w-full mr-2 mb-4 xs:mb-0"}] %}
+
+{% assign quicklinks = [{"title": "Explore", "text": "topics", "imgSrc": "modules/community/images/lines_horizontal.svg", "url": "/topics", "classes": "w-full mr-2 h-52 mb-4 xs:mb-0"}, {"title": "Join", "text": "your favourite groups", "imgSrc": "modules/community/images/lines_horizontal2.svg", "url": "/join", "classes": "w-full mr-2 h-52 mb-4 xs:mb-0"}, {"title": "Ask", "text": "questions", "imgSrc": "modules/community/images/lines_horizontal3.svg", "url": "/questions", "classes": "w-full mr-2 h-52 mb-4 xs:mb-0"}] %}
+
+{% theme_render_rc 'components/pages/home', posts: posts, groups: groups, topics: topics, shields: shields, quicklinks: quicklinks %}

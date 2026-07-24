@@ -1,0 +1,8 @@
+<form action="/groups/{{ group.id }}/leave" method="post">
+  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+  <input type="hidden" name="_method" value="delete">
+  <input type="hidden" name="return_to" value="/groups">
+  <input type="hidden" name="notice_key" value="modules/community/groups.rejected">
+
+  <button type="submit" class="pos-button">{{ 'modules/community/groups.reject' | t }}</button>
+</form>

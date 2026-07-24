@@ -1,0 +1,231 @@
+---
+metadata:
+  name: Create group
+  params:
+    context: {}
+    current_profile: {}
+    object: {}
+---
+{% liquid
+  assign context = context | default: params.context
+  assign current_profile = current_profile | default: params.current_profile
+  assign object = object | default: params.object | hash_merge: type: "group"
+
+  if object.id
+    assign method = 'put'
+    function form_url = 'modules/community/helpers/link_to', object: object
+  else
+    assign method = 'post'
+    assign form_url = '/groups'
+  endif
+  assign uuid = '' | uuid
+  assign group_uuid = object.uuid | default: uuid
+%}
+
+
+<div class="container">
+  <div class="w-full">
+    {% assign title = 'modules/community/groups.form.group_edit' | t %}
+    {% theme_render_rc 'components/atoms/heading', level: 3, content: title, classes: 'pb-4' %}
+    <p>
+      {{ 'modules/community/groups.form.group_edit_subtitle' | t }}
+    </p>
+  </div>
+</div>
+
+<div class="container mt-8 flex flex-wrap">
+  <form action="{{ form_url }}" method="post" class="w-full" data-photo-upload-base data-tc="group-form">
+  {% capture card_content %}
+
+    {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+    <input type="hidden" name="_method" value="{{ method }}">
+    {% if object.id %}
+      <input type="hidden" name="id" value="{{ object.id }}">
+      <input type="hidden" name="group[id]" value="{{ object.id }}">
+    {% endif %}
+    <input type="hidden" name="group[uuid]" value="{{ group_uuid }}">
+    {% if context.params.return_to %}
+      <input type="hidden" name="return_to" value="{{ context.params.return_to }}">
+    {% endif %}
+
+    <fieldset class="lg:w-1/2" x-data="charCounter()">
+      <label class="mb-1 cursor-pointer flex justify-between" for="name">
+        <div class="flex">
+          {{ 'modules/community/groups.form.name' | t }}
+          <span class="text-important pl-2">*</span>
+        </div>
+        <span><span x-text="charsLeft"></span> {{ 'modules/community/groups.form.chars' | t }}</span>
+      </label>
+
+      {% liquid
+        assign input_attrs = '{}' | parse_json
+        hash_assign input_attrs['autofocus'] = ''
+        hash_assign input_attrs['required'] = ''
+        hash_assign input_attrs['maxlength'] = 100
+        hash_assign input_attrs['x-ref'] = 'content'
+        hash_assign input_attrs['x-bind'] = 'input'
+        hash_assign input_attrs['id'] = 'name'
+
+        assign input_params = null | hash_merge: type: 'text', id: 'name', name: 'group[name]', value: object.name, attributes: input_attrs
+        assign label_params = null | hash_merge: content: label
+        assign validation = '{}' | parse_json
+        if object.errors['name']
+          hash_assign validation['passed'] = false
+          hash_assign validation['messages'] = object.errors['name']
+        endif
+
+        assign fieldset_params = null | hash_merge: label_params: label_params, input_params: input_params, description_params: description_params, validation: validation, classes: "mb-2"
+        theme_render_rc 'components/molecules/formfield', params: fieldset_params
+      %}
+    </fieldset>
+
+    <fieldset class="mt-6">
+      <label class="mb-1 cursor-pointer flex justify-between" for="summary">
+        <div class="flex">
+          {{ 'modules/community/groups.form.summary' | t }}
+          <span class="text-important pl-2">*</span>
+        </div>
+      </label>
+
+      {% liquid
+        assign input_attrs = null | hash_merge: style: 'overflow-wrap: anywhere;'
+        hash_assign input_attrs['autofocus'] = ''
+        hash_assign input_attrs['required'] = ''
+        hash_assign input_attrs['maxlength'] = '100'
+        hash_assign input_attrs['data-single-line'] = 'true'
+        hash_assign input_attrs['id'] = 'summary'
+
+        assign input_params = null | hash_merge: id: 'summary', name: 'group[summary]', value: object.summary, attributes: input_attrs, classes: 'w-full h-11'
+        assign label_params = null | hash_merge: content: label
+        assign validation = '{}' | parse_json
+        if object.errors['summary']
+          hash_assign validation['passed'] = false
+          hash_assign validation['messages'] = object.errors['summary']
+        endif
+        assign fieldset_params = null | hash_merge: label_params: label_params, input_params: input_params, description_params: description_params, validation: validation, classes: "mb-2"
+        theme_render_rc 'components/molecules/hashtag-textarea-field', params: fieldset_params
+      %}
+
+      <div class="flex">
+        {% theme_render_rc 'components/atoms/icon', name: 'info', class: 'w-4 mr-2' %}
+        {% liquid
+          assign message = 'modules/community/groups.form.summary_tip' | t
+          theme_render_rc 'components/atoms/sidenote', content: message
+        %}
+      </div>
+    </fieldset>
+
+    <fieldset class="mt-6">
+      <div class="mb-1">{{ 'modules/community/groups.form.photo' | t }}</div>
+      {% render 'modules/community/photos/uppy_area', class: null %}
+      {% liquid
+        assign message = 'modules/community/groups.form.photo_desc' | t
+        theme_render_rc 'components/atoms/sidenote', content: message
+      %}
+    </fieldset>
+
+    <hr>
+
+    {% liquid
+      assign input_attributes = null | hash_merge: rows: '5', id: 'description', style: 'overflow-wrap: anywhere;'
+      assign input_params = null | hash_merge: name: 'group[description]', required: true, type: 'textarea', value: object.description, attributes: input_attributes, classes: "w-full h-24"
+      assign label_content = 'modules/community/groups.form.description' | t
+      assign label_params = null | hash_merge: content: label_content
+      assign description_content = 'modules/community/groups.form.description_tip' | t
+      assign description_params = null | hash_merge: content: description_content
+      assign validation = '{}' | parse_json
+      if object.errors['description']
+        hash_assign validation['passed'] = false
+        hash_assign validation['messages'] = object.errors['description']
+      endif
+      assign fieldset_params =null | hash_merge: label_params: label_params, input_params: input_params, description_params: description_params, validation: validation, classes: "mb-6"
+
+      theme_render_rc 'components/molecules/hashtag-textarea-field', params: fieldset_params
+    %}
+
+
+    {% liquid
+      assign input_attributes = null | hash_merge: rows: '5', id: 'code_of_conduct'
+      assign input_params = null | hash_merge: name: 'group[code_of_conduct]', required: true, type: 'textarea', value: object.code_of_conduct, attributes: input_attributes, classes: "w-full"
+      assign label_content = 'modules/community/groups.form.code_of_conduct' | t
+      assign label_params = null | hash_merge: content: label_content
+      assign description_content = 'modules/community/groups.form.code_of_conduct_tip' | t
+      assign description_params = null | hash_merge: content: description_content
+      assign validation = '{}' | parse_json
+      if object.errors['code_of_conduct']
+        hash_assign validation['passed'] = false
+        hash_assign validation['messages'] = object.errors['code_of_conduct']
+      endif
+      assign fieldset_params =null | hash_merge: label_params: label_params, input_params: input_params, description_params: description_params, validation: validation, classes: "mb-6"
+      theme_render_rc 'components/molecules/formfield', params: fieldset_params
+    %}
+
+
+    <input type="hidden" id="group_content_type_post" name="group[content_types][]" value="post">
+
+  {% endcapture %}
+  {% theme_render_rc 'components/atoms/card', content: card_content, classes: 'mb-8' %}
+
+  <div class="container flex">
+      {% assign title = 'modules/community/groups.form.privacy' | t %}
+      {% theme_render_rc 'components/atoms/heading', level: 3, content: title, classes: 'pb-4' %}
+      <span class="text-important pl-2">*</span>
+  </div>
+
+  {% capture card_content %}
+    <fieldset class="bg-highlighted rounded-surface">
+      <ul class="p-4 flex flex-col md:grid grid-cols-3 !grid-cols-{{ context.group_templates.size }} gap-8 rounded bg-panel-highlight">
+        {% for gt in context.group_templates %}
+          <li class="flex gap-2 items-start">
+            {% liquid
+              assign group_type = gt[0]
+            %}
+            <input type="radio" name="group[group_type]" id="group[group_type][{{ group_type }}]" value="{{ group_type }}" {% if object.group_type == group_type %}checked{% endif %} required class="mt-1">
+            <div>
+              {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+              <label for="group[group_type][{{ group_type }}]" class="cursor-pointer">{{ 'modules/community/groups.types.' | append: group_type | t }}</label>
+              {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+              <div>
+              {% liquid
+                # platformos-check-disable TranslationKeyExists
+                assign message = 'modules/community/groups.types.' | append: group_type | append: '_desc' | t
+                # platformos-check-enable TranslationKeyExists
+                theme_render_rc 'components/atoms/sidenote', content: message
+              %}
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+
+  {% endcapture %}
+  {% theme_render_rc 'components/atoms/card', content: card_content, classes: 'mb-8' %}
+
+  {% liquid
+    if object.id
+      assign button_text = 'modules/community/groups.form.update' | t
+    else
+      assign button_text = 'modules/community/groups.form.submit' | t
+    endif
+    theme_render_rc 'components/atoms/button', type: 'submit' content: button_text
+  %}
+  </form>
+</div>
+
+{% liquid
+  assign photo = photos[0] | default: object.main_photo
+  assign photos = '[]' | parse_json
+  assign photos = photos | add_to_array: photo | compact
+%}
+{%- comment -%}platformos-check-disable LiquidHTMLSyntaxError{%- endcomment -%}
+{% render 'modules/community/photos/uppy_form',, object_id: null, disabled: null, editor_enabled: null
+  object_uuid: group_uuid,
+  presigned_url: context.presigned_url,
+  user_id: user.id,
+  photo_type: 'main',
+  note: 'Image up to 2MB',
+  max_number_of_files: 1,
+  existing_photos: photos
+%}
+{%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}

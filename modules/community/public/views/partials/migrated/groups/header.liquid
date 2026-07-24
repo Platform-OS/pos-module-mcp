@@ -1,0 +1,103 @@
+{% liquid
+  assign name = name | default: params.name
+  assign image_src = image_src | default: params.imageSrc
+  assign current_profile = current_profile | default: params.current_profile
+  assign group = group | default: params.group
+  assign classes = classes | default: params.classes
+  assign can_invite = can_invite | default: params.can_invite
+  assign can_edit = can_edit | default: params.can_edit
+  assign can_join = can_join | default: params.can_join
+  assign can_leave = can_leave | default: params.can_leave
+
+  if can_leave == true and group.member.pending_acceptance == true
+    assign can_leave = false
+  endif
+
+  if can_invite or can_edit or can_leave
+    assign show_dropdown_menu = true
+  endif
+
+  if can_join
+    assign show_join_button = true
+    assign show_dropdown_menu = false
+  endif
+%}
+
+
+<header class="pos-app pos-community-space-header pos-community-space-detail-header pos-increaseLegibility" {% if image_src %}style="background-image: url('{{ image_src }}')"{% endif %}>
+  
+  <div class="pos-community-space-detail-header-title">
+    <h2 class="pos-heading-2">{{ name }}</h2>
+    <span class="pos-tag pos-tag-interactive">
+      {% if group.member.pending_approval %}
+        {{ 'modules/community/groups.relationships.pending' | t }}
+      {% else %}
+        {% liquid
+          # platformos-check-disable TranslationKeyExists
+          assign types = 'modules/community/groups.types' | t
+          # platformos-check-enable TranslationKeyExists
+          assign type = types | dig: group.group_type
+        %}
+        {% render 'modules/common-styling/icon', icon: 'users', class: null %}
+        {{ type }} {{ 'modules/community/groups.group' | t | downcase }}
+      {% endif %}
+    </span>
+  </div>
+
+  <nav class="pos-community-space-detail-header-nav">
+
+    {% if show_join_button and group.member.pending_approval != true %}
+      {% render 'modules/community/migrated/groups/join_button', group: group, compact: null %}
+    {% endif %}
+
+    {% if group.member.pending_acceptance %}
+      {% theme_render_rc 'modules/community/migrated/groups/accept_button', group: group %}
+      {% theme_render_rc 'modules/community/migrated/groups/reject_button', group: group %}
+    {% endif %}
+
+    <a href="{% render 'modules/community/helpers/link_to', object: group %}/members" class="pos-button pos-button-primary">
+      {% render 'modules/common-styling/icon', icon: 'user', class: null %}
+      {{ group.c__members_count }}
+    </a>
+
+    {% if show_dropdown_menu %}
+    <div class="pos-popover">
+      <button popovertarget="pos-community-space-header-options" class="pos-button pos-button-primary">
+        {% render 'modules/common-styling/icon', icon: 'dots', class: null %}
+        <span class="pos-label">{{ 'modules/community/app.more_options' | t }}</span>
+      </button>
+      <menu popover id="pos-community-space-header-options">
+        {% if can_invite %}
+          <li>
+            {% capture label %}
+              {% render 'modules/common-styling/icon', icon: 'userAdd', class: null %}
+              {{ 'modules/community/groups.invite_new_member' | t }}
+            {% endcapture %}
+            {% render 'modules/community/migrated/groups/invite_button', group: group, can_invite: can_invite, label: label %}
+          </li>
+        {% endif %}
+        {% if can_leave %}
+          <li>
+            {% capture label %}
+              {% render 'modules/common-styling/icon', icon: 'leave', class: null %}
+              {{ 'modules/community/groups.leave' | t }}
+            {% endcapture %}
+            {% render 'modules/community/migrated/groups/leave_button', group: group, label: label %}
+          </li>
+        {% endif %}
+
+        {% if can_edit %}
+          <li>
+            <a href="/groups/{{ group.id }}/relationships">
+              {% render 'modules/common-styling/icon', icon: 'cog', class: null %}
+              {{ 'modules/community/groups.relationships.manage_group' | t }}
+            </a>
+          </li>
+        {% endif %}
+      </menu>
+    </div>
+    {% endif %}
+
+  </nav>
+
+</header>

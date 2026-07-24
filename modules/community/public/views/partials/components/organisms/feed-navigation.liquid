@@ -1,0 +1,105 @@
+---
+metadata:
+  name: Feed navigation
+  params:
+    tab: 'feed'
+    path: '/profile'
+    feed:
+      - public
+      - private
+    self:
+      - true
+      - false
+    context: {}
+    classes: ''
+  styleguide:
+    tab: 'feed'
+    path: '/profile'
+    context: {}
+---
+{% liquid
+  assign link_class = 'pos-clean text-normal hover:text-interactive-hover  '
+  assign active_class = 'relative font-bold text-interactive-text hover:text-interactive-hover border-t-2 border-red-400 bg-base px-4 pb-6 md:pb-10 pt-2  md:pt-8 '
+  assign list_class = ''
+  assign feed_url = path
+  if feed == 'private' or self
+    assign feed_url = 'feed'
+  endif
+  if self
+    assign groups_text = 'modules/community/profiles.nav.my_groups' | t
+    assign events_text = 'modules/community/profiles.nav.my_events' | t
+  else
+    assign groups_text = 'modules/community/profiles.nav.groups' | t
+    assign events_text = 'modules/community/profiles.nav.events' | t
+  endif
+%}
+
+
+
+{% capture card_content %}
+<nav x-data="{
+  scrollAmount: 125,
+  atStart: true,
+  atEnd: false,
+  updateScroll() {
+    this.atStart = $refs.feedContainer.scrollLeft <= 1;
+    this.atEnd = $refs.feedContainer.scrollLeft + $refs.feedContainer.clientWidth >= $refs.feedContainer.scrollWidth - 1;
+  }}" class="relative flex items-center" data-tc="feedNavigation">
+  <button
+    class="ps-2 pr-2 hide_nav_arrow text-alternative-text hover:text-interaction-disabled transition-colors sm:hidden"
+    @click="$refs.feedContainer.scrollLeft -= scrollAmount; setTimeout(() => updateScroll(), 100)"
+    :disabled="atStart"
+    aria-label="Scroll left">
+    <svg data-icon="dashLeft" viewBox="0 0 24 24" fill="#CB3D29" class=" fill-current w-4 h-4" >
+      <path d="M16.25 24a.743.743 0 01-.53-.22L5 13.06a1.488 1.488 0 01-.439-1.059c0-.4.155-.777.438-1.06L15.72.22c.141-.142.33-.22.53-.22s.389.078.53.22c.142.141.22.33.22.53s-.078.389-.22.53L6.06 12l10.72 10.72a.744.744 0 010 1.06.749.749 0 01-.53.22z"></path>
+    </svg>
+  </button>
+
+  <ul x-ref="feedContainer" class=" no-scrollbar flex flex-nowrap flex-row gap-3  items-center h-10 lg:whitespace-normal md:gap-6 sm:overflow-visible overflow-y-hidden whitespace-nowrap" >
+      <li class="{{list_class}} pl-2 sm:pl-6 {% if tab == 'feed' %} activity-feed_mobile_padding {% endif %}">
+      <a href="/{{feed_url}}feed#feed-navigation" class="{{link_class}} {% if tab == 'feed' %}{{ active_class }}{% endif %}">
+        {{ 'modules/community/profiles.nav.activity' | t }}
+      </a>
+    </li>
+    <li class="{{list_class}}">
+      <a href="/{{path}}groups#feed-navigation" class="{{link_class}} {% if tab == 'groups' %}{{ active_class }}{% endif %}">
+        {{ groups_text }}
+      </a>
+    </li>
+    <li class="{{list_class}}">
+      <a href="/{{path}}events#feed-navigation" class="{{link_class}} {% if tab == 'events' %}{{ active_class }}{% endif %}">
+        {{ events_text }}
+      </a>
+    </li>
+    <li class="{{list_class}}">
+      <a href="/{{path}}following#feed-navigation" class="{{link_class}} {% if tab == 'following' %}{{ active_class }}{% endif %}">
+        {{ 'modules/community/profiles.nav.following' | t }}
+      </a>
+    </li>
+    <li class="{{list_class}}">
+      <a href="/{{path}}followers#feed-navigation" class="{{link_class}} {% if tab == 'followers' %}{{ active_class }}{% endif %}">
+        {{ 'modules/community/profiles.nav.followers' | t }}
+      </a>
+    </li>
+    <li class="{{list_class}} pr-8 md:pr-0 ">
+      <a href="/{{path}}tags#feed-navigation" class="{{link_class}} {% if tab == 'tags' %}{{ active_class }}{% endif %}">
+        {{ 'modules/community/profiles.nav.tags' | t }}
+      </a>
+    </li>
+  </ul>
+
+  <button
+    class="pe-2 pl-2 text-alternative-text hover:text-interaction-disabled transition-colors sm:hidden"
+    @click="$refs.feedContainer.scrollLeft += scrollAmount; setTimeout(() => updateScroll(), 100)"
+    :disabled="atEnd"
+    aria-label="Scroll right">
+    <svg data-icon="dashRight" viewBox="0 0 24 24" fill="#CB3D29" class="fill-current w-4 h-4">
+      <path d="M5.499 24a.752.752 0 01-.53-1.281L15.689 12 4.969 1.28c-.142-.141-.22-.33-.22-.53s.078-.389.22-.53c.141-.142.33-.22.53-.22s.389.078.53.22l10.72 10.72a1.5 1.5 0 01.001 2.119L6.029 23.78a.743.743 0 01-.53.22z"></path>
+    </svg>
+  </button>
+</nav>
+{% endcapture %}
+
+<div class="{{ classes }}"  id="feed-navigation">
+  {% theme_render_rc 'components/atoms/nav_card', content: card_content, classes: 'bg-highlighted md:py-6 ' %}
+</div>

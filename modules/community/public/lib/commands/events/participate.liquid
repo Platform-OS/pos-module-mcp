@@ -1,0 +1,24 @@
+{% liquid
+  assign now = 'now' | to_time
+  function built_object = 'modules/community/commands/events/participate/build', profile: profile, object: object
+  function validated_object = 'modules/community/commands/events/participate/check', object: built_object
+  if validated_object.valid
+    function relation = 'modules/community/queries/relationships/find_by_name_prefix', l_id: profile.id, r_id: object.id, name: 'event:', include_related: false
+    assign old_relation_name = null
+
+    if relation
+      assign old_relation_name = relation.name
+      hash_assign relation['name'] = object.name
+      function new_relation = 'modules/community/commands/relationships/update', object: relation
+    else
+      function new_relation = 'modules/community/commands/relationships/create', name: object.name, l_id: profile.id, r_id: object.id, created_by_id: profile.id, l_at: now, r_at: now
+    endif
+
+    if new_relation.valid
+      assign event_payload = null | hash_merge: actor_id: profile.id, event_id: object.id, old_type: old_relation_name, new_type: object.name
+      function _ = 'modules/core/commands/events/publish', type: 'event_participation_declared', object: event_payload, delay: null, max_attempts: null
+    endif
+  endif
+
+  return validated_object
+%}

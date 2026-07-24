@@ -1,0 +1,43 @@
+{% comment %}
+
+  button that toggles user following
+
+  profile.id - (string) id of the profile to toggle the relationship with
+  show_label - (bool) if there should be text label shown (default: true)
+  show_icon - (bool) if there should be an icon visible (default: true)
+  small - (bool) if you want the small button version (default: false)
+
+{% endcomment %}
+
+
+{% liquid
+  if show_label == nil
+    assign show_label = true
+  endif
+  if show_icon == nil
+    assign show_icon = true
+  endif
+%}
+
+
+
+<form action="" id="pos-community-user{{ profile.id }}-relationship" class="pos-community-user-relationship">
+  <input type="hidden" name="r_id" value="{{ profile.id }}">
+  <input type="hidden" name="name" value="followship:profile">
+  <button type="submit" class="pos-button{% if small %} pos-button-small{% endif %} pos-button-primary pos-community-user-relationship-toggle-follow"{% unless show_label %} title="{{ 'modules/community/relationships.posts.follow' | t }}"{% endunless %}>
+    {% if show_icon %}
+      {% render 'modules/common-styling/icon', icon: 'userAdd', class: null %}
+    {% endif%}
+    <span class="pos-community-user-follow-toggle-button-label{% unless show_label %} pos-label{% endunless %}">
+      {{ 'modules/community/relationships.posts.follow' | t }}
+    </span>
+  </button>
+  <button type="submit" class="pos-button{% if small %} pos-button-small{% endif %} pos-community-user-relationship-toggle-unfollow"{% unless show_label %} title="{{ 'modules/community/relationships.posts.unfollow' | t }}"{% endunless %}>
+    {% if show_icon %}
+      {% render 'modules/common-styling/icon', icon: 'userRemove', class: null %}
+    {% endif %}
+    <span class="pos-community-user-follow-toggle-button-label{% unless show_label %} pos-label{% endunless %}">
+      {{ 'modules/community/relationships.posts.unfollow' | t }}
+    </span>
+  </button>
+</form>

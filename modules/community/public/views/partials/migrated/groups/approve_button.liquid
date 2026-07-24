@@ -1,0 +1,8 @@
+<form action="{% render 'modules/community/helpers/link_to', object: relation %}" method="post">
+  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+  <input type="hidden" name="_method" value="put">
+  <input type="hidden" name="return_to" value="{% render 'modules/community/helpers/link_to', object: group, action: 'relationships' %}">
+  <input type="hidden" name="notice_key" value="modules/community/groups.relationships.approved">
+
+  <button type="submit" class="pos-button">{{ 'modules/community/groups.relationships.accept' | t }}</button>
+</form>

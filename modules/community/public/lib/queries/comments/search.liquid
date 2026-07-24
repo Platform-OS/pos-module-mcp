@@ -1,0 +1,13 @@
+{% liquid
+  if commentable_uuid_exists == 'false'
+    assign commentable_uuid_exists = false
+  endif
+
+  function profile_table = 'modules/user/helpers/table_name'
+  graphql r = 'modules/community/comments/search', limit: limit, profile_table: profile_table
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/handle_graphql_response', r: r, name: 'queries/comments/search'
+  # platformos-check-enable DeprecatedTag
+
+  return r.comments
+%}

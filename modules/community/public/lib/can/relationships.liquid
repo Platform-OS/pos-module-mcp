@@ -1,0 +1,30 @@
+{% liquid
+  assign relationship = entity
+
+  case do
+
+  when 'delete'
+    if requester.id == relationship.l_id
+      return true
+    endif
+
+    assign owner = context.relationships.owner | detect: r_id: relationship.r_id, l_id: requester.id
+    if owner
+      return true
+    else
+      return false
+    endif
+
+  when 'create'
+    if relationship.name == 'wishlist' and requester.id == relationship.l_id
+      return true
+    endif
+
+    if relationship.name != 'wishlist'
+      return true
+    endif
+
+  else
+    return false
+  endcase
+%}

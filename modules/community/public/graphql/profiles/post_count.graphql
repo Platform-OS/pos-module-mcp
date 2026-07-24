@@ -1,0 +1,20 @@
+mutation profile_post_count(
+  $id: ID!
+  $post_count: Int!
+) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/user/profile"
+      properties: [
+        { name: "post_count", value_int: $post_count }
+      ]
+    }
+  ) {
+    id
+    created_at
+    type: table
+
+    post_count: property_int(name: "post_count")
+  }
+}

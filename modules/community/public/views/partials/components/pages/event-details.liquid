@@ -1,0 +1,172 @@
+---
+metadata:
+  name: Event Details
+  params:
+    event: {}
+    feed: []
+    participants: {}
+    current_profile: {}
+    context: {}
+---
+{% liquid
+  assign event = event | default: params.event
+  assign feed = feed | default: params.feed
+  assign participants = participants | default: params.participants
+  assign current_profile = current_profile | default: params.current_profile
+  assign context = context | default: params.context
+
+  assign participants_going = participants.going
+  assign participants_maybe = participants.maybe
+  assign participants_not_going = participants.not_going
+  assign participants = participants_going | concat: participants_maybe
+  assign participants_preview = participants | limit: 5
+  assign current_user_going = participants_going | detect: id: current_profile.id
+  assign current_user_maybe = participants_maybe | detect: id: current_profile.id
+  assign current_user_not_going = participants_not_going | detect: id: current_profile.id
+  function current_user_can_edit = 'modules/user/helpers/can_do', entity: event, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/events'
+
+  content_for 'meta_image'
+  print event.photo.photo.versions.lg
+  endcontent_for
+  content_for 'meta_description'
+  print event.name | append: ' - ' | append: event.short_description | truncate: 200
+  endcontent_for
+%}
+
+{% liquid
+  assign is_past = event.end_date | default: event.start_date | is_date_in_past
+  if is_past
+    render 'modules/common-styling/content/alert', type: 'info', content: '<p>This event is over. <a href="/events">Click here to browse upcoming events</a></p>'
+  endif
+  if event.status == 'pending'
+    render 'modules/common-styling/content/alert', type: 'warning', content: 'This event is pending approval'
+  elsif event.status == 'unpublished'
+    render 'modules/common-styling/content/alert', type: 'error', content: 'This event has been unpublished'
+  elsif event.status == 'cancelled'
+    render 'modules/common-styling/content/alert', type: 'error', content: 'This event has been cancelled'
+  endif
+%}
+
+{% comment %} header {% endcomment %}
+{% render 'modules/community/migrated/events/header', event: event, current_user_can_edit: current_user_can_edit, current_profile: null %}
+
+
+{% comment %} going/not going form {% endcomment %}
+<section class="pos-event-participants pos-community-space-filters">
+  <div class="pos-event-participants-presence">
+
+    <form action="/events/{{ event.id }}/participate" method="post">
+      <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+      <input type="hidden" name="type" value="event:going">
+      <input type="hidden" name="redirect_to" value="/events/{{ event.id }}">
+      <button type="submit" class="pos-button{% if current_user_going %} pos-button-primary{% endif %}">{{ 'modules/community/events.participation.going' | t }}</button>
+    </form>
+
+    <form action="/events/{{ event.id }}/participate" method="post">
+      <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+      <input type="hidden" name="type" value="event:maybe">
+      <input type="hidden" name="redirect_to" value="/events/{{ event.id }}">
+      <button type="submit" class="pos-button{% if current_user_maybe %} pos-button-primary{% endif %}">{{ 'modules/community/events.participation.maybe' | t }}</button>
+    </form>
+
+    <form action="/events/{{ event.id }}/participate" method="post">
+      <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+      <input type="hidden" name="type" value="event:not-going">
+      <input type="hidden" name="redirect_to" value="/events/{{ event.id }}">
+      <input type="hidden" name="notice_key" value="modules/community/events.left">
+      <button type="submit" class="pos-button{% if current_user_not_going %} pos-button-primary{% endif %}">{{ 'modules/community/events.participation.not_going' | t }}</button>
+    </form>
+
+  </div>
+
+  {% comment %} participants modal {% endcomment %}
+  <button data-dialogtarget="pos-event-participants-list" class="pos-event-participants-button">
+
+    {% if participants.size > 0 %}
+      <div class="pos-event-participants-avatars">
+        {% for participant in participants_preview %}
+          {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+          {% render 'modules/common-styling/user/avatar', size: 'sm', name: participant.name, params: null %}
+          {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+        {% endfor %}
+      </div>
+      <div>{{ 'modules/community/events.participation.see_list' | t }}</div>
+    {% endif %}
+    
+  </button>
+  
+  {% assign participants_popup_title = 'Participants (' | append: participants.size | append: ')' %}
+  {% capture popup_content %}
+    {% theme_render_rc 'components/organisms/participants-popup', participants: participants_going, maybe: participants_maybe , current_profile:current_profile %}
+  {% endcapture %}
+  {% render 'modules/common-styling/content/dialog', id: 'pos-event-participants-list', title: participants_popup_title, content: popup_content %}
+  
+</section>
+
+
+{% comment %} event description {% endcomment %}
+
+<section class="pos-event-details">
+
+  <div class="pos-card">{{ event.description | markdown }}</div>
+  <div class="pos-card pos-event-details-info">
+    <ul>
+      <li>
+        {% render 'modules/common-styling/icon', icon: 'location', class: null %}
+        {{ event.venue }}
+      </li>
+      {% if event.link %}
+        <li>
+          {% render 'modules/common-styling/icon', icon: 'globe', class: null %}
+          {{ event.link | markdown }}
+        </li>
+      {% endif %}
+    </ul>
+  </div>
+
+</section>
+
+
+
+
+
+
+
+
+
+  <section class="mt-8">
+    <div>
+      {% liquid
+        function can_post = "modules/community/can/events", requester: current_profile, do: 'post', entity: event
+
+        if can_post
+          render 'modules/community/migrated/post/form', id: 'pos-community-post-new', target_entity: event, author: current_profile
+        endif
+      %}
+    </div>
+    <section class="pos-app" id="pos-community-feed-posts">
+      {% if feed.total_entries > 0 %}
+        {% liquid
+          function can_post = 'modules/user/helpers/can_do', requester: current_profile, do: 'post', entity: event, access_callback: 'modules/community/can/events'
+
+          for activity in feed.results
+            theme_render_rc 'components/organisms/feed-entry', payload: activity.payload, current_profile: current_profile, namespace: namespace, context: context, can_comment: can_post
+          endfor
+
+          if feed.has_next_page
+            assign pager_url = '/events/' | append: event.id | append: '/frame'
+          endif
+        %}
+        {% if feed.has_next_page %}
+          <button
+            id="pos-community-load-feed-more"
+            class="pos-button"
+            data-load-content="{{ pager_url }}?page={{ page | default: 1 | plus: 1 }}"
+            data-load-where="last"
+            data-load-target="#pos-community-feed-posts"
+            disabled
+          >{{ 'modules/community/app.show_more' | t }}</button>
+        {% endif %}
+      {% endif %}
+    </section>
+  </section>

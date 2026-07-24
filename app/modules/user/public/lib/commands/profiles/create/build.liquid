@@ -1,0 +1,39 @@
+{% liquid
+  function tokenized_names = 'modules/community/commands/profiles/tokenize_names', object: object
+  assign uuid_new = '' | uuid
+  assign uuid = object.uuid | default: uuid_new
+  assign first_name = object.first_name | strip | replace: '  ', ' '
+  assign last_name = object.last_name | strip | replace: '  ', ' '
+  assign name = first_name | append: ' ' | append: last_name
+  assign timezone_name = object.timezone | split: '/' | last | replace: '_', ' '
+  assign post_count = object.post_count | default: 0 | plus: 0
+
+  if context.globals.time_zones.all.first != 'R'
+    function timezone = 'modules/core/helpers/timezone/get_by_name', name: timezone_name
+  endif
+  if object.roles == null
+    assign roles = '[]' | parse_json
+    if context.constants.USER_DEFAULT_ROLE != blank
+      assign roles = roles | array_add: context.constants.USER_DEFAULT_ROLE
+    endif
+  else
+    assign roles_type = object.roles | type_of
+    if roles_type == 'String'
+      assign roles = object.roles | split: ','
+    elsif roles_type == 'Array'
+      assign roles = object.roles
+    else
+      # accepts only String and Array
+      log object.roles, type: 'ERROR: roles must be an array or a coma separated string'
+      assign roles = '[]' | parse_json
+
+      if context.constants.USER_DEFAULT_ROLE != blank
+        assign roles = roles | array_add: context.constants.USER_DEFAULT_ROLE
+      endif
+    endif
+  endif
+
+  assign data = null | hash_merge: first_name: first_name, last_name: last_name, user_id: object.user_id, email: object.email, uuid: uuid, name: name, c__names: tokenized_names, timezone: timezone.name, post_count: post_count, roles: roles
+
+  return data
+%}

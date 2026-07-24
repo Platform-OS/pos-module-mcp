@@ -1,0 +1,55 @@
+---
+metadata:
+  name: Shield
+  params:
+    classes: ''
+    info_text1: ''
+    info_text2: ''
+    icon: ''
+  styleguide:
+    - info_text1: 120k
+      info_text2: People
+      classes: w-full mr-2
+    - info_text1: 1,5k
+      info_text2: Groups
+      icon: multipleUsersNetwork
+      classes: w-full mr-2
+    - info_text1: 200
+      info_text2: Topics
+      icon: bookFlipPage
+      classes: w-full mr-2
+    - info_text1: 330k
+      info_text2: Questions
+      icon: questionCircle
+      classes: w-full mr-2
+    - info_text1: 560k Answers
+      info_text2: Tracking
+      icon: commentText
+      classes: w-full mr-2
+---
+{% liquid
+  assign classes = classes | default: params.classes
+  assign info_text1 = info_text1 | default: params.info_text1
+  assign info_text2 = info_text2 | default: params.info_text2
+  assign icon = icon | default: params.icon
+
+  assign classes = 'pr-3 pl-6 flex items-center rounded shadow-card h-24 bg-panel ' | append: classes
+%}
+{% capture card_content %}
+  <div class="flex items-center align-center">
+  {% if icon != blank %}
+    <div class="pr-4">
+      {% theme_render_rc 'components/atoms/icon', name: icon, class: "w-7 h-7" %}
+    </div>
+  {% endif %}
+    <div>
+      <div>
+        {{info_text1}}
+      </div>
+      <div class="text-interactive-graphic font-bold">
+        {{info_text2}}
+      </div>
+    </div>
+  </div>
+{% endcapture %}
+{% theme_render_rc 'components/atoms/card', content: card_content, classes: classes %}

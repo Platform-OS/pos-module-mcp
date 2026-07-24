@@ -1,0 +1,41 @@
+<nav class="pos-community-navigation pos-app">
+  <menu>
+    <li>
+      <a href="/dashboard" data-pos-preload="hover"{% if context.location.href == '/dashboard' %} class="pos-community-navigation-active" {% endif %}>
+        {% render 'modules/common-styling/icon', icon: 'dashboard' %}
+        {{ 'modules/community/feed.dashboard' | t }}
+      </a>
+    </li>
+    <li>
+      <a href="/groups" data-pos-preload="hover"{% if context.location.href == '/groups' %} class="pos-community-navigation-active" {% endif %}>
+        {% render 'modules/common-styling/icon', icon: 'groups' %}
+        {{ 'modules/community/groups.my_groups' | t }}
+      </a>
+        {% if featured_groups.total_entries > 0 %}
+          <ul>
+            {% for group in featured_groups.results %}
+              <li>
+                {% function url = 'modules/community/helpers/link_to', object: group %}
+                <a href="{{ url }}" data-pos-preload="hover"{% if context.location.href == url %} class="pos-community-navigation-active" {% endif %}>
+                  {% render 'modules/common-styling/icon', icon: 'hierarchy' %}
+                  {{ group.name }}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+    </li>
+    <li>
+      <a href="/events" data-pos-preload="hover" {% if context.location.href == '/events' %} class="pos-community-navigation-active" {% endif %}>
+        {% render 'modules/common-styling/icon', icon: 'calendar' %}
+        {{ 'modules/community/events.events' | t }}
+      </a>
+    </li>
+    <li>
+      <a href="/profiles" data-pos-preload="hover" {% if context.location.href == '/profiles' %} class="pos-community-navigation-active" {% endif %}>
+        {% render 'modules/common-styling/icon', icon: 'users' %}
+        {{ 'modules/community/profiles.members' | t }}
+      </a>
+    </li>
+  </menu>
+</nav>

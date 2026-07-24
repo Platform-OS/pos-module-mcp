@@ -1,0 +1,61 @@
+---
+metadata:
+  name: Popup
+  params:
+    tag: "div"
+    popup_id: 'myPopup'
+    title: ''
+    content: ''
+    closed:
+      - false
+      - true
+    closeIcon:
+      - false
+      - true
+    closable:
+      - false
+      - true
+---
+{% liquid
+  assign popup_id = popup_id | default: params.popup_id | default: 'myPopup'
+  assign title = title | default: params.title | default: 'Popup title'
+  assign content = content | default: params.content | default: 'Sample content'
+  assign closed = closed | default: params.closed | default: true
+  assign closeIcon = closeIcon | default: params.closeIcon | default: true
+  assign closable = closable | default: params.closable | default: true
+  assign icon_params = null | hash_merge: name: 'x', class: 'w-5 h-5'
+
+%}
+{% capture popup_content %}
+<div class="hidden bg-inverted w-96 p-6"
+  data-closed="{{closed}}"
+  data-closable="{{closable}}"
+  data-popup-id="{{popup_id}}"
+  data-pos-component="popup"
+  tabindex="0"
+  aria-hidden="true"
+  role="popup"
+  aria-modal="true"
+  aria-labelledby="popup_title_{{popup_id}}">
+  <div class="flex justify-between">
+    {% assign headline_params = null | hash_merge: tag: 'h2', variant: 'h2', content: title %}
+    <div id="popup_title_{{popup_id}}">
+      {% theme_render_rc 'components/atoms/heading', params: headline_params %}
+    </div>
+    <div class="cursor-pointer" data-popup-open-id="{{popup_id}}">
+      {% if closeIcon == true and closable == true%}
+      {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+      {% endif %}
+    </div>
+  </div>
+  <hr>
+  <div>
+    {% print content %}
+  </div>
+</div>
+{% endcapture %}
+
+{% assign backdrop_params = null | hash_merge: content: popup_content, hidden: true, backdrop_id: popup_id %}
+{% theme_render_rc 'components/atoms/backdrop',
+    params: backdrop_params
+%}

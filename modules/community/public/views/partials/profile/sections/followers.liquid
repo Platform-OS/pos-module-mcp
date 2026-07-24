@@ -1,0 +1,15 @@
+<section>
+
+  <header class="mb-4 flex justify-between items-center">
+    <h2 class="title">{{ 'modules/community/profiles.nav.followers' | t }}</h2>
+  </header>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-4">
+    {% for record in list.results %}
+      {% render 'modules/community/profile/user_card', user: record.l, current_profile: current_profile, post: null, follow_toggle: null %}
+    {% else %}
+      {{ 'modules/community/app.no_followers_found' | t }}
+    {% endfor %}
+  </div>
+
+</section>

@@ -1,0 +1,10 @@
+{% liquid
+  function current_user_timezone = 'modules/core/helpers/timezone/get_by_name', name: current_profile.timezone
+%}
+<script>
+  api = {};
+  api.profile = {};
+  api.profile.id = {% if current_profile.id %} {{ current_profile.id }} {% else %} null {% endif %};
+  api.profile.timezone = {% if current_profile.timezone %} {{ current_user_timezone }} {% else %} null {% endif %};
+  api.lang = {% print context.language | downcase | json %};
+</script>

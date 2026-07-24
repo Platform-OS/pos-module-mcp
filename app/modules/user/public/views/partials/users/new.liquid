@@ -1,0 +1,93 @@
+<div class="community-user-form">
+
+  <section class="community-user-form-content-container">
+
+    <div class="community-user-form-content">
+
+      <a href="/" class="community-user-form-title">
+        <h1>
+          <span class="community-user-form-title-label">
+            {{ 'app.title' | t }}
+          </span>
+          {% render 'modules/community/migrated/layout/logo' %}
+        </h1>
+      </a>
+
+      <h1 class="pos-heading-2">
+        <small>{{ 'user.forms.register.welcome' | t }}</small>
+        {{ 'modules/user/users.new.create_account' | t }}
+      </h1>
+
+      <p class="community-user-form-intro">{{ 'user.forms.register.intro' | t }}</p>
+
+      <form action="/users" method="POST" class="pos-form pos-form-simple">
+        <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+        {% for field in registration_fields %}
+          <fieldset>
+            {% if field.label %}
+              <label for="pos-user-{{ field.name }}">{{ field.label }}</label>
+            {% endif %}
+            <input type="{{ field.type }}" name="{{ field.name }}" id="pos-user-{{ field.name }}" value="{{ values[field.name] }}" required placeholder="{{ field.placeholder }}"{% render 'modules/common-styling/forms/error_input_handler', name: field.name, errors: errors[field.name] %}>
+            {% render 'modules/common-styling/forms/error_list', name: field.name, errors: errors[field.name] %}
+          </fieldset>
+        {% endfor %}
+
+        <fieldset>
+          <label for="pos-user-first-name">First name</label>
+          <input type="text" name="first_name" id="pos-user-first-name" value="{{ values.first_name }}" required placeholder="first name" {% render 'modules/common-styling/forms/error_input_handler', name: 'first_name', errors: errors['first_name'] %}>
+          {% render 'modules/common-styling/forms/error_list', name: 'first_name', errors: errors['first_name'] %}
+        </fieldset>
+
+        <fieldset>
+          <label for="pos-user-last-name">Last name</label>
+          <input type="text" name="last_name" id="pos-user-last-name" value="{{ values.last_name }}" required placeholder="last name" {% render 'modules/common-styling/forms/error_input_handler', name: 'last_name', errors: errors['last_name'] %}>
+          {% render 'modules/common-styling/forms/error_list', name: 'last_name', errors: errors['last_name'] %}
+        </fieldset>
+
+        <fieldset>
+          <label for="pos-user-email">Email</label>
+          <input type="email" name="email" id="pos-user-email" value="{{ values.email }}" required placeholder="my@email.com" {% render 'modules/common-styling/forms/error_input_handler', name: 'email', errors: errors['email'] %}>
+          {% render 'modules/common-styling/forms/error_list', name: 'email', errors: errors['email'] %}
+        </fieldset>
+
+        <fieldset>
+          <label for="pos-user-password">Password</label>
+          <input type="password" name="password" id="pos-user-password" required placeholder="••••••••" {% render 'modules/common-styling/forms/error_input_handler', name: 'password', errors: errors['password'] %}>
+          {% render 'modules/common-styling/forms/error_list', name: 'password', errors: errors['password'] %}
+        </fieldset>
+
+        <fieldset>
+          <input type="checkbox" name="toc" id="community-user-toc" required {% render 'modules/common-styling/forms/error_input_handler', name: 'toc', errors: errors['toc'] %}>
+          <label for="community-user-toc">{{ 'user.forms.register.toc' | t }}</label>
+          {% render 'modules/common-styling/forms/error_list', name: 'toc', errors: errors['toc'] %}
+        </fieldset>
+
+        {% render 'modules/common-styling/forms/hcaptcha' %}
+
+        <fieldset>
+          <button type="submit" class="pos-button pos-button-primary">{{ 'modules/user/passwords.register' | t }}</button>
+        </fieldset>
+
+      </form>
+    
+      {% render 'modules/user/oauth/providers' %}
+
+    </div>
+
+    <footer class="community-user-form-footer">
+      {{ 'modules/user/users.new.already_have_account' | t }}
+    </footer>
+
+  </section>
+
+
+  <aside class="community-user-form-aside" style="--background: url('{{ 'image/community-user-form-background.avif' | asset_url }}'); --ornament: url('{{ 'image/community-user-form-ornament.avif' | asset_url }}');">
+    <h3 class="pos-heading-2">
+      <small>
+        {{ 'user.forms.register.cta.subtitle' | t }}
+      </small>
+      {{ 'user.forms.register.cta.title' | t }}
+    </h3>
+  </aside>
+
+</div>

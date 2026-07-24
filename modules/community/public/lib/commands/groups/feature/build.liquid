@@ -1,0 +1,8 @@
+{% liquid
+  if object.featured_at
+    hash_assign object['featured_at'] = null
+  else
+    hash_assign object['featured_at'] = 'now' | to_time | strftime: '%Y-%m-%dT%H:%M:%S.%L%z'
+  endif
+  return object
+%}

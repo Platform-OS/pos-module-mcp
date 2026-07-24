@@ -1,0 +1,10 @@
+{% liquid
+  assign now = 'now' | to_time
+  function relation = 'modules/community/commands/relationships/create', name: name, l_id: l_id, r_id: r_id, created_by_id: l_id, l_at: now, r_at: null
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/valid_object', contract: contract, object: relation, field_name: 'relationship'
+  # platformos-check-enable DeprecatedTag
+
+  return relation
+%}

@@ -1,0 +1,28 @@
+{% liquid
+  if object.id
+    assign method = 'put'
+  else
+    assign method = 'post'
+  endif
+%}
+<div class="container flex flex-wrap mx-auto groups-center">
+  <form action="/comments" method="post" class="w-full md:w-2/3">
+    {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+    <input type="hidden" name="_method" value="{{method}}" />
+    <input type="hidden" name="return_to" value="{{ context.params.return_to }}" />
+
+    {% if object.id %}
+      <input type="hidden" name="comment[id]" value="{{ object.id }}" />
+    {% endif %}
+
+    <div class="mt-5">
+      <label class="block" for="body">{{ 'modules/community/comments.form.body' | t }}</label>
+      <textarea name="comment[body]" class="w-full p-2 outline-none" rows="3" placeholder="{{ placeholder }}" autofocus required>{{object.body}}</textarea>
+      {% theme_render_rc 'components/atoms/sidenote', content_key: 'modules/community/comments.form.body_help' %}
+
+      {% render 'modules/community/field_error', errors: object.errors.body %}
+    </div>
+
+    <button class="mt-8 button">Submit</button>
+  </form>
+</div>

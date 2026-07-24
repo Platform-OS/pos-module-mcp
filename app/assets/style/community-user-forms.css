@@ -1,0 +1,156 @@
+/*
+  user forms for registering and login
+
+  layout
+  header
+  sidebar
+*/
+
+
+
+/* layout */
+/* ================================================================================ */
+.community-user-form {
+  width: 100vw;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  background-color: var(--pos-color-content-background);
+}
+
+  @media (max-width: 768px) {
+    .community-user-form {
+      grid-template-columns: 1fr;
+    }
+  }
+
+.community-user-form-content-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.community-user-form-content {
+  width: 100%;
+  max-width: 480px;
+  margin-block: auto;
+  padding: var(--pos-padding-card);
+
+  align-self: center;
+  justify-self: center;
+}
+
+
+/* header */
+/* ================================================================================ */
+.community-user-form-title {
+  width: 133px;
+  height: 30px;
+  display: inline-block;
+  margin-block-end: 4rem;
+}
+
+.community-user-form-title-label {
+  position: absolute;
+  left: -200vw;
+}
+
+.community-user-form-title svg {
+  width: 100%;
+  height: auto;
+}
+
+
+/* form */
+/* ================================================================================ */
+.community-user-form-content .pos-heading-2 small {
+  margin-block-end: -.3em;
+  display: block;
+
+  text-transform: uppercase;
+  font-size: .85rem;
+  color: var(--pos-color-content-text-supplementary);
+}
+
+.community-user-form-intro {
+  margin-block-start: calc(var(--pos-gap-text-text) / 2);
+
+  line-height: 1.4em;
+}
+
+.community-user-form .pos-form {
+  width: 100%;
+  margin-block-start: calc(var(--pos-gap-text-text) * 2);
+}
+
+.pos-user-social-login-separator {
+  margin-block: var(--pos-gap-text-text);
+  position: relative;
+
+  text-align: center;
+}
+
+  .pos-user-social-login-separator span {
+    padding-inline: .5em;
+    position: relative;
+    z-index: 1;
+
+    background-color: var(--pos-color-content-background);
+
+    font-size: .85em;
+  }
+
+  .pos-user-social-login-separator:after {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline: 0;
+
+    border-block-end: 1px solid var(--pos-color-frame);
+
+    content: '';
+  }
+
+
+/* footer */
+/* ================================================================================ */
+.community-user-form-footer {
+  margin-block-start: auto;
+  padding: var(--pos-padding-card);
+
+  background-color: var(--pos-color-page-background);
+  border-block-start: 1px solid var(--pos-color-frame);
+}
+
+
+/* sidebar */
+/* ================================================================================ */
+.community-user-form-aside {
+  padding: calc(var(--pos-padding-card) * 2);
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+
+  background-color: var(--pos-color-interactive);
+  background-image: var(--ornament), var(--background);
+  background-size: contain, cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.community-user-form-aside {
+  color: var(--pos-color-content-inverted-text);
+}
+
+  .community-user-form-aside .pos-heading-2 small {
+    display: block;
+    opacity: .7;
+
+    font-size: .75em;
+    font-weight: 200;
+  }
+
+  @media (max-width: 768px) {
+    .community-user-form-aside {
+      display: none;
+    }
+  }

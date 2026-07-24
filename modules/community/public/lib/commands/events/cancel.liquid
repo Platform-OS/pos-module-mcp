@@ -1,0 +1,10 @@
+{%  liquid
+  function object = 'modules/community/commands/events/cancel/build', object: object
+  function object = 'modules/community/commands/events/cancel/check', object: object
+
+  if object.valid
+    function object = 'modules/core/commands/execute', object: object, mutation_name: 'modules/community/events/update', selection: 'record'
+  endif
+
+  return object
+%}

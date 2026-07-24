@@ -1,0 +1,46 @@
+{%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+<header class="pagetitle -mt-10">
+  <h1>
+    {{ 'modules/community/static-pages.faq.title' | t: default: 'Configure FAQ Title' }}
+  </h1>
+</header>
+
+<section class="container mx-auto">
+  <h2 class="title text-center md:max-w-96">
+    {{'modules/community/static-pages.faq.subtitle' | t: default: 'Configure FAQ subtitle' }}
+  </h2>
+
+  <div class="flex flex-wrap lg:w-4/5 sm:mx-auto sm:mb-2 mt-10">
+    {% assign sections = 'modules/community/static-pages.faq.questions' | t: default: '' %}
+    {% for section_item in sections %}
+      {% assign section = section_item[1] %}
+      <div class="w-full lg:w-1/2 px-4 py-2">
+        <h3 class="subtitle !mb-2">
+          {{ section.title }}
+        </h3>
+        {% for item in section.questions %}
+          {% assign value = item[1] %}
+          <div class="mb-5 card" x-data="{ open: false }">
+            <p class="cursor-pointer font-semibold flex" @click="open = !open">
+              <span class="me-2 mt-1">
+                <span x-show="open === false">
+                  {% theme_render_rc 'components/atoms/icon', name: 'dashRight' %}
+                </span>
+                <span x-show="open === true">
+                  {% theme_render_rc 'components/atoms/icon', name: 'dashDown' %}
+                </span>
+              </span>
+
+              {{ value.question }}
+            </p>
+
+            <div class="prose px-6 mt-3" x-show.transition.in.origin.top.center="open === true">
+              {{ value.answer | markdown }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}

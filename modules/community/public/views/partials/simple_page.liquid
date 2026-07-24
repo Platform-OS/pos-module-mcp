@@ -1,0 +1,18 @@
+{%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+<header class="pagetitle -mt-10">
+  <h1>
+    {{ 'modules/community/static-pages.' | append: page.slug | append: '.title' | t: default: 'Configure title' }}
+  </h1>
+</header>
+
+<div class="container text-center">
+  {% if render_update_text and page.updated_at %}
+    {% assign updated_at = page.updated_at | l: 'compact' %}
+    <p class="mb-8 text-sm">{{ 'modules/community/static-pages.' | append: page.slug | append: '.last-updated' | t: updated_at: updated_at }}</p>
+  {% endif %}
+
+  <div class="prose mx-auto text-left">
+    {{ 'modules/community/static-pages.' | append: page.slug | append: '.content' | t: default: 'Configure content' | markdown }}
+  </div>
+</div>
+{%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}

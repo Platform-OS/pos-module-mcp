@@ -1,0 +1,85 @@
+{% doc %}
+  @param {array} mentioned_ids - unique profile ids extracted from a post/comment body, actor already excluded
+  @param {string} actor_id - id of the profile who wrote the post/comment
+  @param {string} container_type - 'group' or 'event'
+  @param {string} container_id - id of the group or event the content belongs to
+  @param {boolean} exclude_container_members - whether group/event members already get a notification elsewhere for this content
+  @param {string} actor_followers_mode - 'if_public', 'always' or 'never' - whether the actor's followers already get a notification elsewhere
+  @param {array} extra_exclude_ids - additional profile ids already notified elsewhere (e.g. post followers/author)
+{% enddoc %}
+
+
+{% liquid
+  if mentioned_ids == blank or mentioned_ids.size == 0
+    return '[]' | parse_json
+  endif
+
+  if exclude_container_members == null
+    assign exclude_container_members = true
+  endif
+  assign actor_followers_mode = actor_followers_mode | default: 'if_public'
+  assign empty_array = '[]' | parse_json
+  assign extra_exclude_ids = extra_exclude_ids | default: empty_array
+
+  assign is_public = false
+  assign members = empty_array
+  assign owners = empty_array
+
+  case container_type
+    when 'group'
+      function container = 'modules/community/queries/groups/find', id: container_id, current_profile: null
+      if container
+        if container.content_visible == 'anonymous'
+          assign is_public = true
+        endif
+        function container_audience = 'modules/community/queries/activities/groups/audience', id: container_id
+        assign members = container_audience.members | default: empty_array
+        assign owners = container_audience.owners | default: empty_array
+      endif
+    when 'event'
+      function container = 'modules/community/queries/events/find', id: container_id, current_profile: null
+      if container
+        if container.status == 'published'
+          assign is_public = true
+        endif
+        function container_audience = 'modules/community/queries/activities/events/audience', id: container_id
+        assign members = container_audience.members | default: empty_array
+        assign owners = container_audience.owners | default: empty_array
+      endif
+    else
+      log container_type, type: 'ERROR: modules/community/commands/mentions/resolve_recipients unknown container_type'
+      return empty_array
+  endcase
+
+  assign exclude_actor_followers = false
+  case actor_followers_mode
+    when 'always'
+      assign exclude_actor_followers = true
+    when 'if_public'
+      assign exclude_actor_followers = is_public
+  endcase
+
+  assign excluded_ids = '[]' | parse_json | concat: extra_exclude_ids
+  if exclude_container_members
+    assign excluded_ids = excluded_ids | concat: members
+  endif
+  if exclude_actor_followers
+    function actor_audience = 'modules/community/queries/activities/users/audience', id: actor_id
+    assign excluded_ids = excluded_ids | concat: actor_audience.followers
+  endif
+
+  assign recipients = '[]' | parse_json
+  for mentioned_id in mentioned_ids
+    assign can_see = is_public
+    if members contains mentioned_id or owners contains mentioned_id
+      assign can_see = true
+    endif
+    if can_see
+      assign recipients = recipients | add_to_array: mentioned_id
+    endif
+  endfor
+
+  assign recipients = recipients | subtract_array: excluded_ids
+
+  return recipients
+%}

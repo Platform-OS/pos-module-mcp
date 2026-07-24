@@ -1,0 +1,32 @@
+---
+slug: profile
+method: put
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile, allow_uncompleted: true
+  # platformos-check-enable DeprecatedTag
+
+  function object = 'modules/user/commands/profiles/update', object: context.params, profile: current_profile
+  if object.valid
+    function user_object = 'modules/user/commands/user/update', id: current_profile.user_id, email: context.params.email, hook_params: null, password: null
+    if user_object.valid
+      assign event_payload = null | hash_merge: actor_id: current_profile.id, profile_id: current_profile.id
+      function _ = 'modules/core/commands/events/publish', type: 'profile_updated', object: event_payload, delay: 0, max_attempts: null
+      function slug = 'modules/user/helpers/profiles/slugs/build', profile: object, current_profile: null
+      assign redirect_url ="/profile/" | append: slug
+      # platformos-check-disable DeprecatedTag
+      include 'modules/community/helpers/redirect_to', url:redirect_url , notice: 'Profile information updated successfully'
+      # platformos-check-enable DeprecatedTag
+    else
+      log user_object, type: 'ERROR: user_object'
+    endif
+  else
+    function _ = 'modules/community/helpers/extend_context', group: null
+
+    function fields = 'modules/community/queries/profiles/profile_fields'
+    theme_render_rc 'components/organisms/profile-form', object: object, context: context, profile_fields: fields, current_profile: current_profile
+  endif
+%}

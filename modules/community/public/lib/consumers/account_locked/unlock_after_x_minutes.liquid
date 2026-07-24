@@ -1,0 +1,8 @@
+{% background delay: event.attempts.lock_time, profile_id: event.profile_id, default_login_attempts: event.attempts.default_login_attempts %}
+  {% liquid
+    function profile = 'modules/user/queries/profiles/find', id: profile_id, uuid: null, user_id: null, first_name: null, last_name: null
+    function reset = 'modules/community/commands/users/reset_login_attempts', object: profile.user, default_login_attempts: default_login_attempts
+    assign event_payload = {"profile_id": profile.id}
+    function _ = 'modules/core/commands/events/publish', type: 'account_unlocked', object: event_payload, delay: 0, max_attempts: null
+  %}
+{% endbackground %}

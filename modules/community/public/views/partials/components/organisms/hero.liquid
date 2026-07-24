@@ -1,0 +1,26 @@
+---
+metadata:
+  name: Hero
+---
+<section class="relative flex flex-wrap items-end text-inverted bg-colorful flex-column bg-cover" style="background-image: url({{ 'modules/community/images/hero.jpg' | asset_url }})">
+  <img src="{{ 'modules/community/images/hero.jpg' | asset_url }}" width="1200" height="384" alt="" class="hidden">
+  <div class="container z-10 w-full py-16 md:py-32">
+    {% liquid
+      assign heading = null | hash_merge: content: 'Hero title', level: 1, classes: 'uppercase pb-3'
+      theme_render_rc 'components/atoms/heading', params: heading
+    %}
+
+    <p class="text-xl font-normal">
+      Subtitle or description lorem ispum dolor sit amet
+    </p>
+
+    <p class="flex gap-3">
+      {% liquid
+        assign login = null | hash_merge: weight: 'primary', href: '/sessions/new', content: 'Log in'
+        assign register = null | hash_merge: weight: 'secondary', variant: 'inverted', href: '/users/new', content: 'Register'
+        theme_render_rc 'components/atoms/button', params: login
+        theme_render_rc 'components/atoms/button', params: register
+      %}
+    </p>
+  </div>
+</section>

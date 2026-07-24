@@ -1,0 +1,8 @@
+{% liquid
+  graphql r = 'modules/community/relationships/models/find', id: id
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/handle_graphql_response', r: r, name: 'queries/relationships/models/find'
+  # platformos-check-enable DeprecatedTag
+
+  return r.records
+%}

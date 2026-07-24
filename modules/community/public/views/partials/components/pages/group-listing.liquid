@@ -1,0 +1,51 @@
+---
+metadata:
+  name: Group listing page
+  params:
+    list: []
+    filters: []
+---
+<section
+  class="pos-app"
+  x-data='{ selectedTags: [], showTags: false, showFeatured: true, totalEntries: 0, totalPages: 0, currentPage: 0, ...frames() }'
+>
+
+  <header class="pos-community-space-header">
+    <h2 class="pos-heading-2">{{ 'modules/community/groups.list' | t }}</h2>
+  </header>
+
+  <nav class="pos-community-space-filters">
+    <form action="/groups" method="GET" id="groups-list" x-ref="form">
+      <input type="hidden" name="page" x-bind:value="currentPage+1" value="{{ filters.page }}" x-ref="page">
+      <fieldset>
+        <input type="search" name="keyword" placeholder="{{ 'modules/community/groups.filters.search' | t }}" value="{{ filters.keyword }}" class="pos-form-input" x-on:keyup.debounce="currentPage = 0; totalPages = 0; $nextTick(() => replace({target: 'list'})); showFeatured = false;">
+      </fieldset>
+      <fieldset>
+        <select name="sort_by" id="filter_sort" value="created_at_desc" class="pos-form-select" x-on:change="currentPage = 0; totalPages = 0; $nextTick(() => replace({target: 'list'})); showFeatured = false;">
+          <option value="created_at_desc">{{ 'modules/community/groups.filters.time_desc' | t }}</option>
+          <option value="created_at_asc">{{ 'modules/community/groups.filters.time_asc' | t }}</option>
+        </select>
+      </fieldset>
+    </form>
+    <a href="/groups/new" class="pos-button">
+      {% render 'modules/common-styling/icon', icon: 'plus', class: null %}
+      {{ 'modules/community/groups.new_group' | t }}
+    </a>
+  </nav>
+
+</section>
+
+
+
+<div>
+  {% if context.params.tags != blank %}
+    <div class="container pt-6">
+      Showing tag: {{ context.params.tags | join: ', ' }}
+      <a href="/groups" class="text-xs pl-4">Clear filter</a>
+    </div>
+  {% endif %}
+
+  <div x-frames-target="list">
+    {% theme_render_rc 'components/organisms/group-list', list: list, filters: filters %}
+  </div>
+</div>

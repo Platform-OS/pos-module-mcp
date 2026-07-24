@@ -1,0 +1,25 @@
+---
+slug: events/:id/edit
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign event_id = context.params.id | split: '-' | last
+  function event = 'modules/community/queries/events/find', id: event_id, with_owner: true, current_profile: current_profile
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: event, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/events', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  function _ = 'modules/community/helpers/extend_context', tags: true, photo_presign: true, group: null
+
+  function cover = 'modules/community/queries/photos/search', object_uuid: event.uuid, limit: 1, photo_type: null
+  hash_assign event['cover'] = cover.results
+
+  theme_render_rc 'components/pages/event-edit', object: event, current_profile: current_profile
+%}

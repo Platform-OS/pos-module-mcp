@@ -1,0 +1,89 @@
+{%- comment -%}platformos-check-disable TranslationKeyExists,MissingAsset{%- endcomment -%}
+<h1 class="pagetitle">{{ 'modules/community/static-pages.about-us.pagetitle' | t }}</h1>
+
+<article class="container mt-14">
+
+  <div class="prose p-8 pb-0">
+    {{ 'modules/community/static-pages.about-us.intro' | t | markdown }}
+  </div>
+
+  <div class="card-lg mt-20">
+    <div class="prose !max-w-full">
+      {{ 'modules/community/static-pages.about-us.content' | t | markdown }}
+    </div>
+    <div class="mt-8 p-8 rounded bg-interaction text-content-inverted text-center font-bold">
+      <div class="text-2xl">{{ 'modules/community/static-pages.about-us.highlight.part-1' | t }}</div>
+      <div class="text-3xl">{{ 'modules/community/static-pages.about-us.highlight.part-2' | t }}</div>
+    </div>
+  </div>
+</article>
+
+<section class="mt-16 -mb-16 py-12 bg-panel-highlight">
+  <div class="container">
+    <h2 class="bigtitle !mb-12 text-center">{{ 'modules/community/static-pages.about-us.sectors.title' | t }}</h2>
+  </div>
+  <ul class="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 sidenote uppercase tracking-wider">
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-energy.png' | asset_url }}" width="35" height="40" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.energy' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-water.png' | asset_url }}" width="34 " height="41" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.water' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-mobility.png' | asset_url }}" width="40" height="40" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.mobility' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-biotech.png' | asset_url }}" width="27" height="50" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.biotech' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-food.png' | asset_url }}" width="24" height="40" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.food' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-manufacturing.png' | asset_url }}" width="40" height="40" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.manufacturing' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-media.png' | asset_url }}" width="35" height="40" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.media' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-entertainment.png' | asset_url }}" width="46" height="29" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.entertainment' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-tourism.png' | asset_url }}" width="52" height="36" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.tourism' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-sport.png' | asset_url }}" width="47" height="45" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.sport' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-design.png' | asset_url }}" width="44" height="54" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.design' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-services.png' | asset_url }}" width="41" height="48" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.services' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-health.png' | asset_url }}" width="49" height="39" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.health' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-education.png' | asset_url }}" width="61" height="40" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.education' | t }}
+    </li>
+    <li class="card !px-8 !rounded-lg flex items-center gap-6">
+      <img src="{{ 'images/icon-technology.png' | asset_url }}" width="33" height="45" alt="">
+      {{ 'modules/community/static-pages.about-us.sectors.technology' | t }}
+    </li>
+
+  </ul>
+</section>
+{%- comment -%}platformos-check-enable TranslationKeyExists,MissingAsset{%- endcomment -%}

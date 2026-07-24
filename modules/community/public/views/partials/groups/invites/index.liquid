@@ -1,0 +1,28 @@
+{% render 'modules/community/groups/header_manage', group: group %}
+
+<div class="container flex flex-col md:flex-row gap-6">
+
+  {%- comment -%}platformos-check-disable MissingPartial{%- endcomment -%}
+  {% render 'modules/community/groups/nav', tab: tab, group: group, current_profile: current_profile %}
+  {%- comment -%}platformos-check-enable MissingPartial{%- endcomment -%}
+
+  <section>
+    <div class="bigtitle">{{ 'modules/community/groups.invites.index.header' | t }}</div>
+    <div class="prose">{{ 'modules/community/groups.invites.index.summary' | t | markdown }}</div>
+
+    {% assign skip_profile_ids = group.relationships | select: name: 'membership' | map: 'l_id' | join: ',' %}
+    <div x-data="invites()" x-init="skip_profile_ids = {{ skip_profile_ids | json }}" class="mt-8">
+      {% render 'modules/community/invites/widget', submitted: null %}
+      <form action="{% render 'modules/community/helpers/link_to', object: group, action: 'invites' %}" method="post">
+        {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+        <input name="email_list" type="hidden" :value="emailList()">
+        <div class="mt-6">
+          <button class="button">{{ 'modules/community/groups.invites.index.send' | t  }}</button>
+          <a href="{% render 'modules/community/helpers/link_to', object: group %}" class="button button-secondary">{{ 'modules/community/groups.invites.index.cancel' | t  }}</a>
+        </div>
+      </form>
+    </div> <!-- endof invites() -->
+
+  </section>
+
+</div>

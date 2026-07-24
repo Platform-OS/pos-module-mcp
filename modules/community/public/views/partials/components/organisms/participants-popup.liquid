@@ -1,0 +1,115 @@
+---
+metadata:
+  name: Participants popup
+  params:
+    participants: []
+    maybe: []
+
+---
+{% liquid
+  assign participants = participants | default: params.participants
+  assign maybe = maybe | default: params.maybe
+
+%}
+
+See who’s participating on this event. You might find familiar faces to connect with.
+
+{% capture participants_content %}
+<div class="">
+  {% for participant in participants %}
+ {% liquid
+     function url = 'modules/community/helpers/link_to', object: participant, type: 'profile'
+     assign my_profile = false
+     if current_profile.id != participant.id
+        assign allow_to_follow = true
+     else
+        assign my_profile = true
+        assign allow_to_follow = false
+     endif
+%}
+
+    <div class="flex justify-between mb-2">
+      <div class="flex justify-between" >
+        <div class="mr-2">
+          {% theme_render_rc 'components/atoms/avatar', size: 'l', name: participant.name, imageSrc: participant.avatar.photo.versions.m, classes: '-ml-2 border border-inverted' %}
+        </div>
+        <div>
+          <div class="font-bold break-all "><a href="{{ url }}">{{ participant.name }}</a></div>
+          <div class="text-xs">{{ participant.job_title }}</div>
+        </div></div>
+      <div>
+        {% liquid
+        if my_profile
+          assign see_profile = 'modules/community/profiles.see_profile' | t
+          theme_render_rc 'components/atoms/button', content: see_profile, weight: 'secondary', href: url, size: 'small'
+        elsif allow_to_follow
+          theme_render_rc 'modules/community/components/molecules/profile-follow-button', profile_id: participant.id, size: 'small' , no_text :true , classes: "w-7 !p-0" , gap: "gap-1 block", params: null, no_icon: null
+
+        endif
+        %}
+  </div>
+    </div>
+  {% endfor %}
+</div>
+{% endcapture %}
+
+{% capture maybe_content %}
+  <div class="">
+    {% for participant in maybe %}
+    {% liquid
+        function url = 'modules/community/helpers/link_to', object: participant, type: 'profile'
+        assign my_profile = false
+        if current_profile.id != participant.id
+          assign allow_to_follow = true
+        else
+         assign my_profile = true
+         assign allow_to_follow = false
+        endif
+     %}
+    <div class="flex justify-between mb-2">
+      <div class="flex justify-between" >
+         <div class="mr-2">
+          {% theme_render_rc 'components/atoms/avatar', size: 'l', name: participant.name, imageSrc: participant.avatar.photo.versions.m, classes: '-ml-2 border border-inverted' %}
+        </div>
+        <div>
+          <div class="font-bold break-all"><a href="{{ url }}">{{ participant.name }}</a></div>
+          <div class="text-xs">{{ participant.job_title }}</div>
+        </div>
+      </div>
+      <div>
+        {% liquid
+        if my_profile
+          assign see_profile = 'modules/community/profiles.see_profile' | t
+          theme_render_rc 'components/atoms/button', content: see_profile, weight: 'secondary', href: url, size: 'small'
+        elsif allow_to_follow
+          theme_render_rc 'modules/community/components/molecules/profile-follow-button', profile_id: participant.id, size: 'small' , no_text :true , classes: " w-7 !p-0" , gap: "gap-1 block", params: null, no_icon: null
+        endif
+        %}
+      </div>
+    </div>
+  {% endfor %}
+  </div>
+  {% endcapture %}
+
+{% liquid
+  assign tabs = []
+  if participants.size > 0
+    assign tab_title = "Going (" | append: participants.size | append: ")"
+    assign tab_content = participants_content
+    assign tab = {"title": tab_title, "content": tab_content}
+    assign tabs << tab
+  endif
+  if maybe.size > 0
+    assign maybe_title = "Maybe (" | append: maybe.size | append: ")"
+    assign maybe_tab_content = maybe_content
+    assign maybe_tab = {"title": maybe_title, "content": maybe_tab_content}
+    assign tabs << maybe_tab
+  endif
+%}
+<div class="pb-9">
+  {% theme_render_rc 'components/atoms/tabs', id: 'participants-tab', tabs: tabs %}
+</div>
+
+
+
+

@@ -1,0 +1,104 @@
+{%- comment -%}
+  pos-module-mcp — resolved module configuration (spec §17.1).
+
+  Layer-1 defaults live here so the engine is inert-but-armed with sane values on
+  install. An app overrides any key via an instance constant `MCP_CONFIG` holding
+  a JSON object (merged shallowly over these defaults) — so operators tune limits
+  without forking the module. Read once per request; callers should assign it and
+  reuse rather than re-invoking.
+
+  @return {object} the effective config: protocol_version, server_{name,version},
+                   endpoint_path, defaults{timeout_ms,max_input_bytes,
+                   max_schema_depth,rate_limit_per_min}, ledger{retention_days}.
+{%- endcomment -%}
+{% liquid
+  assign c = '{}' | parse_json
+  # MCP protocol revision this server implements (pinned — spec §13.1/§18.7).
+  hash_assign c['protocol_version'] = '2025-06-18'
+  # Server display name — reported as serverInfo.name on `initialize` AND used as
+  # the suggested `claude mcp add <name>` client alias on /mcp-tools. Override per
+  # instance via MCP_CONFIG {"server_name":"acme-community"} to brand the server.
+  hash_assign c['server_name'] = 'pos-module-mcp'
+  hash_assign c['server_version'] = '0.1.0'
+  hash_assign c['endpoint_path'] = '/mcp'
+  # App-provided registry partial (Layer-2 tool declarations, spec §8.2). An app
+  # partial at app/views/partials/mcp/registry.liquid returning [{manifest},...].
+  hash_assign c['registry_partial'] = 'mcp/registry'
+  # App-provided authorization policy partials (spec §12.2). A tool's named policy
+  # resolves to <policy_prefix>/<name> = app/views/partials/mcp/policies/<name>.liquid.
+  hash_assign c['policy_prefix'] = 'mcp/policies'
+  # App-provided connection instructions partial — the house rules / persona sent
+  # to the agent on `initialize`. app/views/partials/mcp/instructions.liquid
+  # returning a string. Falls back to a built-in default when absent.
+  hash_assign c['instructions_partial'] = 'mcp/instructions'
+  # App-provided prompt registry (§13.1 prompts). app/views/partials/mcp/prompts.liquid
+  # returning [{name, description, arguments, template}]. Empty/absent = no prompts.
+  hash_assign c['prompts_partial'] = 'mcp/prompts'
+
+  assign d = '{}' | parse_json
+  hash_assign d['timeout_ms'] = 5000
+  hash_assign d['max_input_bytes'] = 65536
+  hash_assign d['max_schema_depth'] = 5
+  hash_assign d['rate_limit_per_min'] = 60
+  # Idempotency replay window (§16.3): how long a client key can replay its result.
+  hash_assign d['idempotency_window_seconds'] = 86400
+  # Approval window (§9.6): how long a pending approval can be acted on before it expires.
+  hash_assign d['approval_window_seconds'] = 604800
+  # Approval-queue guard (§9.6): max NON-EXPIRED pending approvals a single principal
+  # may hold at once. Bounds operator-queue depth so an agent cannot flood the
+  # human-in-the-loop gate with garbage and bury legitimate proposals. Identical
+  # proposals (same input_sha256) are additionally deduplicated. 0 disables the cap.
+  hash_assign d['approval_max_pending_per_principal'] = 3
+  # Abuse auto-suspend: if a principal accrues this many policy violations (denials,
+  # rate-limits, invalid/unknown-tool attempts) within the window, its current token
+  # is auto-suspended. A real control, not a message. 0 disables.
+  hash_assign d['abuse_threshold'] = 20
+  hash_assign d['abuse_window_seconds'] = 300
+  hash_assign c['defaults'] = d
+
+  assign l = '{}' | parse_json
+  hash_assign l['retention_days'] = 730
+  hash_assign c['ledger'] = l
+
+  # Zero-config .md resources (spec §3.2, §17.1). OFF by default — an operator
+  # turns it on via MCP_CONFIG and names the slug prefixes to expose (allowlist),
+  # so no page is agent-readable unless explicitly opted in.
+  assign r = '{}' | parse_json
+  hash_assign r['expose_markdown_pages'] = false
+  assign default_prefixes = '["docs"]' | parse_json
+  hash_assign r['markdown_page_prefixes'] = default_prefixes
+  hash_assign c['resources'] = r
+
+  # OAuth resource-server metadata (spec §9.5, RFC 9728). v1 authenticates
+  # instance-issued tokens bound to a real user (backlog/decision-2), so no JWT
+  # signing keys are needed here. `issuer`, when set via the MCP_OAUTH_ISSUER
+  # constant, is advertised in the well-known doc as the authorization server for
+  # a future external-AS/JWT strategy; empty by default.
+  assign o = '{}' | parse_json
+  hash_assign o['issuer'] = context.constants.MCP_OAUTH_ISSUER | default: ''
+  hash_assign o['audience'] = context.constants.MCP_OAUTH_AUDIENCE | default: c.server_name
+  hash_assign c['oauth'] = o
+  # The OAuth resource identifier this instance defends (RFC 9728) = the /mcp URL.
+  hash_assign c['resource_identifier'] = 'https://' | append: context.location.host | append: c.endpoint_path
+
+  # Override from the MCP_CONFIG constant, when present and valid JSON. hash_merge
+  # is shallow, so merge the nested `defaults` object explicitly before the
+  # top-level merge — otherwise overriding one limit would drop the others.
+  assign raw = context.constants.MCP_CONFIG | default: ''
+  if raw != blank
+    assign override = raw | parse_json
+    unless override == blank
+      unless override.defaults == blank
+        assign merged_defaults = c.defaults | hash_merge: override.defaults
+        hash_assign override['defaults'] = merged_defaults
+      endunless
+      unless override.resources == blank
+        assign merged_resources = c.resources | hash_merge: override.resources
+        hash_assign override['resources'] = merged_resources
+      endunless
+      assign c = c | hash_merge: override
+    endunless
+  endif
+
+  return c
+%}

@@ -1,0 +1,5 @@
+{% assign object = {"uuid": object.uuid, "creator_id": current_profile.id, "commentable_uuid": object.commentable_uuid, "target_activity_uuid": object.target_activity_uuid, "body": object.body, "title": object.title} %}
+
+{% liquid
+  return object
+%}

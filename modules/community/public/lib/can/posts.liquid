@@ -1,0 +1,45 @@
+{% liquid
+  assign can = false
+  assign post = entity
+  if post == blank
+    return false
+  endif
+
+  function can_manage_all = 'modules/user/helpers/can_do', requester: requester, do: 'posts.manage.all', entity: null, access_callback: null
+
+  if can_manage_all
+    return true
+  endif
+
+  assign creator_id = post.creator_id
+  assign relation = requester.relationships['followship:profile'] | detect: r_id: creator_id
+
+  if relation
+    assign is_following = true
+  else
+    assign is_following = false
+  endif
+
+  if creator_id == requester.id
+    assign owner = true
+  else
+    assign owner = false
+  endif
+
+  case do
+  when 'edit'
+    return owner
+  when 'delete'
+    return owner
+  when 'reply'
+    return true
+  when 'post'
+    if owner
+      return true
+    else
+      return is_following
+    endif
+  endcase
+
+  return can
+%}

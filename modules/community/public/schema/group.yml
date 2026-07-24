@@ -1,0 +1,39 @@
+name: group
+properties:
+  - name: uuid
+  - name: name
+  - name: summary
+  - name: description
+  - name: code_of_conduct
+  - name: content_type
+  - name: content_types
+    type: array
+
+
+# Predefined type of group [public, moderated, private, secret, custom]
+  - name: group_type
+
+# Can users ask to join a group [yes, no]
+  - name: ask_to_join
+
+# Permissions
+# Minimum role required to perform an action
+# [anonymous, member, moderator, admin]
+  - name: meta_visible
+  - name: content_visible
+  - name: approve_request
+  - name: post_content
+  - name: add_comments
+  - name: invite_member
+
+# Cache
+  - name: c__members_count
+    type: integer
+  - name: c__full_members_count
+    type: integer
+  - name: c__posts_count
+    type: integer
+
+# Featured groups
+  - name: featured_at
+    type: datetime

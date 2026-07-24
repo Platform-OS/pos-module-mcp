@@ -1,0 +1,14 @@
+{% liquid
+  function list = 'modules/community/queries/relationships/search_by_right', limit: 100, name: 'membership', r_id: event.group_id, l_id: null, not_l_id: null, accepted: null, include_related: null, approved: null
+  assign membership_ids = list.results | map: 'l_id'
+
+  function audience = 'modules/community/commands/audience/build'
+  hash_assign audience['notifications']['profile'] = membership_ids
+
+  assign notification_title = 'modules/community/push_notifications.group_deleted.title' | t
+  assign notification_body = 'modules/community/push_notifications.group_deleted.body' | t: group: event.target_name
+  assign url = 'https://' | append: context.location.host | append: '/groups'
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  function publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+%}

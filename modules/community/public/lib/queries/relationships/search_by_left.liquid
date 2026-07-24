@@ -1,0 +1,14 @@
+{% liquid
+  if l_id == blank
+    log 'Something went wrong. Left-ID cannot be blank.', type: 'ERROR: relationships/search_by_left'
+    return null
+  endif
+
+  assign limit = limit | default: 100 | plus: 0
+  assign pagef = pagef | default: 1 | plus: 0
+
+  assign relation_tables = '["modules/community/group", "modules/community/post", "modules/community/event", "modules/community/tag", "modules/user/profile"]' | parse_json
+  graphql r = 'modules/community/relationships/search', limit: limit, page: pagef, name: name, l_id: l_id, r_id: r_id, include_related: include_related, relation_tables: relation_tables
+
+  return r.records
+%}

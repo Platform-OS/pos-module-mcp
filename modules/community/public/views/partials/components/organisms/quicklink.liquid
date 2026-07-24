@@ -1,0 +1,57 @@
+---
+metadata:
+  name: Quick link
+  params:
+    title: ''
+    text: ''
+    imgSrc: ''
+    classes: ''
+    url: ''
+  styleguide:
+    - title: Explore
+      text: topics
+      imgSrc: modules/community/images/lines_horizontal.svg
+      url: /topics
+      classes: w-1/3 mr-2 h-52
+    - title: Join
+      text: your favourite groups
+      imgSrc: modules/community/images/lines_horizontal2.svg
+      url: /join
+      classes: w-1/3 mr-2 h-52
+    - title: Ask
+      text: questions
+      imgSrc: modules/community/images/lines_horizontal3.svg
+      url: /questions
+      classes: w-1/3 mr-2 h-52
+---
+
+{% liquid
+assign title = title | default: params.title
+assign text = text | default: params.text
+assign url = url | default: params.url
+assign img_src = img_src | default: params.imgSrc
+assign classes = classes | default: params.classes
+
+assign classes = classes | append: ' overflow-hidden p-0 '
+%}
+
+{% capture card_content %}
+  <div class="relative bg-colorful h-full flex flex-col justify-between p-4">
+      <div class="absolute top-0 left-0 w-full h-full bg-no-repeat bg-cover"
+        style="background-image: url({{ img_src | asset_url }})">
+      </div>
+      <div class="p-6">
+        {% if title != blank %}
+        {% theme_render_rc 'components/atoms/heading', content: title, classes: 'text-inverted', level: 2 %}
+        {% endif %}
+        <div class="pb-4 pt-2 text-inverted font-bold">{{text}}</div>
+      </div>
+      {% theme_render_rc 'components/molecules/iconbutton',
+        icon: "dashRight",
+        weight: "primary",
+        href: url,
+        classes: "z-10 p-4 ml-auto"
+      %}
+  </div>
+{% endcapture %}
+{% theme_render_rc 'components/atoms/card', content: card_content, classes: classes %}

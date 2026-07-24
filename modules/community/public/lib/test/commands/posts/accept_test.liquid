@@ -1,0 +1,23 @@
+{% assign profile = {"id": "5"} %}
+
+{% liquid
+  assign params = '{"title": "ooo oo", "body":"foo ooo ooo ooo", "uuid": "12345", "group_id": "2137", "entity_type":"group", "content_type": "post"  }' | parse_json
+  function post = 'modules/community/commands/posts/create', object: params, current_profile: profile
+  function pc = 'modules/tests/assertions/valid_object', contract: contract, object: post, field_name: 'post'
+  assign params = '{}' | parse_json
+  hash_assign params['id'] = post.id
+  hash_assign params['accepted_post_id'] = post.id
+
+  function object = 'modules/community/commands/posts/accept', object: params, current_profile: profile, post: post
+
+  function contract = 'modules/tests/assertions/valid_object', contract: contract, object: object, field_name: 'id'
+  function contract = 'modules/tests/assertions/presence', contract: contract, object: object, field_name: 'accepted_post_id'
+%}
+
+{% liquid
+  assign post = object
+  function object = 'modules/community/commands/posts/accept', object: params, current_profile: profile, post: post
+
+  function contract = 'modules/tests/assertions/valid_object', contract: contract, object: object, field_name: 'id'
+  function contract = 'modules/tests/assertions/not_presence', contract: contract, object: object, field_name: 'accepted_post_id'
+%}

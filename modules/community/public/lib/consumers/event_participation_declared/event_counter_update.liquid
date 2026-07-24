@@ -1,0 +1,35 @@
+{% liquid
+    assign going = 0
+    assign maybe = 0
+    assign not_going = 0
+
+    case event.old_type
+        when 'event:going'
+            assign going = -1
+        when 'event:maybe'
+            assign maybe = -1
+        when 'event:not-going'
+            assign not_going = -1
+    endcase
+
+    case event.new_type
+        when 'event:going'
+            assign going = 1
+        when 'event:maybe'
+            assign maybe = 1
+        when 'event:not-going'
+            assign not_going = 1
+    endcase
+
+    assign object = '{}' | parse_json
+    hash_assign object['id'] = event.event_id
+    hash_assign object['going'] = going
+    hash_assign object['maybe'] = maybe
+    hash_assign object['not_going'] = not_going
+
+    function res = 'modules/community/commands/events/update_count_cache', object: object
+    if res.valid != true
+      log res, type: 'ERROR: events/update_count_cache'
+    endif
+%}
+  

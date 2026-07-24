@@ -1,0 +1,34 @@
+<label for="group[{{ name }}]" class="flex flex-wrap mb-3">
+
+  <span class="w-full">{{ name | t: scope: 'modules/community/groups.explanation' }}</span>
+
+  <select name="group[{{ name }}]" id="group[{{ name }}]" class="pt-1 pb-1 ps-1 text-sm">
+    <option
+      {% if group[name] == name %}selected{% endif %}
+      x-bind:selected="templates[group_type].{{ name }} == 'anon'"
+      value="anon">
+      Anonymous
+    </option>
+
+    <option
+      {% if group[name] == name %}selected{% endif %}
+      x-bind:selected="templates[group_type].{{ name }} == 'member'"
+      value="member">
+      Member
+    </option>
+<!--
+    <option
+      {% if group[name] == name %}selected{% endif %}
+      x-bind:selected="templates[group_type].{{ name }} == 'moderator'"
+      value="moderator">
+      Moderator
+    </option>
+
+    <option
+      {% if group[name] == name %}selected{% endif %}
+      x-bind:selected="templates[group_type].{{ name }} == 'admin'"
+      value="admin">
+      Admin
+    </option> -->
+  </select>
+</label>

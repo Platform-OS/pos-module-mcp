@@ -1,0 +1,4 @@
+{% liquid
+  graphql r  = 'modules/community/groups/main', name: 'main'
+  return r.groups.results.first
+%}

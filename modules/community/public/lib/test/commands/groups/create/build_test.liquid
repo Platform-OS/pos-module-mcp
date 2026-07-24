@@ -1,0 +1,7 @@
+{% liquid
+  assign object = null | hash_merge: name:" test "
+  function new_group = 'modules/community/commands/groups/create/build', object: object
+  # platformos-check-disable DeprecatedTag
+  include 'modules/tests/assertions/equal', contract: contract, field_name: 'name', given: new_group.name, expected: "test"
+  # platformos-check-enable DeprecatedTag
+%}

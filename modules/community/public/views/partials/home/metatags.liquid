@@ -1,0 +1,10 @@
+<title>{{ 'modules/community/app.title' | t }} - {{ 'modules/community/static-pages.home.title' | t | strip_html }}</title>
+<meta property="og:title" content="{{ 'modules/community/app.title' | t }}" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ context.location.url }}" />
+{%- comment -%}platformos-check-disable MissingAsset{%- endcomment -%}
+<meta property="og:image" content="{{ 'images/logo.png' | asset_url }}" />
+{%- comment -%}platformos-check-enable MissingAsset{%- endcomment -%}
+<meta property="og:locale" content="{{ lang }}" />
+<meta property="og:description" content="{{ 'modules/community/static-pages.home.title' | t | strip_html }}" />
+<meta name="description" content="{{ 'modules/community/static-pages.home.title' | t | strip_html }}">

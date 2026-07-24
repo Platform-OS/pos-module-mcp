@@ -1,0 +1,20 @@
+---
+metadata:
+  name: Group accept button
+  params:
+    group: {}
+    profile: {}
+---
+<form action="/groups/{{group.id}}/leave" method="post">
+  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+  <input type="hidden" name="_method" value="delete" />
+  <input type="hidden" name="return_to" value="/groups" />
+  <input type="hidden" name="notice_key" value="modules/community/groups.rejected" />
+
+  {% liquid
+    # assign button_label = 'modules/community/groups.reject' | t
+    assign button_label = 'Reject invite'
+
+    theme_render_rc 'components/atoms/button', content: button_label, type: 'submit', weight: 'secondary'
+  %}
+</form>

@@ -1,0 +1,28 @@
+{% liquid
+  unless relation
+    return
+  endunless
+
+  function actor = 'modules/user/queries/profiles/find', id: relation.l_id, uuid: null, user_id: null, first_name: null, last_name: null
+
+  unless actor
+    return
+  endunless
+
+  case relation.name
+  when 'membership'
+    if relation.created
+      if relation.r_accepted_at == blank and relation.l_accepted_at
+        assign event_payload = null | hash_merge: actor_id: actor.id, group_id: relation.r_id
+        function _ = 'modules/core/commands/events/publish', type: 'user_asked_to_join_group', object: event_payload, delay: 0, max_attempts: null
+      endif
+    endif
+  when 'followship:profile'
+    if relation.created
+      assign event_payload = null | hash_merge: actor_id: actor.id, followed_profile_id: relation.r_id, relation_id: relation.id
+      function _ = 'modules/core/commands/events/publish', type: 'user_followed_user', object: event_payload, delay: 0, max_attempts: null
+    endif
+  endcase
+
+  return _event
+%}

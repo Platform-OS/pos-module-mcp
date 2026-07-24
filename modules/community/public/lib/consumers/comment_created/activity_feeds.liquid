@@ -1,0 +1,48 @@
+{% liquid
+  assign notification_skip_profiles = '[]' | parse_json | add_to_array: event.actor.id
+
+  function audience = 'modules/community/commands/audience/build'
+  function actor = 'modules/community/queries/activities/users/audience', id: event.actor.id
+  hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: actor.followers
+
+  function comment = 'modules/community/queries/activities/comments/audience', id: event.object.id
+
+  assign url = null
+
+  case event.target.type
+
+  when 'group'
+    function group = 'modules/community/queries/activities/groups/audience', id: event.target.id
+    hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: group.members
+    function url = 'modules/community/helpers/link_to_url', object: event.target, type: 'group', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+
+  when 'post'
+    function post = 'modules/community/queries/activities/posts/audience', id: event.target.id
+    hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: post.followers
+    hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | concat: post.author
+
+    if event.object.target_activity_uuid
+      function activities = 'modules/community/queries/activities/one', uuid: event.object.target_activity_uuid
+      assign activity = activities.results.first.payload
+      if activity
+        hash_assign activity['comment_id'] = event.object.id
+        function url = 'modules/community/helpers/link_to_url', object: activity, type: 'activity', namespace: null, current_profile: null, action: null, role: null, anchor: null, template: null
+      endif
+    endif
+
+  endcase
+
+  hash_assign audience['notifications']['profile'] = audience['notifications']['profile'] | subtract_array: notification_skip_profiles
+
+  assign notification_title = 'modules/community/push_notifications.new_comment.title' | t
+  assign notification_body = 'modules/community/push_notifications.new_comment.body' | t: actor: event.actor.name, title: event.target.name
+  assign push_notification = {"title": notification_title, "body": notification_body, "url": url}
+
+  function publish = 'modules/community/commands/activities/publish_to_many', uuid: event.uuid, audience: audience, at: null, notification: push_notification
+%}
+
+{% comment %} system:audit {% endcomment %}
+{% render 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "1", at: null %}
+
+{% comment %} system:items {% endcomment %}
+{% render 'modules/community/commands/activities/publish', uuid: event.uuid, type: "system", ids: "2", at: null %}

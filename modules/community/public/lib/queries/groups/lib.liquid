@@ -1,0 +1,15 @@
+{% liquid
+  assign lib = '{}' | parse_json
+
+  function tags = 'modules/community/queries/tags/search', limit: 100, page: null, not_ids: null, sort: null, name: null, names: null, query: null, status: null, with_creator: null
+  hash_assign lib['tags'] = tags.results | map: 'name'
+
+  function post_templates = 'modules/community/queries/posts/post_templates'
+  hash_assign lib['post_templates'] = post_templates
+
+  function group_templates = 'modules/community/queries/groups/group_templates', group: group
+  assign _ = group_templates | remove_hash_key: 'profile_group'
+  hash_assign lib['group_templates'] = group_templates
+
+  return lib
+%}

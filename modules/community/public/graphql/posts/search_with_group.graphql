@@ -1,0 +1,49 @@
+query search(
+  $id: ID
+  $limit: Int = 20
+) {
+  posts: records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/post" }
+      deleted_at: { exists: false }
+      properties: [
+        { name: "removed_at", exists: false }
+      ]
+    }
+    sort: [{ created_at: { order: DESC } }]
+  ) {
+    total_entries
+    results {
+      id
+      created_at
+      type: table
+
+      uuid: property(name: "uuid")
+      parent_id: property(name: "parent_id")
+      group_id: property(name: "group_id")
+      creator_id: property(name: "creator_id")
+      commentable: property_boolean(name: "commentable")
+      replyable: property_boolean(name: "replyable")
+      votable: property_boolean(name: "votable")
+      followable: property_boolean(name: "followable")
+      featurable: property_boolean(name: "featurable")
+
+      group: related_record(table: "modules/community/group" join_on_property: "group_id" foreign_property: "id") {
+        id
+        type: table
+        name: property(name: "name")
+        content_types: property_array(name: "content_types")
+        group_type: property(name: "group_type")
+        ask_to_join: property(name: "ask_to_join")
+        meta_visible: property(name: "meta_visible")
+        content_visible: property(name: "content_visible")
+        approve_request: property(name: "approve_request")
+        post_content: property(name: "post_content")
+        add_comments: property(name: "add_comments")
+        invite_member: property(name: "invite_member")
+      }
+    }
+  }
+}

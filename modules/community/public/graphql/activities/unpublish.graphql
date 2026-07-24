@@ -1,0 +1,3 @@
+mutation unpublish($record_id: ID!) {
+  activity_unpublish(record_id: $record_id)
+}

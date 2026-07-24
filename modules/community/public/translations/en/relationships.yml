@@ -1,0 +1,26 @@
+---
+en:
+  relationships:
+    posts:
+      follow: Follow
+      unfollow: Remove connection
+      title: When following you will receive notifications about activities in this
+        question
+    tags:
+      follow: Follow
+      unfollow: Unfollow
+    type:
+    - followship:profile
+    - followship:tag
+    - followship:post
+    - followship
+    - membership
+    - event:going
+    - event:maybe
+    - event:not-going
+    - organization_membership
+    - collaboration
+    - owner
+    - owner:project
+    - ownership
+    - wishlist

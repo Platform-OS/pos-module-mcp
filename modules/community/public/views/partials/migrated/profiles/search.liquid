@@ -1,0 +1,75 @@
+{% liquid
+ assign list = list | default: params.list
+ assign current_profile = current_profile | default: params.current_profile
+ function filters = 'modules/community/queries/profiles/filters', params: context.params, default_sort_by: null
+%}
+
+
+<header class="pos-app pos-community-space-header pos-increaseLegibility">
+  <h2 class="pos-heading-2">{{ 'modules/community/profiles.members' | t}}</h2>
+</header>
+
+<nav class="pos-community-space-filters">
+  <div>
+    <form action="/profiles" method="GET" id="pos-community-members-filters">
+      <fieldset class="pos-form-fieldset-combined">
+        <input type="text" name="keyword" value="{{ filters.keyword }}" placeholder="{{ 'modules/community/quick_search.name' | t }}" class="pos-form-input">
+        <button type="submit" class="pos-button">
+          <span class="pos-label">{{ 'modules/community/quick_search.name' | t }}</span>
+          {% render 'modules/common-styling/icon', icon: 'search', class: null %}
+        </button>
+      </fieldset>
+      <fieldset>
+        <select name="sort_by" id="filter_sort" class="pos-form-select" onChange="document.querySelector('#pos-community-members-filters').submit()">
+          <option value="first_name_asc" {% if filters.sort_by == 'first_name_asc'%} selected {% endif %}>Sort by First Name (A-Z)</option>
+          <option value="first_name_desc" {% if filters.sort_by == 'first_name_desc'%} selected {% endif %}>Sort by First Name (Z-A)</option>
+          <option value="created_at_asc" {% if filters.sort_by == 'created_at_asc'%} selected {% endif %}>Oldest members first</option>
+          <option value="created_at_desc" {% if filters.sort_by == 'created_at_desc'%} selected {% endif %}>Newest members first</option>
+        </select>
+      </fieldset>
+    </form>
+  </div>
+</nav>
+
+
+{% if list.results.size > 0 %}
+
+  <div class="pos-community-space-grid">
+    {% for profile in list.results %}
+      {% liquid
+        function url = 'modules/community/helpers/link_to', object: profile, type: 'profile'
+        assign my_profile = false
+        if current_profile.id != profile.id
+          assign allow_to_follow = true
+        else
+          assign my_profile = true
+          assign allow_to_follow = false
+        endif
+      %}
+      {% theme_render_rc 'modules/community/migrated/profiles/card',
+          profile: profile,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          job_title: profile.job_title,
+          employer: profile.employer,
+          location: profile.location,
+          url: url,
+          allow_to_follow: allow_to_follow,
+          my_profile: my_profile
+      %}
+    {% endfor %}
+  </div>
+
+  {% render 'modules/common-styling/pagination', total_pages: list.total_pages %}
+
+{% else %}
+
+  <section class="pos-community-space-empty">
+    <div>
+      <h3 class="pos-heading-2">{{ 'modules/community/profiles.index.empty.title' | t }}</h3>
+      <p>{{ 'modules/community/profiles.index.empty.desc' | t }}</p>
+    </div>
+    {% render 'modules/common-styling/icon', icon: 'users', class: null %}
+  </section>
+
+{% endif %}

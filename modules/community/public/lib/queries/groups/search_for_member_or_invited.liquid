@@ -1,0 +1,13 @@
+{% liquid
+  if member_id == blank
+    log 'Something went wrong. Member cannot be blank.', type: 'ERROR'
+    return null
+  endif
+
+  assign page = page | to_positive_integer: 1
+
+  graphql r = 'modules/community/groups/search_for_member_or_invited', limit: limit, page: page, member_id: member_id, not_ids: not_ids
+  function groups = 'modules/community/queries/groups/add_current_profile_role_info', groups: r.groups, current_profile: current_profile
+
+  return groups
+%}

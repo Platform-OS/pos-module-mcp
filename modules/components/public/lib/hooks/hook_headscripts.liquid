@@ -1,0 +1,5 @@
+{% capture headscript %}
+  {% comment %} <link rel="stylesheet" href="{{ 'modules/components/components.css' | asset_url }}"> {% endcomment %}
+  <script defer src="{{ 'modules/components/components.js' | asset_url }}"></script>
+{% endcapture %}
+{% return headscript %}

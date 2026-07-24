@@ -1,0 +1,26 @@
+---
+slug: admin/users/:id/update
+method: post
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', do: 'users.update', requester: current_profile, entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  graphql g = 'modules/user/user/find', id: context.params.id
+  assign user = g.users.results.first
+
+  assign ignore_roles = 'superadmin,rejected' | split: ','
+  assign remove_roles = user.roles | array_subtract: ignore_roles
+  for role in remove_roles
+    function result = 'modules/user/commands/profiles/roles/remove', id: context.params.id, role: role
+  endfor
+
+  assign assign_roles = context.params.roles | array_subtract: ignore_roles
+  function result = 'modules/user/commands/profiles/roles/set', id: context.params.id, roles: assign_roles
+
+  function _ = 'modules/core/helpers/redirect_to', url: null, error: null, info: null, notice: null, object: null, default: null, format: null
+%}

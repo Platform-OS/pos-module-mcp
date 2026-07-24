@@ -1,0 +1,13 @@
+{% liquid
+  function hashtags = 'modules/community/helpers/extract_hashtags', input: input
+  assign output = input
+
+  for hashtag in hashtags
+    assign slugified_hashtag = hashtag | slugify
+    assign pattern = '#' | append: hashtag | append: '(?![\p{L}\d\-])'
+    assign replace_with = '<a href="/hashtag/' | append: slugified_hashtag | append: '">#' | append: hashtag | append: '</a>'
+    assign output = output | replace_regex: pattern, replace_with
+  endfor
+
+  return output
+%}

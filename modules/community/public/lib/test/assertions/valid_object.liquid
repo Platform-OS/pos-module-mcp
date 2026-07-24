@@ -1,0 +1,10 @@
+{% liquid
+  hash_assign contract['total'] = contract['total'] | plus: 1
+  if object.valid != true
+    assign message = 'should be valid: ' | append: object.errors
+    # platformos-check-disable MissingPartial
+    function contract = 'test/register_error_f', contract: contract, field_name: field_name, message: message
+    # platformos-check-enable MissingPartial
+  endif
+  return contract
+%}

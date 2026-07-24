@@ -1,0 +1,23 @@
+<ul>
+  {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+  <a href="/tests/run" class="button">Run</a>
+  <a href="/tests/run_async" class="button">Run Async</a>
+  {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+</ul>
+<section class="table mt-5">
+  <header>
+    <div>Test</div>
+    <div></div>
+  </header>
+  <div class="table-content">
+  {% for test in tests %}
+    <ul>
+      {% assign test_name = test.path | split: 'test/' | last %}
+      <li>{{ test.path }}</li>
+      {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+      <li><a href="/tests/run?name={{ test_name }}" class="button">Run</a></li>
+      {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+    </ul>
+  {% endfor %}
+  </div>
+</section>

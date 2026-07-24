@@ -1,0 +1,34 @@
+{% liquid
+  assign can = false
+
+  assign photo = entity
+
+  case do
+  when 'delete'
+    function profile_can = 'modules/user/helpers/can_do', requester: requester, entity: photo, do: 'photos.delete.all', access_callback: null
+    if profile_can
+    return true
+    endif
+    function profile_can = 'modules/user/helpers/can_do', requester: requester, entity: photo, do: 'photos.delete', access_callback: null
+    unless profile_can
+      return false
+    endunless
+    if photo.profile_id == requester.id
+      return true
+    endif
+  when 'edit'
+    function profile_can = 'modules/user/helpers/can_do', requester: requester, entity: photo, do: 'photos.edit.all', access_callback: null
+    if profile_can
+    return true
+    endif
+    function profile_can = 'modules/user/helpers/can_do', requester: requester, entity: photo, do: 'photos.edit', access_callback: null
+    unless profile_can
+      return false
+    endunless
+    if photo.profile_id == requester.id
+      return true
+    endif
+  endcase
+
+  return can
+%}

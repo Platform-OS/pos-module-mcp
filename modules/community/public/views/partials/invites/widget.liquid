@@ -1,0 +1,49 @@
+<div x-cloak>
+  <template x-for="entry in selected.items">
+    <div class="p-4 my-2 flex items-center gap-4 border rounded">
+
+      <img :src="entry.photo" x-show="entry.photo" width="45" height="45" :alt="entry.name" class="object-cover rounded-full" data-avatar>
+
+      <div x-show="!entry.photo" class="p-3 rounded-full bg-interaction-disabled">
+        {% theme_render_rc 'components/atoms/icon', name: 'user', class: 'w-6 text-interaction' %}
+      </div>
+
+      <div>
+        <div class="text-interaction font-semibold" x-text="entry.name"></div>
+        <div x-html="entry.profileLink"></div>
+        <div x-text="entry.displayName"></div>
+      </div>
+
+      <button class="ms-auto -me-4 p-4 text-interaction hover:text-danger-hover" x-on:click="remove(entry); $refs.queryInput.click(); $refs.queryInput.focus();" >
+        {% theme_render_rc 'components/atoms/icon', name: 'x' %}
+      </button>
+    </div>
+  </template>
+</div>
+
+<label for="email[]" class="sidenote block text-content-sidenote">{{ 'modules/community/groups.invites.index.email' | t }}</label>
+<div class="flex flex-wrap justify-between relative" x-on:click="showSuggestions = true" x-on:click.outside="showSuggestions = false">
+  <input type="text" class="w-full mt-2" x-model="query" x-on:keyup.debounce="loadSuggestions($event)" x-ref="queryInput" {% if submitted %}disabled {% endif %}>
+    <button type="button" x-on:click="clear()" class="absolute bottom-3.5 right-4">
+    {% theme_render_rc 'components/atoms/icon', name: 'x' %}
+  </button>
+
+  <div class="mt-px absolute top-full left-0 right-0 bg-panel-highlight shadow" x-cloak x-show="showSuggestions">
+    <template x-for="entry in suggestions.items" >
+      <div class="p-4 flex items-center gap-4 border border-t-0 last:rounded-b hover:bg-panel cursor-pointer transition-colors" x-on:click="register(entry); $refs.queryInput.click(); $refs.queryInput.click();">
+
+        <img :src="entry.photo" x-show="entry.photo" width="45" height="45" :alt="entry.name" class="object-cover rounded-full" data-avatar>
+
+        <div x-show="!entry.photo" class="p-3 rounded-full bg-interaction-disabled">
+          {% theme_render_rc 'components/atoms/icon', name: 'user', class: 'w-6 text-interaction' %}
+        </div>
+
+        <div>
+          <div class="text-interaction font-semibold" x-text="entry.name"></div>
+          <div class="text-interaction" x-html="entry.profileLink"></div>
+          <div x-text="entry.displayName"></div>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>

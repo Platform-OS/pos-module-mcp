@@ -1,0 +1,8 @@
+{% liquid
+  assign to_email = 'modules/community/static-pages.contact-us.contact-email' | t
+  assign from_email = 'modules/community/app.from_email' | t
+  assign subject = 'modules/community/emails.contact-us.subject' | t: host: host
+  assign object = {"to": to_email, "from": from_email, "subject": subject, "partial": "modules/community/emails/contacts/new_support_ticket", "layout": "modules/community/mailer", "data": {"host": host, "object": object.properties}}
+  function object = 'modules/core/commands/email/send', object: object
+  return object
+%}

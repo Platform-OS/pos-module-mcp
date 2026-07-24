@@ -1,0 +1,10 @@
+{% liquid
+  if id == blank
+    log 'Something went wrong. ID cannot be blank.', type: 'ERROR'
+    return null
+  endif
+
+  graphql r  = 'modules/community/posts/search_with_group', id: id, limit: 1
+
+  return r.posts.results.first
+%}

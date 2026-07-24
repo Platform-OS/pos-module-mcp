@@ -1,0 +1,10 @@
+query count {
+  tags: records(
+    per_page: 1
+    filter: {
+      table: { value: "modules/community/tag" }
+    }
+  ){
+    total_entries
+  }
+}

@@ -1,0 +1,16 @@
+---
+slug: groups/:id/about
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+
+  assign group_id = context.params.id
+  function group = 'modules/community/queries/groups/find', id: group_id, with_owner: true, current_profile: null
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'see_meta', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  theme_render_rc 'components/templates/groups', section: 'about', group: group, current_profile: current_profile, tab: 'about', context: context
+%}

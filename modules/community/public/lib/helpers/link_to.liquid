@@ -1,0 +1,157 @@
+{% liquid
+
+  assign namespace = namespace | default: null
+  assign current_profile = current_profile | default: null
+  assign action = action | default: null
+  assign role = role | default: null
+  assign anchor = anchor | default: null
+  assign template = template | default: null
+
+  if namespace != blank
+    assign url = '/' | append: namespace
+  endif
+
+  function profile_table = 'modules/user/helpers/table_name'
+  assign type = type | default: object.type | append: '' | replace_regex: 'modules/[^/]+/', ''
+  if type
+    case type
+    when 'activity'
+      assign activity = object
+    when 'tag'
+      assign tag = object
+    when 'group'
+      assign group = object
+    when 'profile', profile_table
+      assign profile = object
+    when 'category'
+    when 'comment'
+      assign comment = object
+    when 'post'
+      assign post = object
+    when 'relationship'
+      assign relationship = object
+    when 'process'
+      assign process = object
+    when 'event'
+      assign event = object
+    when 'project_offer'
+    when 'bulk_operation'
+      assign bulk_operation = object
+    when 'document'
+      assign document = object
+    when 'theme_settings'
+      assign theme_settings = object
+    when 'search'
+      assign search = object
+    else
+      assign unknown = object
+    endcase
+  endif
+
+  if theme_settings
+    assign url = '/admin/themes/' | append: theme_settings.name | append: '/edit'
+  endif
+
+  if activity
+    function slug = 'modules/user/helpers/profiles/slugs/build', profile: activity.actor, current_profile: null
+    assign url = '/profile/' | append: slug | append: '/feed/' | append: activity.uuid
+    if activity.comment_id
+      assign url = url | append: '?view_comment=1#feed-comment-' | append: activity.comment_id
+    endif
+  endif
+
+  if process
+    if namespace == blank
+      assign url = url | append: '/admin/processes/' | append: process.id
+    else
+      assign url = url | append: '/processes/' | append: process.id
+    endif
+  endif
+
+  if group
+    if namespace == blank and action == blank
+      assign slugified_name = group.name | slugify
+      assign url = url | append: '/groups/' | append: slugified_name | append: '-' | append: group.id
+    else
+      assign url = url | append: '/groups/' | append: group.id
+    endif
+  endif
+
+  if relationship
+    if relationship.name == 'membership'
+      assign url = url | append: '/groups/' | append: relationship.r_id | append: '/invites/accept/' | append: relationship.id
+    else
+      assign url = url | append: '/relationships/' | append: relationship.id
+    endif
+  endif
+
+  if profile
+    function slug = 'modules/user/helpers/profiles/slugs/build', profile: profile, current_profile: null
+    assign url = url | append: '/profile/' | append: slug
+  endif
+
+  if tag
+    function slug = 'modules/community/helpers/generate_slug', title: tag.name, id: tag.id
+    assign url = url | append: "/tags/" | append: slug
+  endif
+
+  if document
+    assign url = url | append: "/documents/" | append: document.id
+  endif
+
+  if search
+    assign url = url | append: "/search" | append: '?'
+  endif
+
+  if comment
+    assign url = comment.url
+  endif
+
+  if current_profile and namespace == blank and role == blank
+    if context.constants.DEBUG == "true"
+      log "Do not pass current_profile. User role instead.", type: 'INFO: /link_to.liquid:85'
+    endif
+    assign role = role | default: current_profile.type
+  endif
+
+  if bulk_operation
+    assign url = "/admin/inventory/data/" | append: bulk_operation.id
+  endif
+
+  if post
+    function slug = 'modules/community/helpers/generate_slug', title: post.title, id: post.id
+    assign url = url | append: "/groups/" | append: post.group_id |  append: "/content/" | append: slug
+  endif
+
+  if event
+    assign url = url | append: "/events/" | append: event.id
+  endif
+
+  if object
+    hash_assign object['action'] = null
+
+    if action
+      assign url = url | append: '/' | append: action
+      hash_assign object['action'] = action
+    endif
+  else
+    if action
+      assign url = url | append: '/' | append: action
+    endif
+  endif
+
+  if anchor
+    assign url = url | append: '#refid-' | append: anchor
+  endif
+
+  if unknown
+    assign url = "/404?type=unknown&id=" | append: unknown.id
+  endif
+
+  if template
+    assign url = template |  expand_url_template: object
+  endif
+
+  print url
+  return url
+%}

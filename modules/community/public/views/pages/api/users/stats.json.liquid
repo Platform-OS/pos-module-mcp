@@ -1,0 +1,20 @@
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', followships: true, membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_not_authenticated', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  function inbox_unread = 'modules/chat/queries/conversations/number_of_unread_by_participant', participant_id: current_profile.id
+  assign empty_object = '{}' | parse_json
+
+  assign object = '{"valid": true}' | parse_json
+  hash_assign object['inbox_unread'] = inbox_unread
+  hash_assign object['relationships'] = current_profile.relationships | default: empty_object
+
+  function unread_count = 'modules/community/queries/activities/unread_count', feed: 'user-notifications', feed_id: current_profile.id
+  hash_assign object['notifications'] = unread_count
+
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/json/shared/show', object: object
+  # platformos-check-enable DeprecatedTag
+%}

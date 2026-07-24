@@ -1,0 +1,29 @@
+---
+metadata:
+  name: Icon with badge
+  params:
+    maxValue: 1000
+    value: 1000
+    icon: "bell"
+  styleguide:
+    - maxValue: 20
+      value: 8
+    - maxValue: 999
+      value: 1500
+      icon: "mail"
+    - maxValue: 1999
+      value: 1500
+      icon: "globe"
+---
+{% liquid
+  assign maxValue = maxValue | default: params.maxValue
+  assign value = value | default: params.value
+  assign icon = icon | default: params.icon | default: 'bell'
+%}
+
+<div class="relative inline-block">
+  {% theme_render_rc 'components/atoms/icon', name: icon, class: 'w-6 h-6 ml-2' %}
+  <div class="absolute -top-2 left-6">
+    {% theme_render_rc 'components/atoms/badge', value: value, maxValue: maxValue %}
+  </div>
+</div>

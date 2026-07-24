@@ -1,0 +1,23 @@
+{% liquid
+  function object = 'modules/community/commands/groups/accept_invite/build', object: object
+  function object = 'modules/community/commands/groups/accept_invite/check', object: object
+
+  unless object.valid
+    return object
+  endunless
+
+  function object = 'modules/community/commands/relationships/update', object: object
+
+  if object.valid
+    if object.l_accepted_at and object.r_accepted_at
+      assign event_payload = null | hash_merge: l_id: object.l_id, r_id: object.r_id, relationship_id: object.id
+      function _ = 'modules/core/commands/events/publish', type: 'relationship_created', object: event_payload, delay: 0, max_attempts: null
+      if object.r.type == 'group' or object.r.type == 'modules/community/group'
+        assign event_payload = null | hash_merge: group_id: object.r_id, requester_id: relation.created_by_id, group_admin_id: current_profile.id
+        function _ = 'modules/core/commands/events/publish', type: 'group_join_request_accepted', object: event_payload, delay: 0, max_attempts: null
+      endif
+    endif
+  endif
+
+  return object
+%}

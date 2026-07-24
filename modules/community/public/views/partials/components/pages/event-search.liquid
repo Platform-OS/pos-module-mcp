@@ -1,0 +1,82 @@
+{% liquid
+  function filters = 'modules/community/queries/events/admin_filters', params: context.params
+%}
+
+<header class="pos-app pos-community-space-header pos-increaseLegibility">
+  <h2 class="pos-heading-2">{{ 'modules/community/events.events' | t }}</h2>
+</header>
+
+<nav class="pos-community-space-filters">
+  <div>
+    <form action="/events" method="GET" id="pos-community-members-filters">
+      <fieldset class="pos-form-fieldset-combined">
+        <input type="text" name="keyword" value="{{ filters.keyword }}" placeholder="{{ 'modules/community/quick_search.name' | t }}" class="pos-form-input">
+        <button type="submit" class="pos-button">
+          <span class="pos-label">{{ 'modules/community/quick_search.name' | t }}</span>
+          {% render 'modules/common-styling/icon', icon: 'search', class: null %}
+        </button>
+      </fieldset>
+      <fieldset>
+        <select name="sort_by" id="filter_sort" class="pos-form-select" onChange="document.querySelector('#pos-community-members-filters').submit()">
+          <option value="created_at_asc" {% if filters.sort_by == 'created_at_asc'%} selected {% endif %}>Oldest first</option>
+          <option value="created_at_desc" {% if filters.sort_by == 'created_at_desc'%} selected {% endif %}>Newest first</option>
+        </select>
+      </fieldset>
+    </form>
+  </div>
+</nav>
+
+{% if context.params.tags != blank %}
+  <div>
+    Showing tag: {{ context.params.tags | join: ', ' }}
+    <a href="/events">Clear filter</a>
+  </div>
+{% endif %}
+
+{% if list.results.size > 0 %}
+
+  <div class="pos-community-space-grid">
+    {% for event in list.results %}
+        {% liquid
+          assign event_type = 'online'
+          if event.venue and event.link == blank
+            assign event_type = 'local'
+          endif
+          assign slugified_name = event.name | slugify
+          assign url = '/events/' | append: slugified_name | append: '-' | append: event.id
+          
+          
+          assign owner = event.owner.profile
+          assign members = event.c__going | plus: event.c__maybe
+        %}
+        {% render 'modules/community/migrated/events/card',
+          owner: owner,
+          title: event.name,
+          url: url,
+          location: event.venue,
+          date: event.start_date,
+          type: event_type,
+          summary: event.description,
+          members: members,
+          image: event.photo.photo
+          current_profile: current_profile
+        %}
+    {% endfor %}
+  </div>
+
+  {% liquid
+    render 'modules/common-styling/pagination', total_pages: list.total_pages
+  %}
+
+{% else %}
+
+  <section class="pos-community-space-empty">
+    <div>
+      <h3 class="pos-heading-2">{{ 'modules/community/events.index.empty.title' | t }}</h3>
+      <p>{{ 'modules/community/events.index.empty.desc' | t }}</p>
+      <p><a href="{% render 'modules/community/helpers/link_to', action: 'new', object: null, namespace: 'events' %}" class="pos-button">{{ 'modules/community/events.index.empty.cta' | t }}</a></p>
+    </div>
+    {% render 'modules/common-styling/icon', icon: 'calendar', class: null %}
+  </section>
+
+{% endif %}

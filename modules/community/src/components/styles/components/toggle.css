@@ -1,0 +1,16 @@
+.pos-toggle__slider:before {
+  @apply w-4 h-4 bg-inverted rounded-full duration-500;
+  position: absolute;
+  content: "";
+  left: 4px;
+  bottom: 4px;
+}
+
+input:checked + .pos-toggle__slider {
+  @apply bg-interactive-graphic;
+}
+
+input:checked + .pos-toggle__slider:before {
+  @apply translate-x-6;
+}
+

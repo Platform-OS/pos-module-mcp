@@ -1,0 +1,35 @@
+{% liquid
+  assign action = '/api/posts/' | append: post.id | append: '/vote'
+  assign upvote_profile_ids = post.upvote_profile_ids
+%}
+
+{% if profile_id %}
+  {%- comment -%}platformos-check-disable MissingPage{%- endcomment -%}
+  <form
+    action="{{ action }}"
+    class="pos-community-post-like {% if upvote_profile_ids contains profile_id %} pos-community-post-like-active {% endif %} {% if upvote_profile_ids.size > 1 or upvote_profile_ids.size == 0 %} pos-community-post-like-multiple {% endif %}"
+  >
+    <input type="hidden" name="id" value="{{ post.id }}">
+    <input type="hidden" name="type" value="{% if upvote_profile_ids contains profile_id %}clear{% else %}up{% endif %}">
+    <input type="hidden" name="parent_entity_type" value="{{ parent_entity_type }}">
+
+    <button type="submit">
+      <span class="pos-community-post-like-liked">
+        {% render 'modules/common-styling/icon', icon: 'heartFull', class: null %}
+        <span class="pos-button-label">{{ 'modules/community/posts.like_button.vote_clear' | t }}</span>
+      </span>
+
+      <span class="pos-community-post-like-unliked">
+        {% render 'modules/common-styling/icon', icon: 'heart', class: null %}
+        <span class="pos-button-label">{{ 'modules/community/posts.like_button.vote_up' | t }}</span>
+      </span>
+
+      <span>
+        <span class="pos-community-post-like-count">{{ upvote_profile_ids.size | default: 0 }}</span>
+        <span class="pos-community-post-like-count-multiple">{{ 'modules/community/posts.like_button.likes' | t }}</span>
+        <span class="pos-community-post-like-count-single">{{ 'modules/community/posts.like_button.like' | t }}</span>
+      </span>
+    </button>
+  </form>
+  {%- comment -%}platformos-check-enable MissingPage{%- endcomment -%}
+{% endif %}

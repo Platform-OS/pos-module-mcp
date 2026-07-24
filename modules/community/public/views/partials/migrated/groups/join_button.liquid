@@ -1,0 +1,18 @@
+{% comment %}
+  Button used to join a group
+
+  group - (object) group related information including ID and approve_request
+  compact - (bool) smaller version of the button
+{% endcomment %}
+
+
+
+<form action="/groups/{{ group.id }}/join" method="post">
+  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+  <input type="hidden" name="return_to" value="/groups/{{ group.id }}">
+  <input type="hidden" name="notice_key" value="modules/community/groups.joined">
+
+  <button type="submit" class="pos-button {% if compact %} pos-button-small {% endif %}">
+    {{ group.approve_request | t: scope: 'modules/community/groups.join_button' }} {{ 'modules/community/groups.group' | t | downcase }}
+  </button>
+</form>

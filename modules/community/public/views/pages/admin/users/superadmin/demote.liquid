@@ -1,0 +1,12 @@
+---
+slug: admin/users/:id/superadmin/demote
+method: post
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+
+  function _ = 'modules/community/commands/users/superadmin/demote', id: context.params.id, current_profile: current_profile
+
+  function _ = 'modules/core/helpers/redirect_to', url: null, error: null, info: null, notice: null, object: null, default: null, format: null
+%}

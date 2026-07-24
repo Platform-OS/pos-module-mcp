@@ -1,0 +1,34 @@
+---
+metadata:
+  name: Radio
+  params:
+    name: 'my-radio'
+    checked:
+      - false
+      - true
+    id: 'my-radio'
+    disabled:
+      - false
+      - true
+---
+{% liquid
+  assign checked = checked | default: params.checked | default: false
+  assign id = id | default: params.id
+  assign name = name | default: params.name
+  assign disabled = disabled | default: params.disabled | default: false
+
+  assign basic_classes = 'w-4 h-4 bg-input border rounded-full enabled:border-input-border appearance-none cursor-pointer '
+  assign checked_classes = 'enabled:checked:border-4 enabled:checked:border-interactive-graphic '
+  assign disabled_classes = 'disabled:border-interactive-disabled '
+  assign disabled_checked_classes = 'disabled:checked:border-4 '
+
+  assign classes = basic_classes | append: checked_classes | append: disabled_classes | append: disabled_checked_classes
+  %}
+<input class="{{classes}}"
+  type="radio"
+  id="{{id}}"
+  name="{{name}}"
+  {% if checked %}checked{% endif %}
+  {% if disabled %}disabled{% endif %}
+/>
+

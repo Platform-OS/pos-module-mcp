@@ -1,0 +1,77 @@
+---
+metadata:
+  name: Icon button
+  params:
+    alignment:
+      - left
+      - right
+    filled:
+      - false
+      - true
+    size:
+      - normal
+      - small
+    disabled:
+      - false
+      - true
+    gap: 2
+    weight: secondary
+    content: Upload
+    variant: confirmation
+    attributes: attributes
+    classes: ''
+    href: ''
+    icon: folderUpload
+    type: 'button'
+  styleguide:
+    - alignment: left
+      gap: 2
+      weight: primary
+      content: Upload
+      variant: confirmation
+      icon: folderUpload
+    - alignment: right
+      gap: 2
+      weight: secondary
+      content: Upload secondary
+      variant: confirmation
+      icon: folderUpload
+    - alignment: left
+      content: Delete small
+      size: small
+      variant: important
+      icon: trash
+---
+{% liquid
+  assign alignment = alignment | default: params.alignment | default: "right"
+  assign filled = filled | default: params.filled | default: false
+  assign size = size | default: params.size | default: 'normal'
+  assign disabled = disabled | default: params.disabled | default: false
+  assign gap = gap | default: params.gap | default: 2
+  assign weight = weight | default: params.weight | default: "secondary"
+  assign content = content | default: params.content
+  assign variant = variant | default: params.variant
+  assign attributes = attributes | default: params.attributes
+  assign classes = classes | default: params.classes
+  assign icon = icon | default: params.icon
+  assign href = href | default: params.href
+  assign type = type | default: params.type
+
+  if content == blank
+    assign classes = classes | prepend: 'px-2 '
+  endif
+
+  assign wrapper_classes = "flex items-center gap-" | append: gap
+  if alignment == "left"
+    assign wrapper_classes = wrapper_classes | append:  " flex-row-reverse"
+  endif
+%}
+
+{% capture icon_content %}
+<div class="{{wrapper_classes}}">
+  <span>{{content | html_safe}}</span>
+  {% theme_render_rc 'components/atoms/icon', name: icon %}
+</div>
+{% endcapture %}
+
+{% theme_render_rc 'components/atoms/button', content: icon_content, classes: classes, weight: weight, variant: variant, attributes: attributes, filled: filled, size: size, disabled: disabled, href: href, type: type %}

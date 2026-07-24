@@ -1,0 +1,20 @@
+{% liquid
+  assign event = event | default: nil
+  assign actor_id = actor_id | default: nil
+  assign object_id = object_id | default: nil
+  assign target_id = target_id | default: nil
+
+  if target_id
+    function target = 'modules/community/queries/activities/record', id: target_id, meta: "target"
+  endif
+  if object_id
+    function object = 'modules/community/queries/activities/record', id: object_id, meta: "object"
+  endif
+  function profile = 'modules/user/queries/profiles/find', id: actor_id, first_name: null, last_name: null, user_id: null, uuid: null
+
+  hash_assign event['object'] = object
+  hash_assign event['target'] = target
+  hash_assign event['actor'] = profile
+
+  return event
+%}

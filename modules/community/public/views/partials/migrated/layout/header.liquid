@@ -1,0 +1,150 @@
+{% liquid
+  assign profile = profile | default: params.profile
+  assign context = context | default: params.context
+  assign variant = variant | default: params.variant | default: 'default'
+  assign registered_profile = false
+  if profile and profile.user_id != blank
+    function profile_url = 'modules/community/helpers/link_to', namespace: null, action: null, current_profile: null, role: null, anchor: null, template: null, object: profile
+    assign registered_profile = true
+    function can_view_admin = 'modules/user/helpers/can_do', requester: profile, do: 'admin_pages.view', access_callback: null, entity: null
+  endif
+
+  function current_profile_navigation_path = 'modules/community/helpers/link_to', object: profile
+
+assign active_class = active_class | default: ' text-interactive-graphic '
+%}
+
+
+<header class="pos-community-header pos-app">
+
+  <button class="pos-community-header-menutoggle" onclick="document.body.classList.toggle('pos-community-navigationActive')">
+    <span class="pos-community-header-label">{{ 'modules/community/app.toggle_menu' | t }}</span>
+    {% render 'modules/common-styling/icon', icon: 'menu', class: null %}
+  </button>
+
+  <a href="/" class="pos-community-header-title" data-pos-preload="hover">
+    <h1>
+      <span class="pos-community-header-label">
+        {{ 'app.title' | t }}
+      </span>
+      {% render 'modules/community/migrated/layout/logo' %}
+    </h1>
+  </a>
+
+  {% comment %}
+  <nav class="pos-community-header-breadcrumbs">
+    <ol>
+      <li><a href="#">Breadcrumb element</a></li>
+      <li>Breadcrumb element</li>
+    </ol>
+  </nav>
+  {% endcomment %}
+
+  {% if registered_profile %}
+
+    <nav class="pos-community-header-tools">
+      <menu>
+        <li class="pos-community-header-search-container">
+          <form action="/quick-search" class="pos-form-fieldset pos-community-header-search-form">
+            <input type="search" name="qkeyword" placeholder="{{ 'modules/community/quick_search.name' | t }}" class="pos-form-input">
+            <button type="reset" tabindex="-1" title="{{ 'modules/community/app.close_search' | t }}">
+              {% render 'modules/common-styling/icon' icon: 'x', class: null %}
+              <span class="pos-community-header-label">
+                {{ 'modules/community/app.close_search' | t }}
+              </span>
+            </button>
+            <button type="submit">
+              {% render 'modules/common-styling/icon' icon: 'search', class: null %}
+              <span class="pos-community-header-label">Search</span>
+            </button>
+          </form>
+        </li>
+        <li>
+          <a href="/inbox" id="pos-community-header-messages" data-pos-preload="hover">
+            <i>
+              {% render 'modules/common-styling/icon' icon: 'mail', class: null %}
+              <span class="pos-community-header-indicator"></span>
+            </i>
+            <span class="pos-community-header-label">Inbox</span>
+          </a>
+        </li>
+        {% if profile.allow_notifications != 'false' %}
+          <li class="pos-popover pos-community-header-popup">
+            <button
+              type="button"
+              id="pos-community-header-notifications"
+              popovertarget="pos-community-header-notifications-popup"
+              data-load-content="/notifications.frame?full=true"
+              data-load-target="#pos-community-header-notifications-content"
+              data-load-where="replace"
+              data-load-trigger-type="mouseenter"
+            >
+              <i>
+                {% render 'modules/common-styling/icon' icon: 'bell', class: null %}
+                <span class="pos-community-header-indicator"></span>
+              </i>
+              <span class="pos-community-header-label">{{ 'modules/community/notifications.title' | t }}</span>
+            </button>
+            <section popover id="pos-community-header-notifications-popup">
+              <header class="pos-community-header-notifications-title">
+                {{ 'modules/community/notifications.title' | t }}
+                <a href="/notifications" class="pos-button pos-button-small">{{ 'modules/community/app.see_all' | t }}</a>
+              </header>
+              <div id="pos-community-header-notifications-content"></div>
+            </section>
+          </li>
+        {% endif %}
+      </menu>
+    </nav>
+
+    <nav class="pos-popover pos-community-header-profile">
+      <button popovertarget="pos-community-header-profile-content" class="pos-community-header-profile-button">
+        {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+        {% render 'modules/common-styling/user/avatar', size: 'xs', name: profile.name, params: null %}
+        {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+        <span class="pos-community-header-profile-button-name">{{ profile.name }}</span>
+        {% render 'modules/common-styling/icon', icon: 'dashDown', class: null %}
+      </button>
+
+      <menu popover id="pos-community-header-profile-content" class="pos-community-header-profile-content">
+        <li><a href="/feed" data-pos-preload="hover">{{ 'modules/community/profiles.nav.activity' | t }}</a></li>
+        <li><a href="{{ profile_url }}" data-pos-preload="hover">{{ 'modules/community/profiles.my_profile' | t }}</a></li>
+        <li><a href="/settings">{{ 'modules/community/profiles.nav.settings' | t }}</a></li>
+        {% if can_view_admin %}
+          <li><a href="/admin" data-pos-preload="hover">{{ 'modules/community/app.admin' | t }}</a></li>
+        {% endif %}
+        <li>
+          <form action="/sessions" method="post">
+            {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+            <input type="hidden" name="_method" value="delete">
+            <button type="submit">{{ 'modules/user/users.logout' | t }}</button>
+          </form>
+        </li>
+      </menu>
+    </nav>
+
+    <nav class="pos-popover pos-community-header-create">
+      <button popovertarget="pos-community-header-create-content" class="pos-button pos-button-primary">
+        <i>
+          {% render 'modules/common-styling/icon', icon: 'plus', class: null %}
+        </i>
+        <span class="pos-community-label">{{ 'modules/community/app.create' | t }}</span>
+      </button>
+
+      <menu popover id="pos-community-header-create-content" class="pos-community-header-create-content">
+        <li><a href="/" data-pos-preload="hover">{{ 'modules/community/feed.post' | t }}</a></li>
+        <li><a href="/groups/new" data-pos-preload="hover">{{ 'modules/community/groups.group' | t }}</a></li>
+        <li><a href="/events/new" data-pos-preload="hover">{{ 'modules/community/events.event' | t }}</a></li>
+      </menu>
+    </nav>
+
+  {% else %}
+    
+    <div class="pos-community-header-signoptions">
+      <a href="/sessions/new" class="pos-button pos-button-primary">Log in</a>
+      <a href="/users/new" class="pos-button">Register</a>
+    </div>
+
+  {% endif %}
+
+</header>

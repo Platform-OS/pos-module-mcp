@@ -1,0 +1,53 @@
+---
+slug: api/posts/:post_id/vote
+method: put
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign entity_type = context.params.parent_entity_type
+  assign post_id = context.params.post_id
+  function post = 'modules/community/queries/posts/find', id: post_id
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/present_or_404', property:  post.id
+  # platformos-check-enable DeprecatedTag
+
+  assign parent_id = post.group_id
+
+  assign entity = null
+
+  case entity_type
+  when 'modules/community/group'
+    function entity = 'modules/community/queries/groups/find', id: parent_id, with_owner: true, current_profile: null
+    assign permission_access_callback = 'modules/community/can/groups'
+  when 'modules/community/event'
+    function entity = 'modules/community/queries/events/find', id: parent_id, with_owner: true, current_profile: null
+    assign permission_access_callback = 'modules/community/can/events'
+  endcase
+
+  comment
+    if entity with permissions is not present, no permissions for voting apply
+  endcomment
+  if entity
+    # platformos-check-disable DeprecatedTag
+    include 'modules/user/helpers/can_do_or_unauthorized', entity: entity, do: 'vote', requester: current_profile, access_callback: permission_access_callback, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+    # platformos-check-enable DeprecatedTag
+  elsif context.current_user.id == blank
+    break
+  endif
+
+  function object = 'modules/community/commands/posts/vote', object: context.params, current_profile: current_profile, post: post
+  if object.valid
+    assign event_payload = null | hash_merge: actor_id: current_profile.id, post_id: object.id
+    function _ = 'modules/core/commands/events/publish', type: 'post_voted', object: event_payload, delay: 0, max_attempts: null
+    if context.params.type == 'up'
+      assign event_payload = null | hash_merge: actor_id: current_profile.id, post_id: object.id
+      function _ = 'modules/core/commands/events/publish', type: 'post_upvoted', object: event_payload, delay: 0, max_attempts: null
+    endif
+  endif
+
+  render 'modules/community/json/shared/show', object: object
+%}

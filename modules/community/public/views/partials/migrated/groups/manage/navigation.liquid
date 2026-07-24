@@ -1,0 +1,18 @@
+{% liquid
+  assign active_class = 'pos-community-space-navigation-active'
+%}
+
+<nav class="pos-app pos-community-space-navigation">
+  <ul>
+    <li>
+      <a href="/groups/{{ group.id }}/relationships" class="{% if context.location.pathname contains 'relationships' %}{{ active_class }}{% endif %}">
+        {{ 'modules/community/groups.nav.user_management' | t }}
+      </a>
+    </li>
+    <li>
+      <a href="/groups/{{ group.id }}/edit" class="{% if context.location.pathname contains 'edit' %}{{ active_class }}{% endif %}">
+        {{ 'modules/community/groups.nav.group_edit' | t }}
+      </a>
+    </li>
+  </ul>
+</nav>

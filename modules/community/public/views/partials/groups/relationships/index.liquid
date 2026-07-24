@@ -1,0 +1,16 @@
+{% render 'modules/community/groups/header_manage', group: group %}
+
+<div class="container">
+
+  <h2 class="sidenote ms-4 mb-2 text-content-sidenote uppercase">
+    {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+    {{ 'modules/community/groups.relationships.members_count' | t: count: members.total_entries  }}
+    {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+  </h2>
+
+  <div class="card">
+    {% render 'modules/community/groups/relationships/list', group: group, list: owners, title: 'modules/community/groups.relationships.admins', dropdown: null, page: null %}
+    {% render 'modules/community/groups/relationships/list', group: group, list: members, title: 'modules/community/groups.relationships.general_members', dropdown: null, page: null %}
+  </div>
+
+</div>

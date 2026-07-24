@@ -1,0 +1,51 @@
+{
+  "name": "{{ 'app.title' | t }}",
+  "short_name": "Community",
+  "description": "{{ 'app.description' | t }}",
+  "start_url": ".",
+  "display": "minimal-ui",
+  "background_color": "#f7f8fa",
+  "theme_color": "#2173c4",
+  "icons": [
+    {
+      "src": "{{ 'modules/community/favicon/community-icon-192x192-maskable.png' | asset_url }}",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "{{ 'modules/community/favicon/community-icon-512x512-maskable.png' | asset_url }}",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "{{ 'modules/community/favicon/community-icon-192x192-any.png' | asset_url }}",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "{{ 'modules/community/favicon/community-icon-512x512-any.png' | asset_url }}",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "{{ 'modules/community/favicon/community-screenshot-001.png' | asset_url }}",
+      "sizes": "1024x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Community Solution"
+    },
+    {
+      "src": "{{ 'modules/community/favicon/community-screenshot-002.png' | asset_url }}",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Community Solution"
+    }
+  ]
+}

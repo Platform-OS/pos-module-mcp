@@ -1,0 +1,13 @@
+{% liquid
+  function object = 'modules/community/commands/users/invites/create/build', email: email, password: null
+  function object = 'modules/community/commands/users/invites/create/check', object: object
+
+  if object.valid
+    function user = 'modules/core/commands/execute', object: object, mutation_name: 'modules/community/users/create_with_name', selection: 'user_create'
+
+    hash_assign object['id'] = user.id
+    return object
+  else
+    return object
+  endif
+%}

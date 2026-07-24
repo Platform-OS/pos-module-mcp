@@ -1,0 +1,27 @@
+---
+layout: modules/community/admin
+metadata:
+  menu:
+    title: "Event management"
+  permission: "events.manage.all"
+  relative_path: "/admin/community/events"
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile'
+  # platformos-check-disable UnreachableCode
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', requester: current_profile, do: context.page.metadata.permission, entity: null, access_callback: null, anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+  # platformos-check-enable UnreachableCode
+  assign page = context.params.page | default: 1 | plus: 0
+  
+  function filters = 'modules/community/queries/events/admin_filters', params: context.params
+  
+  assign status = filters.status
+  if filters.status == "all"
+    assign status = "published, unpublished, pending, cancelled" | split: ", "
+  endif
+
+  function events = 'modules/community/queries/events/search', status: status, page: page, limit: 20, with_owner: true, keyword: filters.keyword, sort: filters.sort, name: null, owner_id: null, relation_name: null, not_name: null, not_ids: null, from: null, current_profile: null
+  render 'modules/community/admin_pages/events', filters: filters, events: events, current_profile: current_profile, attributes: null, page: null
+%}

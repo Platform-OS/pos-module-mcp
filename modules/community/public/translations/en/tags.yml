@@ -1,0 +1,20 @@
+---
+en:
+  tags:
+    follow: Follow
+    unfollow: Unfollow
+    followed: Followed hashtags
+    followable: Other hashtags to follow
+    filters:
+      search: Search hashtags
+    new:
+      new: New tag
+    edit:
+      edit: Edit tag
+    list:
+      add: Add tag
+      edit: Edit
+      empty_state: You haven't added any tags yet. <br> Create your first one now!
+    attr:
+      name: Name
+      disabled_at: Disabled At

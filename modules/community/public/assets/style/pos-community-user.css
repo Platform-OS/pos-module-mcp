@@ -1,0 +1,283 @@
+  /*
+  components related to user profiles
+
+  
+  card
+  profile banner
+  edit form
+*/
+  
+  
+  
+/* card
+============================================================================ */
+.pos-card-user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--pos-gap-card-elements) / 2);
+}
+
+  .pos-card-user:has(.pos-card-user-person:focus-visible) {
+    outline: 2px solid var(--pos-color-focused);
+    outline-offset: 2px;
+  }
+
+.pos-card-user-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--pos-gap-card-elements);
+}
+
+  a.pos-card-user-person:focus-visible {
+    outline: none;
+    box-shadow: none;
+    color: var(--pos-color-interactive-hover);
+  }
+
+  .pos-card-user-person .pos-avatar {
+    transition: scale .2s ease-in-out;
+  }
+
+  .pos-card-user-person:hover .pos-avatar,
+  .pos-card-user:has(.pos-card-user-person:focus-visible) .pos-avatar {
+    scale: 1.02;      
+  }
+
+.pos-card-user-job {
+  font-size: .9rem;
+}
+
+.pos-card-user-actions {
+  margin-block-start: var(--pos-gap-card-elements);
+}
+
+
+/* follow/unfollow button
+============================================================================ */
+.pos-community-user-relationship {
+  visibility: hidden;
+}
+
+.pos-community-user-relationship-initialized {
+  visibility: visible;
+}
+
+.pos-community-user-relationship:not(.pos-community-user-relationship-active) .pos-community-user-relationship-toggle-unfollow {
+  display: none;
+}
+
+.pos-community-user-relationship-active .pos-community-user-relationship-toggle-follow {
+  display: none;
+}
+
+
+
+/* profile banner
+============================================================================ */
+.pos-community-profile-banner {
+  min-height: 400px;
+  padding: var(--pos-padding-card);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+
+  border-radius: var(--pos-radius-card) var(--pos-radius-card) 0 0;
+  background-image: url('../images/profile-banner-background.avif');
+  background-size: cover;
+  background-position: center;
+  background-color: var(--pos-color-highlight-text);
+
+  color: var(--pos-color-highlight-background);
+}
+
+.pos-community-profile-banner-cover {
+  height: 50%;
+  width: 100%;
+
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  background-position: top center;
+  background-size: cover;
+
+  border-radius: var(--pos-radius-card) var(--pos-radius-card) 0 0;
+}
+
+.pos-community-profile-banner-heading {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+  @media (max-width: 560px) {
+    .pos-community-profile-banner-heading {
+      flex-grow: 1;
+      flex-direction: column;
+    }
+  }
+
+.pos-community-profile-banner-content {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+  @media (max-width: 560px) {
+    .pos-community-profile-banner-content {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+/* avatar */
+.pos-community-profile-banner .pos-avatar {
+  margin-block-end: 1rem;
+}
+
+  @media (max-width: 560px) {
+    .pos-community-profile-banner .pos-avatar {
+      align-self: center;
+    }
+  }
+
+/* action buttons */
+.pos-community-profile-banner-actions {
+  align-self: end;
+}
+
+  @media (max-width: 560px) {
+    .pos-community-profile-banner-actions {
+      margin-block-end: auto;
+      order: -1;
+    }
+  }
+
+.pos-community-profile-banner-actions ul {
+  display: flex;
+  gap: var(--pos-gap-button-button);
+}
+
+/* aside details */
+.pos-community-profile-banner-details {
+  display: flex;
+  flex-direction: column;
+  align-self: end;
+  gap: .5em;
+
+  font-size: .75em;
+}
+
+  .pos-community-profile-banner-details li {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    gap: .7em;
+  }
+
+  .pos-community-profile-banner-details svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  @media (max-width: 560px) {
+    .pos-community-profile-banner-details {
+      align-self: center;
+    }
+  }
+
+/* job title */
+.pos-community-profile-banner-job {
+  text-transform: uppercase;
+  font-size: .75rem;
+}
+
+/* name */
+.pos-community-profile-banner-name {
+  line-height: 2em;
+  color: var(--pos-color-highlight-background)
+}
+
+  .pos-community-profile-banner-name:hover {
+    text-decoration: underline;
+  }
+
+.pos-community-profile-banner-name .pos-heading-2 {
+  margin-block-end: .2em;
+
+  font-weight: 600;
+}
+
+
+
+/* edit form
+============================================================================ */
+.pos-community-profile-edit-banner {
+  min-height: 150px;
+  border-radius: var(--pos-radius-card);
+}
+
+.pos-community-profile-edit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--pos-gap-card-card);
+}
+
+  @media (max-width: 1279px) {
+    .pos-community-profile-edit {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pos-community-profile-edit .pos-card + .pos-card {
+    margin-block-start: var(--pos-gap-card-card);
+  }
+
+.pos-community-profile-edit-form {
+  margin-block-start: var(--pos-gap-card-card);
+}
+
+.pos-community-profile-edit .uppy-container {
+  min-width: 300px;
+}
+
+/* avatar */
+.pos-community-profile-edit-form-avatar {
+  margin-block-start: 6.5rem;
+}
+
+.pos-community-profile-edit-form-avatar .pos-avatar {
+  margin-block-start: -6.5rem;
+  margin-inline: auto;
+}
+
+/* push notifications */
+.pos-community-profile-edit-push {
+  display: grid;
+  grid-template-columns: 3rem auto;
+  gap: var(--pos-padding-card);
+}
+
+.pos-community-profile-edit-push svg {
+  margin-block-start: 1rem;
+
+  color: var(--pos-color-content-text-supplementary);
+}
+
+.pos-community-profile-edit-push-action {
+  margin-block: var(--pos-gap-section-elements);
+
+  text-align: center;
+}
+
+.pos-community-profile-edit-push .pos-heading-4 {
+  margin-block-start: var(--pos-gap-section-elements);
+}
+
+.pos-community-profile-edit-push .pos-table {
+  margin-block-start: var(--pos-gap-section-elements);
+}

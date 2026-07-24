@@ -1,0 +1,18 @@
+query records(
+  $name: String!
+  $r_id: String
+  $l_id: String
+){
+  records(
+    per_page: 1
+    filter: {
+      properties: [
+        { name: "name" value: $name }
+        { name: "r_id" value: $r_id }
+        { name: "l_id" value: $l_id }
+      ]
+    }
+  ){
+    total_entries
+  }
+}

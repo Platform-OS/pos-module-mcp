@@ -1,0 +1,18 @@
+{% liquid
+  function object = 'modules/community/commands/groups/join/build', group: group, profile: profile
+  function object = 'modules/community/commands/groups/join/check', object: object, group: group
+
+  if object.valid
+    function object = 'modules/community/commands/relationships/find_or_create', object: object
+    if object.created
+      assign event_payload = null | hash_merge: l_id: object.l_id, r_id: object.r_id, relationship_id: object.id
+      function _ = 'modules/core/commands/events/publish', type: 'relationship_created', object: event_payload, delay: 0, max_attempts: null
+      function _event = 'modules/community/commands/core_events/factory/create', relation: object, _event: null
+      if object.r_accepted_at == null
+        # TODO: get rid of events/factory and inline it part here
+      endif
+    endif
+  endif
+
+  return object
+%}

@@ -1,0 +1,41 @@
+---
+slug: comments.frame
+method: post
+layout: ''
+---
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  if context.params.comment.commentable_type == 'post' or context.params.comment.commentable_type == 'modules/community/post'
+    function post = 'modules/community/queries/posts/find', id: context.params.comment.commentable_id
+    # platformos-check-disable DeprecatedTag
+    include 'modules/user/helpers/can_do_or_unauthorized', entity: post, do: 'reply', requester: current_profile, access_callback: 'modules/community/can/posts', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+    # platformos-check-enable DeprecatedTag
+  else
+    log context.params.comment.commentable_type, type: 'ERROR: Unknown commentable type'
+    response_status 400
+    return
+  endif
+
+  function object = 'modules/community/commands/comments/create', object: context.params.comment, current_profile: current_profile
+
+  if object.valid
+    function _tags = 'modules/community/commands/tags/create_tags_from_text', text: object.body
+    
+    assign event_payload = null | hash_merge: creator_id: current_profile.id, comment_id: object.id, commentable_id: context.params.comment.commentable_id
+    function _ = 'modules/core/commands/events/publish', type: 'comment_created', object: event_payload, delay: 0, max_attempts: null
+
+    theme_render_rc 'components/molecules/comment', post: post, comment: object, current_profile: current_profile, context: context
+
+    if context.params.return_to
+      redirect_to context.params.return_to
+    endif
+  else
+    log object.errors, type: 'ERROR: comments/create.frame'
+    response_status 422
+    echo 'modules/community/comments.create_failed' | t
+  endif
+%}

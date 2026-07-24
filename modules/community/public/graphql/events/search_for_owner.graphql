@@ -1,0 +1,97 @@
+query search(
+  $id: ID
+  $limit: Int = 20
+  $owner_id: String!
+  $name: String
+  $with_owner: Boolean = false
+) {
+  events: records(
+    per_page: $limit
+    filter: {
+      id: { value: $id }
+      table: { value: "modules/community/event" }
+      properties: [
+        { name: "name", value: $name }
+      ]
+      related_records: {
+        join: { join_on_property: "id", foreign_property: "r_id"}
+        filter: {
+          table: { value: "modules/community/relationship" },
+          properties: [
+            { name: "l_id", value: $owner_id }
+            { name: "name", value: "owner" }
+          ]
+        }
+      }
+    }
+    sort: [
+      { created_at: { order: DESC }}
+    ]
+  ){
+    total_entries
+    results {
+      ...event
+    }
+  }
+}
+
+fragment event on Record {
+  id
+  created_at
+  type: table
+
+  uuid: property(name: "uuid")
+  name: property(name: "name")
+  short_description: property(name: "short_description")
+  description: property(name: "description")
+  start_date: property(name: "start_date")
+  end_date: property(name: "end_date")
+  link: property(name: "link")
+  venue: property(name: "venue")
+  commentable: property_boolean(name: "commentable")
+  status: property(name: "status")
+  tags: property_array(name: "tags")
+  c__going: property_int(name: "c__going")
+  c__maybe: property_int(name: "c__maybe")
+  c__not_going: property_int(name: "c__not_going")
+
+  photo: related_record(table: "modules/community/photo", join_on_property: "uuid", foreign_property: "object_uuid") {
+    id
+    photo_width: property_int(name: "photo_width")
+    photo_height: property_int(name: "photo_height")
+    photo: property_upload(name: "photo") {
+      url
+      versions
+    }
+  }
+  owner: related_record(
+    table: "modules/community/relationship"
+    join_on_property: "id"
+    foreign_property: "r_id"
+    filter: { properties: { value: "owner", name: "name" } }
+  ) @include(if: $with_owner) {
+    id
+    properties
+    profile: related_record(table: "modules/user/profile", join_on_property: "l_id") {
+      id
+      username: property(name: "username")
+      first_name: property(name: "first_name")
+      last_name: property(name: "last_name")
+      slug: property(name: "slug")
+      user_id: property(name: "user_id")
+      avatar: related_record(
+        table: "modules/community/photo"
+        join_on_property: "uuid"
+        foreign_property: "object_uuid"
+        filter: { properties: { name: "photo_type", value: "avatar" } }
+      ) {
+        photo_width: property_int(name: "photo_width")
+        photo_height: property_int(name: "photo_height")
+        photo: property_upload(name: "photo") {
+          url
+          versions
+        }
+      }
+    }
+  }
+}

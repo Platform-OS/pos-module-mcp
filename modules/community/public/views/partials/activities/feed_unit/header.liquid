@@ -1,0 +1,114 @@
+{% liquid
+  assign profile = payload.actor
+  assign latest_profile_cache_key = '_latest_profile_' | append: profile.id
+
+  parse_json latest_profile
+    cache latest_profile_cache_key, expire: 3600
+      function latest_profile = 'modules/user/queries/profiles/find', id: profile.id, uuid: null, user_id: null, first_name: null, last_name: null
+      print latest_profile
+    endcache
+  endparse_json
+
+  hash_assign profile['slug'] = latest_profile['slug']
+
+  function actor = 'modules/community/commands/activities/header', profile: profile
+
+  assign new_post = post | default: '{}' | parse_json
+  hash_assign new_post['type'] = 'post'
+
+  if current_profile
+    function can_edit = 'modules/user/helpers/can_do', requester: current_profile, do: 'edit', entity: new_post, access_callback: 'modules/community/can/posts'
+    function can_remove = 'modules/user/helpers/can_do', requester: current_profile, do: 'delete', entity: new_post, access_callback: 'modules/community/can/posts'
+  endif
+
+  if can_edit or can_remove
+    assign show_dropdown = true
+  endif
+%}
+
+<header>
+  {% if actor.url %}
+    <a href="{{ actor.url }}">
+  {% endif %}
+      {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+      {% render 'modules/common-styling/user/avatar', size: 'l', name: actor.name, params: null %}
+      {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+  {% if actor.url %}
+    </a>
+  {% endif %}
+
+    <div class="pos-community-post-header-info">
+      
+      <div>
+        {% if actor.url %}
+          <a href="{{ actor.url }}" class="pos-community-post-header-author">{{ actor.name }}</a>
+        {% else %}
+          {{ actor.name }}
+        {% endif %}
+
+        {% liquid
+          case payload.type
+
+          when 'login_failed', 'account_locked', 'account_unlocked'
+            render 'modules/community/activities/feed_unit/type/login_failed', payload: payload
+
+          when 'post_created'
+            if payload.target.name == 'PROFILE_GROUP'
+              assign internal_group = true
+            endif
+            unless internal_group
+              render 'modules/community/activities/feed_unit/type/default', payload: payload, namespace: namespace, role: role, event: null, meta: null
+            endunless
+
+          else
+            render 'modules/community/activities/feed_unit/type/default', payload: payload, namespace: namespace, role: role, event: null, meta: null
+          endcase
+        %}
+      </div>
+
+      {% render 'modules/community/activities/feed_unit/date', payload: payload, current_profile: current_profile, skip_link: null %}
+    </div>
+
+      {% if payload.type == 'post_created' and show_dropdown and hide_menu != true %}
+        <div class="pos-popover pos-community-post-menu">
+          <button popovertarget="pos-community-post-{{ post.id }}-menu" class="pos-community-post-menu-toggle">
+            {% render 'modules/common-styling/icon', icon: 'dots', class: null %}
+            <span class="pos-label">{{ 'modules/community/posts.menu.toggle' | t: post: payload.post_id }}</span>
+          </button>
+          <menu popover id="pos-community-post-{{ post.id }}-menu">
+            {% if can_edit %}
+              <li>
+                <button
+                  type="button"
+                  class="pos-community-post-menu-edit"
+                  popovertarget="pos-community-post-{{ post.id }}-menu"
+                  popovertargetaction="hide"
+                  class="pos-community-post-menu-edit"
+                >
+                  {% render 'modules/common-styling/icon', icon: 'pencil', class: null %}
+                  {{ 'modules/community/common.edit' | t }}
+                  <span class="pos-label">{{ 'modules/community/feed.post' | t }} {{ payload.post_id }}</span>
+                </button>
+              </li>
+            {% endif %}
+            {% if can_remove %}
+              <li class="pos-popover-menu-item-important">
+                <button
+                  type="button"
+                  popovertarget="pos-community-post-{{ post.id }}-menu"
+                  popovertargetaction="hide"
+                  class="pos-community-post-menu-delete"
+                  data-confirmation-message="{{ 'modules/community/app.confirm-delete' | t }}"
+                >
+                  {% render 'modules/common-styling/icon', icon: 'x', class: null %}
+                  {{ 'modules/community/common.delete' | t }}
+                  <span class="pos-label">{{ 'modules/community/feed.post' | t }} {{ payload.post_id }}</span>
+                </button>
+              </li>
+            {% endif %}
+          </menu>
+        </div>
+      {% endif %}
+
+
+</header>

@@ -1,0 +1,8 @@
+<section class="pos-community-space-empty">
+<div>
+    <h3 class="pos-heading-2">{{ 'modules/community/groups.index.empty.title' | t }}</h3>
+    <p>{{ 'modules/community/groups.index.empty.desc' | t }}</p>
+    <p><a href="{% render 'modules/community/helpers/link_to', action: 'new', object: null, namespace: 'groups' %}" class="pos-button">{{ 'modules/community/groups.index.empty.cta' | t }}</a></p>
+</div>
+{% render 'modules/common-styling/icon', icon: 'users', class: null %}
+</section>

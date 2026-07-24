@@ -1,0 +1,74 @@
+---
+metadata:
+  name: Group template
+  params:
+    group: {}
+    current_profile: {}
+    tab: ''
+    section: ''
+---
+{% liquid
+  function can_invite = 'modules/user/helpers/can_do', requester: current_profile, do: 'invite', entity: group, access_callback: 'modules/community/can/groups'
+  function can_edit = 'modules/user/helpers/can_do', requester: current_profile, do: 'edit', entity: group, access_callback: 'modules/community/can/groups'
+  function can_join = 'modules/user/helpers/can_do', requester: current_profile, do: 'join', entity: group, access_callback: 'modules/community/can/groups'
+  function can_leave = 'modules/user/helpers/can_do', requester: current_profile, do: 'leave', entity: group, access_callback: 'modules/community/can/groups'
+  function can_post = 'modules/user/helpers/can_do', requester: current_profile, do: 'post', entity: group, access_callback: 'modules/community/can/groups'
+
+  assign group_photo = group.main_photo.photo.versions.uncropped
+%}
+{%- content_for 'meta_image' -%}{{ group.main_photo.photo.versions.lg }}{%- endcontent_for -%}
+{%- content_for 'meta_description' -%}{{ group.name | append: ' - ' | append: group.summary | truncate: 200 }}{%- endcontent_for -%}
+
+{%- comment -%}platformos-check-disable LiquidHTMLSyntaxError{%- endcomment -%}
+{% render 'modules/community/migrated/groups/header',, params: null
+  name: group.name,
+  image_src: group_photo,
+  current_profile: current_profile,
+  group: group,
+  classes: group_header_classes,
+  can_invite: can_invite,
+  can_edit: can_edit,
+  can_join: can_join,
+  can_leave: can_leave
+%}
+{%- comment -%}platformos-check-enable LiquidHTMLSyntaxError{%- endcomment -%}
+
+{% function url = 'modules/community/helpers/link_to', object: group %}
+{% render 'modules/community/migrated/groups/navigation',
+  tab: tab,
+  url: url,
+  id: group.id
+%}
+
+<div class="flex flex-col md:flex-row gap-6">
+
+  <div class="lg:w-1/5 md:w-1/4 break-words">
+    {% theme_render_rc 'components/organisms/group-details',
+      group_type: group.group_type,
+      created_at: group.created_at,
+      admins: group.owner,
+      description: group.description,
+      id: group.id
+      can_post: can_post
+    %}
+  </div>
+
+  <section class="flex-1">
+    {% liquid
+      case section
+      when 'invites'
+        theme_render_rc 'components/pages/group-invites', group: group, current_profile: current_profile, list: list, tab: 'members', context: context
+      when 'details'
+        theme_render_rc 'components/pages/group-details', group: group, current_profile: current_profile, list: list, tab: 'activity', context: context
+      when 'members'
+        function can_see_content = 'modules/user/helpers/can_do', requester: current_profile, do: 'see_content', entity: group, access_callback: 'modules/community/can/groups'
+        render 'modules/community/migrated/groups/members', group: group, list: list, can_see_content: can_see_content, current_profile: current_profile, params: null
+      when 'about'
+        function can_see_content = 'modules/user/helpers/can_do', requester: current_profile, do: 'see_content', entity: group, access_callback: 'modules/community/can/groups'
+        render 'modules/community/migrated/groups/about', can_see_content: can_see_content, group_type: group.group_type, code_of_conduct: group.code_of_conduct, params: null
+      endcase
+    %}
+  </section>
+
+
+</div>

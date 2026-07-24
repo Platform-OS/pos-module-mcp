@@ -1,0 +1,55 @@
+query search(
+  $id: ID
+  $not_ids: [ID!]
+  $limit: Int = 20
+  $page: Int = 1
+  $name: String
+  $status: String
+  $sort: [PropertySort!]
+  $names: [String!]
+  $query: String
+  $disabled_at: String
+  $with_creator: Boolean = false
+) {
+  tags: records(
+    per_page: $limit
+    page: $page
+    filter: {
+      id: { value: $id, not_value_in: $not_ids }
+      table: { value: "modules/community/tag" }
+      properties: [
+        { name: "name" value: $name }
+        { name: "name" value_in: $names }
+        { name: "name" contains: $query }
+        { name: "status" value: $status }
+        { name: "disabled_at" value: $disabled_at }
+      ]
+    }
+    sort: [
+      { properties: $sort },
+      { created_at: { order: DESC } }
+    ]
+  ){
+    total_entries
+    total_pages
+    results {
+      id
+      created_at
+      type: table
+
+      name: property(name: "name")
+      status: property(name: "status")
+      post_count: property_int(name: "post_count")
+      follower_count: property_int(name: "follower_count")
+      disabled_at: property(name: "disabled_at")
+      creator_id: property(name: "creator_id")
+
+      creator: related_record(
+        table: "modules/user/profile"
+        join_on_property: "creator_id"
+      ) @include(if: $with_creator) {
+        properties
+      }
+    }
+  }
+}

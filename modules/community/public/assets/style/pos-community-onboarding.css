@@ -1,0 +1,67 @@
+/*
+  community onboarding screen
+
+  interests
+  timezone
+*/
+
+
+/* interests */
+/* ================================================================================ */
+.pos-community-onboarding-interests input[type="checkbox"] {
+  position: absolute;
+  left: -100%;
+}
+
+.pos-community-onboarding-interests label {
+  height: var(--pos-height-button);
+  padding-inline: var(--pos-padding-button);
+  display: flex;
+  align-items: center;
+
+  background-color: var(--pos-color-page-background);
+  border-radius: var(--pos-radius-button);
+  user-select: none;
+  
+  text-transform: none;
+  font-size: 1rem;
+  color: var(--pos-color-interactive);
+
+  transition: all .1s linear;
+}
+
+  .pos-community-onboarding-interests label:before {
+    margin-inline-end: .5ex;
+
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--pos-color-content-icon);
+
+    content: '#';
+
+    transition: color .1s linear;
+  }
+
+.pos-community-onboarding-interests input[type="checkbox"]:checked + label {
+  background-color: var(--pos-color-button-primary-background);
+  color: var(--pos-color-button-primary-text);
+}
+
+  .pos-community-onboarding-interests input[type="checkbox"]:checked + label:before {
+    color: var(--pos-color-button-primary-text);
+  }
+
+
+/* timezone */
+/* ================================================================================ */
+.pos-community-onboarding-timezone {
+  padding-block: var(--pos-gap-text-text);
+
+  border-block-start: 1px solid var(--pos-color-frame);
+  border-block-end: 1px solid var(--pos-color-frame);
+}
+
+.pos-community-onboarding-timezone select {
+  width: 100%;
+  margin-block-start: var(--pos-gap-text-text);
+}

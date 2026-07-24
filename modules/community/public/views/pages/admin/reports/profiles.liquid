@@ -1,0 +1,23 @@
+---
+layout: modules/community/admin
+slug: admin/reports/profiles
+method: post
+---
+{%- function current_profile = 'modules/community/helpers/current_profile' -%}
+
+{%- render 'modules/user/helpers/can_do_or_redirect', requester: current_profile, do: 'admin_pages.view', entity: null, access_callback: null, return_url: '/' -%}
+
+{% liquid
+  assign operation_uuid = '' | uuid
+  assign object = '{}' | parse_json | hash_merge: uuid: operation_uuid, creator_id: current_profile.id, user_id: current_profile.user_id, operation_type: 'export_profiles', operation_model: 'profile', options: '{}', retrieve_all_command: 'modules/user/commands/profiles/export_all'
+  function object = 'modules/reports/commands/reports/create', object: object
+
+  if object.valid
+    function res = 'modules/core/commands/statuses/create', name: 'modules/reports/statuses.report.pending', reference_id: object.id, requester_id: 'report', payload: null, delay: null, max_attempts: null, reference_schema: null, timestamp: null
+
+    assign object_payload = '{}' | parse_json | hash_merge: actor_id: current_profile.id, object_id: object.id, app_host: context.location.host
+    function _ = 'modules/core/commands/events/publish', type: 'report_requested', object: object_payload, delay: 0, max_attempts: null
+  endif
+%}
+
+{% redirect_to '/admin/reports/list?type=profile' %}

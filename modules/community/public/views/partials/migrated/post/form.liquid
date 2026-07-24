@@ -1,0 +1,47 @@
+{% liquid
+
+  assign placeholder_defaut = 'modules/community/posts.create.placeholder' | t
+  assign placeholder = placeholder | default: placeholder_defaut
+
+  assign id = id
+  assign editor_id = id | append: '-editor'
+
+%}
+
+
+<div
+  class="pos-app pos-card pos-card-highlighted pos-community-feed-create"
+  id="{{ id }}"
+  data-response-target="#pos-community-feed-posts"
+  data-response-target-place="start"
+>
+  {%- comment -%}platformos-check-disable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+  {% render 'modules/common-styling/user/avatar', size: 'lg', name: author.name, params: null %}
+  {%- comment -%}platformos-check-enable PartialCallArguments,MissingRenderPartialArguments,UnrecognizedRenderPartialArguments{%- endcomment -%}
+  <button class="pos-community-feed-create-activate pos-form-input" disabled>{{ placeholder }}</button>
+  <form action="/posts.frame" method="post" x-ref="form">
+    {% liquid
+      assign uuid = '' | uuid
+    %}
+    <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+    <input type="hidden" name="post[entity_type]" value="{{ target_entity.type }}">
+    <input type="hidden" name="post[entity_id]" value="{{ target_entity.id }}">
+    <input type="hidden" name="post[content_type]" value="post">
+    <input type="hidden" name="post[uuid]" value="{{ uuid }}">
+
+    {%- comment -%}platformos-check-disable MissingRenderPartialArguments{%- endcomment -%}
+    {% render 'modules/common-styling/forms/markdown',
+      name: 'post[body]',
+      id: editor_id,
+      presigned_upload: context.presigned_url,
+      mention_search_url: '/api/users/search.json',
+      minlength: 3
+    %}
+    {%- comment -%}platformos-check-enable MissingRenderPartialArguments{%- endcomment -%}
+
+    <fieldset class="pos-form-actions">
+      <button type="button" class="pos-community-feed-create-close">Cancel</button>
+      <button type="submit" class="pos-button pos-button-primary">Post</button>
+    </fieldset>
+  </form>
+</div>

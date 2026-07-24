@@ -1,0 +1,53 @@
+---
+slug: groups/:id/edit
+method: put
+layout: modules/community/community
+---
+
+{% liquid
+  function current_profile = 'modules/community/helpers/current_profile', membership: true
+  # platformos-check-disable DeprecatedTag
+  include 'modules/community/helpers/profile_present_or_redirect', profile: current_profile
+  # platformos-check-enable DeprecatedTag
+
+  assign group_id = context.params.id | split: '-' | last
+  function group = 'modules/community/queries/groups/find', id: group_id, with_owner: true, current_profile: current_profile
+  # platformos-check-disable DeprecatedTag
+  include 'modules/user/helpers/can_do_or_unauthorized', entity: group, do: 'edit', requester: current_profile, access_callback: 'modules/community/can/groups', anonymous_return_to: null, redirect_anonymous_to_login: false, forbidden_partial: null
+  # platformos-check-enable DeprecatedTag
+
+  if context.params.group.cover.added[0]
+    assign cover_url = context.params.group.cover.added[0]
+  else
+    assign cover_url = context.params.group.cover.current[0]
+  endif
+
+  function object = 'modules/community/commands/groups/update', object: context.params.group
+
+  if object.valid
+    assign cover = null | hash_merge: direct_url: cover_url, photo_type: 'group_cover', origin_url: cover_url, object_uuid: object.uuid
+    function cover = 'modules/community/commands/photos/create', object: cover, current_profile: current_profile
+
+    if object.approve_request == "anonymous" and group.approve_request != "anonymous"
+      function _ = 'modules/community/commands/relationships/update_group_members', group: object
+    endif
+
+    function url = 'modules/community/helpers/link_to', object: group
+    # platformos-check-disable DeprecatedTag
+    include 'modules/community/helpers/redirect_to', url: url, notice: 'modules/community/common.updated'
+    # platformos-check-enable DeprecatedTag
+  else
+    assign cover = '[]' | parse_json
+    assign file = null | hash_merge: url: cover_url
+    assign add_to_cover = null | hash_merge: id: '1', file: file
+    assign cover = cover | array_add: add_to_cover
+    hash_assign object['cover'] = cover
+
+    hash_assign object['type'] = group.type
+    function _ = 'modules/community/helpers/extend_context', group: group, post_templates: true, group_templates: true
+
+    render 'modules/community/migrated/groups/manage/header', group: object
+    render 'modules/community/migrated/groups/manage/navigation', group: object
+    render 'modules/community/migrated/groups/manage/form', current_profile: current_profile, object: object, params: null, description_params: null
+  endif
+%}

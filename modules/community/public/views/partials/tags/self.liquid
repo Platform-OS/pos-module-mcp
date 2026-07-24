@@ -1,0 +1,55 @@
+<h3 class="pos-heading-2">{{ 'modules/community/tags.followed' | t }}</h3>
+<ul class="pos-card pos-tags-list pos-mt-text-text" id="pos-community-space-tags-followed">
+  {% for tag in tags %}
+  <li class="pos-tag pos-community-tag-noted">
+    #{{ tag.name }}
+    <span class="pos-community-tag-noted-note">
+      {% render 'modules/common-styling/icon', icon: 'users', class: null %}
+      {% liquid
+        assign followers = tag.follower_count | to_positive_integer: 0 
+      %}
+      {{ followers }}
+      <span class="pos-label">
+        {{ 'Follower' | pluralize: followers }}
+      </span>
+    </span>
+    <form action="" id="pos-community-tag{{ tag.id }}-relationship" class="pos-community-tag-relationship">
+      <input type="hidden" name="l_id" value="{{ current_profile.id }}">
+      <input type="hidden" name="r_id" value="{{ tag.id }}">
+      <input type="hidden" name="name" value="followship:tag">
+      <button type="submit" title="Unfollow '{{ tag.name }}' hashtag">
+        <span class="pos-label">Unfollow '{{ tag.name }}' hashtag</span>
+        {% render 'modules/common-styling/icon', icon: 'x', class: null %}
+      </button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+
+
+<h3 class="pos-heading-2 pos-mt-section-section">{{ 'modules/community/tags.followable' | t }}</h3>
+<ul class="pos-card pos-tags-list pos-mt-text-text" id="pos-community-space-tags-proposed">
+  {% for tag in tags %}
+  <li class="">
+    <form action="" id="pos-community-tag{{ tag.id }}-relationship" class="pos-community-tag-relationship">
+      <input type="hidden" name="l_id" value="{{ current_profile.id }}">
+      <input type="hidden" name="r_id" value="{{ tag.id }}">
+      <input type="hidden" name="name" value="followship:tag">
+
+      <button type="submit" title="Follow '{{ tag.name }}' hashtag" class="pos-tag pos-tag-interactive pos-community-tag-noted">
+        #{{ tag.name }}
+        <span class="pos-community-tag-noted-note">
+          {% render 'modules/common-styling/icon', icon: 'users', class: null %}
+          {% liquid
+            assign followers = tag.follower_count | to_positive_integer: 0 
+          %}
+          {{ followers }}
+          <span class="pos-label">
+            {{ 'Follower' | pluralize: followers }}
+          </span>
+        </span>
+      </button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>

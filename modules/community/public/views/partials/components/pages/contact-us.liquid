@@ -1,0 +1,45 @@
+---
+metadata:
+  name: Contact Us Page
+---
+
+<div class="container mt-4 mb-10">
+  {% theme_render_rc 'components/atoms/heading', level: 3, content: 'If you need to contact us, we’re here to help.' %}
+</div>
+
+<section class="container flex flex-col lg:flex-row justify-center gap-4">
+  <div class="lg:w-2/3">
+    {% capture form_card_content %}
+      <form action="/contacts" method="post">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6 items-center">
+
+          <label for="contact[email]">
+            {% theme_render_rc 'components/atoms/heading', level: 4, content: 'Email' %}
+          </label>
+          {% theme_render_rc 'components/atoms/input', type: 'email', name: 'contact[email]', required: true, placeholder: 'Your Email' %}
+
+          <label for="contact[message]" class="mt-6 md:mt-0 self-start">
+            {% theme_render_rc 'components/atoms/heading', level: 4, content: 'Message' %}
+          </label>
+          {% theme_render_rc 'components/atoms/input', type: 'textarea', name: 'contact[message]', required: true, placeholder: 'Your message', classes: 'h-52' %}
+
+          <div></div>
+          {% spam_protection "hcaptcha" %}
+          {% if errors.hcaptcha %}
+            <div></div>
+            <div class="text-red-500">{{ errors.hcaptcha | join: ', ' }}</div>
+          {% endif %}
+
+          <div></div>
+          <div class="p-2 flex">
+            {% theme_render_rc 'components/atoms/button', type: 'submit', content: 'Send message' %}
+          </div>
+
+          <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}" />
+
+        </div>
+      </form>
+    {% endcapture %}
+    {% theme_render_rc 'components/atoms/card', content: form_card_content %}
+  </div>
+</section>

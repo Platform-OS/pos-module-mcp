@@ -1,0 +1,11 @@
+{% liquid
+  function mentions = 'modules/community/helpers/extract_mentions', input: input
+  assign output = input
+
+  for mention in mentions
+    assign pattern = '@\[' | append: mention[0] | append: '\]\((\d+)\)'
+    assign output = output | replace_regex: pattern, mention[0]
+  endfor
+
+  return output
+%}

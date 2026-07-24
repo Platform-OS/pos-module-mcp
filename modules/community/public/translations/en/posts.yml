@@ -1,0 +1,17 @@
+---
+en:
+  posts:
+    errors:
+      only_owner_can_accept_answer: Only owner can accept answer
+      owner_cant_vote_his_post: You can't vote on post you wrote
+    create:
+      placeholder: Have anything to post?
+      failed: Failed to create post
+      success: Posted
+    like_button:
+      likes: likes
+      like: like
+      vote_up: Like post
+      vote_clear: Unlike post
+    menu:
+      toggle: Show options for post %{post}

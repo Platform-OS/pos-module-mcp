@@ -1,0 +1,107 @@
+---
+metadata:
+  name: Content card
+  params:
+    variant:
+      - default
+      - highlighted
+    title: ''
+    content: ''
+    footerContent: ''
+    imgSrc: ''
+    imgSrcSet: ''
+    avifSrcSet: ''
+    animation:
+      - true
+      - false
+    classes: ''
+    titleClasses: ''
+    url: ''
+  styleguide:
+    - variant: default
+      title: Blog post title
+      content: This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...
+      imgSrc: 'https://picsum.photos/300/180?random=1'
+      animation: true
+      footerContent: <div class="text-xs pb-4">by <a href="#" class="pos-clean text-interactive-text">Jane Doe</a></div>
+      classes: 'w-80'
+    - variant: highlighted
+      title: Blog post title
+      content: This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...
+      author: Jane Doe
+      authorLink: '/janedoe'
+      imgSrc: 'https://picsum.photos/300/180?random=2'
+      classes: 'w-80'
+    - variant: default
+      content: This is a post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras turpis arcu, tempor eget ante munis...
+      imgSrc: 'https://picsum.photos/300/180?random=3'
+      classes: 'w-80'
+
+---
+{% liquid
+  assign variant = variant | default: params.variant | default: 'default'
+  assign animation = animation | default: params.animation | default: false
+  assign title = title | default: params.title
+  assign content = content | default: params.content
+  assign footerContent = footerContent | default: params.footerContent | default: false
+  assign imgSrc = imgSrc | default: params.imgSrc
+  assign imgSrcSet = imgSrcSet | default: params.imgSrcSet
+  assign avifSrcSet = avifSrcSet | default: params.avifSrcSet
+  assign classes = classes | default: params.classes
+  assign titleClasses = titleClasses | default: params.titleClasses
+  assign url = url | default: params.url
+
+  assign classes = classes | append: ' overflow-hidden p-0 '
+  assign titleClasses = titleClasses | append: ' break-words '
+
+  if animation == true
+    assign classes = classes | append: 'hover:scale-105 duration-500 hover:shadow-large '
+  endif
+%}
+
+{% capture card_content %}
+  <div class="h-full flex flex-col">
+    <div class="relative w-full h-0 pt-[calc(100%*(9/16))]">
+      {% if url != blank %}
+      <a href="{{url}}">
+        <span class="sr-only">{{title}}</span>
+      {% endif %}
+        <picture>
+          {% if avifSrcSet != blank and imgSrc != blank %}
+            <source type="image/avif" srcset="{{avifSrcSet}}">
+            {% assign src = imgSrc %}
+            {% assign srcset = imgSrcSet %}
+          {% else %}
+            {% assign src = 'modules/components/images/Placeholder_image.png' | asset_url %}
+            {% assign srcset = '' %}
+          {% endif %}
+          <img src="{{src}}" srcset="{{srcset}}" alt="{{title}}" class="absolute w-full h-full object-cover top-0" width="476" height="268">
+        </picture>
+      {% if url != blank %}
+      </a>
+      {% endif %}
+    </div>
+    <div class="p-6">
+      {% if title != blank %}
+        {% if url != blank %}
+        <a href="{{url}}">
+        {% endif %}
+          {% theme_render_rc 'components/atoms/heading', content: title, classes: titleClasses, level: 4 %}
+        {% if url != blank %}
+        </a>
+        {% endif %}
+      {% endif %}
+      <div class="pb-4">{{content | html_safe}}</div>
+    </div>
+    <div class="p-6 mt-auto">
+      {{footerContent | html_safe}}
+    </div>
+  </div>
+{% endcapture %}
+
+
+{% liquid
+  assign card_params = null | hash_merge: content: card_content, classes: classes, variant: variant
+%}
+{% theme_render_rc 'components/atoms/card', params: card_params %}
+

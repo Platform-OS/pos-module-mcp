@@ -1,0 +1,423 @@
+/*
+  shared elements for spaces-related pages (light groups, events, members, etc.)
+
+  header
+  filters
+  card grid
+  space details header
+  space details navigation
+  admin user table
+  admin edit form
+  empty space
+*/
+
+
+
+/* header */
+/* ================================================================================ */
+.pos-community-space-header {
+  min-height: 140px;
+  padding: var(--pos-padding-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  border-radius: var(--pos-radius-panel);
+  background-color: var(--pos-color-interactive);
+  background-image: url('../images/background_groups.avif');
+  background-size: cover;
+  background-position: center;
+
+  color: var(--pos-color-content-inverted-text);
+}
+
+.pos-community-space-header .pos-heading-2 {
+  line-height: 1.1em;
+  font-weight: 600;
+}
+
+.pos-community-space-header small {
+  margin-inline-start: .1ex;
+  margin-block-start: .1em;
+  margin-block-end: .3em;
+  display: block;
+
+  line-height: 1em;
+  font-size: .5em;
+  font-weight: 400;
+}
+
+  .pos-community-space-header small strong {
+    font-weight: 600;
+  }
+
+.pos-community-space-header .pos-heading-2 a {
+  color: inherit;
+}
+
+  .pos-community-space-header .pos-heading-2 a:hover {
+    text-decoration: underline;
+  }
+
+/* add margin for the standalone header (without navigation or filters) */
+.pos-community-space-header + :not(.pos-community-space-filters):not(.pos-community-space-navigation) {
+  margin-block-start: var(--pos-gap-card-card);
+}
+
+/* add bottom border radius for standalone header (without navigation or filters) */
+.pos-community-content:has(.pos-community-space-header + .pos-community-space-filters) .pos-community-space-header,
+.pos-community-content:has(.pos-community-space-header + .pos-community-space-navigation) .pos-community-space-header {
+  border-radius: var(--pos-radius-panel) var(--pos-radius-panel) 0 0;
+}
+
+
+
+/* filters */
+/* ================================================================================ */
+.pos-community-space-filters {
+  margin-block-end: var(--pos-gap-card-card);
+  padding: var(--pos-padding-card);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--pos-gap-input-input);
+
+  background-color: var(--pos-color-highlight-background);
+
+  color: var(--pos-color-highlight-text);
+}
+
+.pos-community-space-filters form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pos-gap-input-input);
+}
+
+
+
+/* card grid */
+/* ================================================================================ */
+.pos-community-space-grid {
+  --columns-number: 1;
+  --card-min-width: 250px;
+  
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--columns-number), minmax(var(--card-min-width), 1fr));
+  gap: var(--pos-gap-card-card);
+}
+
+@media (min-width: 850px) {
+  .pos-community-space-grid {
+    --columns-number: 2;
+  }
+}
+
+@media (min-width: 1499px) {
+  .pos-community-space-grid {
+    --columns-number: 3;
+  }
+}
+
+@media (min-width: 2099px) {
+  .pos-community-space-grid {
+    --columns-number: 6;
+  }
+}
+
+
+
+/* space details header */
+/* ================================================================================ */
+.pos-community-space-detail-header {
+  min-height: 264px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* using common-styling increase legibility class but we don't need to span it across whole header height */
+.pos-community-space-detail-header:before {
+  inset-block-end: 50%;
+}
+
+.pos-community-space-detail-header-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--pos-gap-card-elements);
+
+  line-height: 1.1;
+}
+
+.pos-community-space-detail-header-nav {
+  display: flex;
+  gap: var(--pos-gap-button-button);
+}
+
+
+
+/* space details navigation */
+/* ================================================================================ */
+.pos-community-space-navigation {
+  max-width: calc(100vw - 2 * var(--pos-padding-page));
+  margin-block-end: var(--pos-gap-card-card);
+  overflow-x: auto;
+
+  background-color: var(--pos-color-highlight-background);
+  
+  color: var(--pos-color-highlight-text);
+}
+
+.pos-community-space-navigation ul {
+  position: relative;
+  display: flex;
+}
+
+.pos-community-space-navigation a {
+  padding: var(--pos-padding-cell);
+  display: block;
+
+  white-space: nowrap;
+  color: inherit;
+}
+
+  .pos-community-space-navigation a:focus-visible {
+    outline-offset: -6px;
+
+    color: var(--pos-color-interactive-hover);
+  }
+
+  .pos-community-space-navigation .pos-community-space-navigation-active {
+    background-color: var(--pos-color-content-background);
+    
+    color: var(--pos-color-interactive);
+  }
+
+/* active/hover indicator */
+.pos-community-space-navigation:not(:has(a:hover)) .pos-community-space-navigation-active {
+  anchor-name: --pos-community-space-navigation-active;
+}
+
+.pos-community-space-navigation a:hover {
+  anchor-name: --pos-community-space-navigation-active;
+
+  color: var(--pos-color-interactive-hover);
+}
+
+.pos-community-space-navigation ul:after {
+  position: absolute;
+  inset-inline-start: anchor(left);
+  inset-inline-end: anchor(right);
+  inset-block-end: anchor(bottom);
+  position-anchor: --pos-community-space-navigation-active;
+
+  border-block-end: 2px solid var(--pos-color-interactive);
+
+  transition-property: inset-inline-start, inset-inline-end;
+  transition-duration: .2s;
+  transition-timing-function: ease-in-out;
+
+  content: '';
+}
+
+
+/* admin filters */
+/* ================================================================================ */
+.pos-community-spaces-admin-filters {
+  margin-block: var(--pos-gap-card-card);
+  padding: var(--pos-padding-cell);
+  display: flex;
+  align-items: center;
+  gap: var(--pos-gap-button-button);
+
+  border-radius: var(--pos-radius-panel);
+  background-color: var(--pos-color-highlight-background);
+
+  color: var(--pos-color-highlight-text);
+}
+
+
+
+/* admin user table */
+/* ================================================================================ */
+.pos-community-spaces-admin-table li {
+  vertical-align: middle;
+}
+
+.pos-community-spaces-admin-table + .pos-community-spaces-admin-table {
+  margin-block-start: var(--pos-gap-card-card);
+}
+
+.pos-community-spaces-admin-table-user {
+  margin: calc(var(--pos-padding-button) * -1);
+  padding: var(--pos-padding-button);
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--pos-gap-card-elements) / 2);
+
+  border-radius: var(--pos-radius-button);
+}
+
+  .pos-community-spaces-admin-table-user-position {
+    display: block;
+
+    font-size: .8em;
+    color: var(--pos-color-content-text-supplementary);
+  }
+
+  .pos-community-spaces-admin-table-user .pos-avatar {
+    scale: 1;
+    transition: scale .2s var(--pos-community-transition-ui-detail);
+  }
+
+  .pos-community-spaces-admin-table-user:hover .pos-avatar,
+  .pos-community-spaces-admin-table-user:focus-visible .pos-avatar {
+    scale: 1.05;
+  }
+
+  .pos-community-spaces-admin-table-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--pos-gap-button-button);
+  }
+
+  @media (min-width: 801px){
+    .pos-community-spaces-admin-table-actions {
+      justify-content: end; 
+    }
+
+    .pos-community-spaces-admin-table-action-mobile {
+      display: none;
+    }
+  }
+
+.pos-community-spaces-admin-table-actions .pos-label {
+  position: absolute;
+  inset-inline-start: -200vw;
+}
+
+.pos-community-spaces-admin-table-actions button[popovertarget] {
+  width: var(--pos-height-button);
+  height: var(--pos-height-button);
+  padding: var(--pos-padding-button);
+
+  border-radius: var(--pos-radius-button);
+
+  color: var(--pos-color-interactive);
+}
+
+  .pos-community-spaces-admin-table-actions button[popovertarget]:hover {
+    color: var(--pos-color-interactive-hover);
+  }
+
+  .pos-community-spaces-admin-table-actions button[popovertarget]:focus-visible {
+    outline: 2px solid var(--pos-color-focused);
+  }
+
+@media (max-width: 800px) {
+  .pos-community-spaces-admin-table .pos-table-content > ul {
+    position: relative;
+  }
+
+  .pos-community-spaces-admin-table-actions .pos-popover {
+    position: absolute;
+    inset-block-start: var(--pos-padding-card);
+    inset-inline-end: var(--pos-padding-cell);
+  }
+
+  .pos-community-spaces-admin-table-user {
+    max-width: calc(100% - 44px);
+  }
+
+  /* hide buttons on mobile but show the same actions in popover menu */
+  .pos-community-spaces-admin-table-actions > .pos-button {
+    display: none;
+  }
+  
+  .pos-community-spaces-admin-table-action-mobile {
+    display: flex;
+  }
+}
+
+/* remove admin permissions icon */
+.pos-community-spaces-admin-remove-admin-icon,
+.pos-community-spaces-admin-make-admin-icon,
+.pos-community-spaces-admin-throw-icon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+  font-style: normal;
+}
+
+.pos-community-spaces-admin-remove-admin-icon svg,
+.pos-community-spaces-admin-make-admin-icon svg,
+.pos-community-spaces-admin-throw-icon svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-block-end: -1rem;
+  position: relative;
+  inset-block-start: -2.5rem;
+  inset-inline-start: 3rem;
+
+  rotate: 45deg;
+
+  fill: gold;
+}
+
+  .pos-community-spaces-admin-make-admin-icon svg {
+    margin-block-end: -4px;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+
+    rotate: 0deg;
+  }
+
+  .pos-community-spaces-admin-throw-icon svg {
+    rotate: 0deg;
+
+    fill: var(--pos-color-content-text-supplementary);
+  }
+
+
+
+/* admin edit form */
+/* ================================================================================ */
+.pos-community-spaces-admin-form-selection {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: calc(var(--pos-gap-card-elements) * 2);
+}
+
+  @media (min-width: 1000px) {
+    .pos-community-spaces-admin-form-selection {
+      grid-template-columns: repeat(auto-fit, minmax(32%, 1fr));
+    }
+  }
+
+
+
+/* empty space */
+/* ================================================================================ */
+.pos-community-space-empty {
+  max-width: 600px;
+  margin-inline: auto;
+  margin-block: var(--pos-gap-section-section);
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  align-items: center;
+  gap: var(--pos-gap-card-card);
+}
+
+.pos-heading-2 + p {
+  margin-block-start: var(--pos-gap-card-elements);
+}
+
+.pos-community-space-empty svg {
+  max-width: 100px;
+  fill: var(--pos-color-content-text-supplementary);
+}

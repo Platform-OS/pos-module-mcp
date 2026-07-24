@@ -1,0 +1,44 @@
+{% liquid
+  assign url = url | default: nil
+  assign default_url = default_url | default: nil
+  assign error = error | default: nil
+  assign notice = notice | default: nil
+  assign info = info | default: nil
+  assign force_clear = force_clear | default: nil
+
+  unless url
+    if context.session.return_to
+      assign url = context.session.return_to
+      session return_to = null
+    endif
+  endunless
+
+  if context.params.return_to
+    assign url = context.params.return_to
+  endif
+
+  assign url = url | url_decode | default: default_url | default: '/'
+
+  assign not_start_with_slash = url | matches: '^(?!\/)(.+)'
+  assign wrong_url = url | matches: '^\/\/'
+  if not_start_with_slash or wrong_url
+    assign url = '/'
+  endif
+
+  if error
+    assign message = error | t: default: error
+    assign severity = 'error'
+  elsif notice
+    assign message = notice | t: default: notice
+    assign severity = 'success'
+  elsif info
+    assign message = info | t: default: info
+    assign severity = 'info'
+  endif
+  assign flash = null | hash_merge: message: message, severity: severity, from: context.location.pathname, force_clear: force_clear
+
+  function _ = 'modules/core/commands/session/set', key: 'sflash', value: flash
+
+  redirect_to url
+  break
+%}

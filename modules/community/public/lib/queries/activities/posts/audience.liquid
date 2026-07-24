@@ -1,0 +1,16 @@
+{% liquid
+  if id == blank
+    log '(posts) ID cannot be blank when searching for audience'
+    return null
+  endif
+
+  graphql r = 'modules/community/activities/posts/audience', id: id, limit: 1000
+  assign post = r.posts.results.first
+  assign audience = '{ "followers": [], "author": [] }' | parse_json
+  assign relationships = post.relationships | group_by: 'name'
+
+  hash_assign audience['author'] = audience['author'] | add_to_array: post.creator_id
+  hash_assign audience['followers'] = relationships['followship:post'] | map: 'l_id'
+
+  return audience
+%}

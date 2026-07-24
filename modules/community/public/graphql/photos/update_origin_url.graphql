@@ -1,0 +1,22 @@
+mutation update_origin_url($id: ID! $origin_url: String!) {
+  record: record_update(
+    id: $id
+    record: {
+      table: "modules/community/photo"
+      properties: [
+        { name: "origin_url" value: $origin_url }
+      ]
+    }
+  ){
+    id
+    photo_type: property(name: "photo_type")
+    photo_width: property_int(name: "photo_width")
+    photo_height: property_int(name: "photo_height")
+    origin_url: property(name: "origin_url")
+    photo: property_upload(name: "photo") {
+      file_name
+      url
+      versions
+    }
+  }
+}

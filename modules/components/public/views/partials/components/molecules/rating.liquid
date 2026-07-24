@@ -1,0 +1,69 @@
+---
+metadata:
+  name: Rating
+  params:
+    name: 'my-rating'
+    max_value: 5
+    static:
+      - true
+      - false
+    value:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+  styleguide:
+    - name: 'rating-1'
+      max-value: 5
+      value: 3
+      static: true
+    - name: 'rating-2'
+      max-value: 5
+      value: 2
+      static: true
+    - name: 'rating-2'
+      max-value: 5
+      value: 2
+---
+{% liquid
+  assign name = name | default: params.name
+  assign max_value = max_value | default: params.max_value | default: 5
+  assign value = value | default: params.value
+  assign static = static | default: params.static | default: false
+
+  assign icon_params = '{}' | parse_json | hash_merge: name: 'star', class: 'pos-rating-empty w-4 h-4 text-input-border mr-2 '
+  assign icon_params_filled = '{}' | parse_json | hash_merge: name: 'starFull', class: 'pos-rating-full w-4 h-4 text-warning stroke-input-border mr-2 '
+
+  if static == false
+    hash_assign icon_params['class'] = icon_params.class | append: 'cursor-pointer'
+    hash_assign icon_params_filled['class'] = icon_params_filled.class | append: 'cursor-pointer'
+  endif
+  assign classes = 'inline-flex '
+
+%}
+<div class="pos-rating {{classes}}">
+
+  {% for i in (1..max_value) %}
+    {% if static == true %}
+      {% if value >= i %}
+        {% theme_render_rc 'components/atoms/icon', params: icon_params_filled %}
+      {% else %}
+        {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+      {% endif %}
+    {% else %}
+    <label for="{{name}}-rating-stars-{{i}}">
+      {% theme_render_rc 'components/atoms/icon', params: icon_params_filled %}
+      {% theme_render_rc 'components/atoms/icon', params: icon_params %}
+    </label>
+    <input
+      type="radio"
+      name="{{name}}"
+      class="hidden"
+      id="{{name}}-rating-stars-{{i}}"
+      {% if i == value %}checked{% endif %}
+      value="{{i}}"
+    />
+    {% endif %}
+  {% endfor %}
+</div>

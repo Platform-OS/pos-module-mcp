@@ -1,0 +1,17 @@
+---
+metadata:
+  name: Post
+  params:
+    author: ''
+---
+{% liquid
+  assign card_data = params
+  assign author = params.author
+%}
+{% capture footer_content %}
+  <div class="text-xs pb-4">by <a href="#" class="pos-clean text-interactive-text">{{author}}</a></div>
+{% endcapture %}
+{% liquid
+  assign card_params = card_data | hash_merge: footerContent: footer_content
+%}
+{% theme_render_rc 'components/organisms/content-card', params: card_params %}

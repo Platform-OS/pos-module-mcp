@@ -1,0 +1,60 @@
+---
+en:
+  push_notifications:
+    new_post:
+      title: New post
+      body: "%{actor} shared a new post: \"%{title}\""
+    new_event_post:
+      title: New event
+      body: "%{actor} posted a new event: \"%{title}\""
+    new_comment:
+      title: New comment
+      body: "%{actor} commented on \"%{title}\""
+    new_follower:
+      title: New follower
+      body: "%{actor} started following you"
+    mention:
+      title: You were mentioned
+      body: "%{actor} mentioned you"
+    group_invite:
+      title: Group invitation
+      body: "%{actor} invited you to join \"%{group}\""
+    group_join_request:
+      title: New join request
+      body: "%{actor} requested to join \"%{group}\""
+    group_join_request_accepted:
+      title: Request accepted
+      body: "Your request to join \"%{group}\" was accepted"
+    group_join_request_rejected:
+      title: Request declined
+      body: "Your request to join \"%{group}\" was declined"
+    event_rsvp:
+      title: Event RSVP
+      body: "%{actor} responded to \"%{event}\""
+    event_cancelled:
+      title: Event cancelled
+      body: "\"%{event}\" was cancelled"
+    event_approved:
+      title: Event approved
+      body: "Your event \"%{event}\" was approved"
+    event_rejected:
+      title: Event rejected
+      body: "Your event \"%{event}\" was rejected"
+    event_deleted:
+      title: Event deleted
+      body: "Your event \"%{event}\" was deleted"
+    post_upvoted:
+      title: New upvote
+      body: "%{actor} upvoted your post \"%{title}\""
+    new_group:
+      title: New group
+      body: "%{actor} created a new group: \"%{group}\""
+    group_deleted:
+      title: Group deleted
+      body: "The group \"%{group}\" was deleted"
+    edit:
+      push_notifications: Push notifications
+      description: Enable notifications to stay up to date on direct messages, replies to your posts, and important community announcements.
+      subscriptions:
+        title: Your active subscriptions
+        description: You can manage all of your active subscriptions and disable notifications for different browsers and devices.

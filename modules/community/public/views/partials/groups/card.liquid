@@ -1,0 +1,59 @@
+<article class="card !p-0 flex flex-col rounded relative overflow-hidden" data-tc="group-card">
+
+  {% if group.main_photo %}
+    <a href="{% render 'modules/community/helpers/link_to', object: group %}">
+      <picture>
+        <source type="image/avif" srcset="{{ group.main_photo.photo.versions.m_avif | replace: ' ', '%20'}}, {{ group.main_photo.photo.versions.lg_avif }} 2x">
+        <img src="{{ group.main_photo.photo.versions.m }}" srcset="{{ group.main_photo.photo.versions.lg | replace: ' ', '%20' }} 2x" width="{{ group.main_photo.photo.photo_width }}" height="{{ group.main_photo.photo.photo_height }}" alt="" class="w-full">
+      </picture>
+    </a>
+  {% endif %}
+
+  <div class="p-4 pb-0 flex flex-col">
+    <h3 class="subtitle uppercase !font-bold">
+      <a href="{% render 'modules/community/helpers/link_to', object: group %}" class="text-content">{{ group.name }}</a>
+    </h3>
+
+    {% if group.tags[0] %}
+      <ul class="mt-2 flex flex-wrap gap-2 sidenote">
+        {% for tag in group.tags %}
+          <li class="py-1 px-2 rounded bg-panel-highlight uppercase">#{{ tag }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <p class="my-4">
+      {{ group.summary | truncatewords: 7 }}
+    </p>
+  </div>
+
+  <footer class="mt-auto p-4 flex flex-wrap items-center justify-between gap-4">
+    <ul class="sidenote flex flex-col md:flex-row gap-2 md:gap-3 text-content-sidenote">
+      <li class="flex items-center gap-2">
+        {%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+        {{ group.c__members_count | default: 0 }} {{ 'modules/community/groups.members' | t: count: group.c__members_count | downcase }}
+        {%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}
+      </li>
+      <li class="flex items-center gap-2 md:border-s md:ps-3">
+        {% theme_render_rc 'components/atoms/icon', name: 'commentText' %}
+        {{ group.c__posts_count | default: 0 }}
+      </li>
+    </ul>
+
+    <span class="ms-auto">
+      {% liquid
+        if group.member == blank and group.owner == blank
+          # platformos-check-disable MissingPartial
+          render 'modules/community/groups/buttons/join', class: 'button-small', group: group, current_profile: current_profile
+          # platformos-check-enable MissingPartial
+        endif
+
+        if group.member.pending_acceptance
+          # platformos-check-disable MissingPartial
+          render 'modules/community/groups/buttons/accept_invite', class: 'button-small', group: group, current_profile: current_profile
+          # platformos-check-enable MissingPartial
+        endif
+      %}
+    </span>
+  </footer>
+</article>

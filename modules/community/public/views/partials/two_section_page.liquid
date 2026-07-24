@@ -1,0 +1,38 @@
+{%- comment -%}platformos-check-disable TranslationKeyExists{%- endcomment -%}
+<header class="pagetitle -mt-10">
+  <h1>
+    {{ 'modules/community/static-pages.' | append: page.slug | append: '.title' | t: default: 'Configure title' }}
+  </h1>
+</header>
+
+<section class="text-center md:text-left">
+  <div class="bg-panel">
+    <div class="md:flex items-start gap-8 py-10 mb-16 container">
+      <div class="flex-1">
+        <div class="prose max-w-full">
+          {{ 'modules/community/static-pages.' | append: page.slug | append: '.section1_content' | t: default: "Configure section1 content" | markdown }}
+        </div>
+      </div>
+      {% if photo1 %}
+        <picture class="hidden md:block">
+          <source type="image/avif" srcset="{{ photo1.photo.versions.lg_avif }}, {{ photo1.photo.versions.xl_avif }} 2x">
+          <img src="{{ photo1.photo.versions.lg }}" srcset="{{ photo1.photo.versions.xl }} 2x" width="{{ photo1.width }}" height="{{ photo1.height }}" alt="">
+        </picture>
+      {% endif %}
+    </div>
+  </div>
+  <div class="md:flex items-start container">
+    {% if photo2 %}
+      <picture class="hidden md:block">
+        <source type="image/avif" srcset="{{ photo2.photo.versions.lg_avif }}, {{ photo2.photo.versions.xl_avif }} 2x">
+        <img src="{{ photo2.photo.versions.lg }}" srcset="{{ photo2.photo.versions.xl }} 2x" width="{{ photo2.width }}" height="{{ photo2.height }}" alt="">
+      </picture>
+    {% endif %}
+    <div class="flex-1">
+      <div class="prose max-w-full">
+        {{ 'modules/community/static-pages.' | append: page.slug | append: '.section2_content' | t: default: "Configure section1 content" | markdown }}
+      </div>
+    </div>
+  </div>
+</section>
+{%- comment -%}platformos-check-enable TranslationKeyExists{%- endcomment -%}

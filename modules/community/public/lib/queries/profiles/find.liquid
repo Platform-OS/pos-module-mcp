@@ -1,0 +1,38 @@
+{% liquid
+  if uuid == blank and slug == blank and id == blank and user_id == blank and anonymous_session_id == blank
+    return null
+  endif
+%}
+
+{% graphql r = 'modules/user/profiles/search', limit: 1, uuid: uuid, id: id, user_id: user_id %}
+
+{% liquid
+  assign profile = r.records.results.first
+
+  function profile = 'modules/community/queries/profiles/preload_relationships', profile: profile, relationships: relationships
+
+  if profile.user_id
+    # Load the user from user module.
+    function user = 'modules/user/queries/user/load', id: profile.user_id
+    hash_assign profile['email'] = user.email
+    hash_assign profile['user'] = user
+
+    # Now profile implements 'permission.requester' interface.
+    hash_assign profile['permissions'] = user.permissions
+
+    # Merge results with user profile. It can be more abstract but is enough for now.
+    if user.hook_results.profile
+      assign profile = profile | hash_merge: user.hook_results.profile
+    endif
+
+    # platformos-check-disable UnknownProperty
+    if profile.first_name and profile.last_name
+    # platformos-check-enable UnknownProperty
+      # platformos-check-disable UnknownProperty
+      hash_assign profile['name'] = profile.first_name | append: ' ' | append: profile.last_name
+      # platformos-check-enable UnknownProperty
+    endif
+  endif
+
+  return profile
+%}

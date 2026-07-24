@@ -1,0 +1,51 @@
+{% liquid
+  assign active_class = 'pos-community-space-navigation-active'
+%}
+
+
+<nav class="pos-app pos-community-space-navigation">
+  <ul>
+    <li>
+      <a href="/profile/{{ profile.slug }}/" class="{% if active == 'feed' %}{{ active_class }}{% endif %}">
+        {% if tab == 'feed' or context.location.pathname == url %}<h3>{% endif %}
+          {{ 'modules/community/profiles.nav.activity' | t }}
+        {% if tab == 'feed' or context.location.pathname == url %}</h3>{% endif %}
+      </a>
+    </li>
+    <li>
+      <a href="/profile/{{ profile.slug }}/groups" class="{% if active == 'groups' %}{{ active_class }}{% endif %}">
+        {% if tab == 'groups' %}<h3>{% endif %}
+          {{ 'modules/community/profiles.nav.groups' | t }}
+        {% if tab == 'groups' %}</h3>{% endif %}
+      </a>
+    </li>
+    <li>
+      <a href="/profile/{{ profile.slug }}/events" class="{% if active == 'events' %}{{ active_class }}{% endif %}">
+        {% if tab == 'events' %}<h3>{% endif %}
+          {{ 'modules/community/profiles.nav.events' | t }}
+        {% if tab == 'events' %}</h3>{% endif %}
+      </a>
+    </li>
+    <li>
+      <a href="/profile/{{ profile.slug }}/following" class="{% if active == 'following' %}{{ active_class }}{% endif %}">
+        {% if tab == 'following' %}<h3>{% endif %}
+          {{ 'modules/community/profiles.nav.following' | t }}
+        {% if tab == 'following' %}</h3>{% endif %}
+      </a>
+    </li>
+    <li>
+      <a href="/profile/{{ profile.slug }}/followers" class="{% if active == 'followers' %}{{ active_class }}{% endif %}">
+        {% if tab == 'followers' %}<h3>{% endif %}
+          {{ 'modules/community/profiles.nav.followers' | t }}
+        {% if tab == 'followers' %}</h3>{% endif %}
+      </a>
+    </li>
+    <li>
+      <a href="/profile/{{ profile.slug }}/tags" class="{% if active == 'tags' %}{{ active_class }}{% endif %}">
+        {% if tab == 'tags' %}<h3>{% endif %}
+          {{ 'modules/community/profiles.nav.tags' | t }}
+        {% if tab == 'tags' %}</h3>{% endif %}
+      </a>
+    </li>
+  </ul>
+</nav>

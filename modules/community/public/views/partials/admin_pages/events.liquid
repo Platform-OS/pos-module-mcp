@@ -1,0 +1,123 @@
+{% liquid
+  assign placeholder_img = 'modules/community/images/Placeholder_image.png' | asset_url
+%}
+<div class="container">
+  {% theme_render_rc 'components/atoms/heading', content: 'Event management', level: 2, classes: 'pb-8' %}
+
+  {% capture card_content %}
+    <form action="/admin/community/events" method="GET" id="event-list"  data-events-list="" x-ref="form">
+      <div class="flex flex-col md:flex-row items-center gap-4 justify-between">
+        <div class="flex gap-4 w-full md:w-auto">
+          {% liquid
+            assign search_placeholder = 'Search event'
+            assign input_params = null | hash_merge: name: 'keyword', placeholder: search_placeholder, value: filters.keyword
+            assign button_params = null | hash_merge: type: 'submit', icon: 'search', weight: 'primary'
+            theme_render_rc 'components/molecules/search-field', input_params: input_params, button_params: button_params, button: true, classes: 'w-full'
+          %}
+          {% assign select_options = [{"label": "Status", "value": "all"}, {"label": "Published", "value": "published"}, {"label": "Unpublished", "value": "unpublished"}, {"label": "Pending", "value": "pending"}, {"label": "Cancelled", "value": "cancelled"}] %}
+          {% theme_render_rc 'components/molecules/select', name: 'status', value: filters.status, id: 'filter_status', options: select_options, placeholder: 'Status' %}
+        </div>
+        <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+          {% assign select_options = [{"label": "Sort by Create (new)", "value": "created_at_desc"}, {"label": "Sort by Create (old)", "value": "created_at_asc"}] %}
+
+          {% theme_render_rc 'components/molecules/select', name:'sort_by', value: filters.sort_by, id:'filter_sort', options:select_options, classes:'rounded-none w-full' %}
+          {% theme_render_rc 'components/molecules/iconbutton',
+            icon: 'plus',
+            href: '/events/new',
+            content: 'Create event',
+            weight: "primary"
+            alignment: 'left'
+          %}
+        </div>
+      </div>
+    </form>
+  {% endcapture %}
+  {% theme_render_rc 'components/atoms/card', content: card_content, classes: 'mb-6' %}
+
+  {% capture content %}
+  {% if events.results.size > 0 %}
+    <table class="w-full">
+      <thead class="hidden md:block">
+        <tr class="uppercase text-sm flex flex-row">
+          <th class="flex-1"></th>
+        <th class="flex-1 font-normal">title</th>
+        <th class="w-16 min-w-[4rem] font-normal">ID</th>
+        <th class="flex-1 font-normal">created by</th>
+        <th class="flex-1 font-normal">created at</th>
+        <th class="flex-1 font-normal">status</th>
+        <th class="flex-1 font-normal">modify</th>
+        <th class="flex-1 font-normal">delete</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for event in events.results %}
+        {% liquid
+          assign status = 'warning'
+          if event.status == 'published'
+            assign status = 'success'
+          elsif event.status == 'unpublished' or event.status == 'cancelled'
+            assign status = 'error'
+          endif
+        %}
+
+        <tr class="flex flex-col md:flex-row mb-4 bg-highlighted md:bg-panel rounded">
+          <td class="flex-1">
+            {% assign photo = event.photo.photo.versions.sm | default: placeholder_img %}
+            <img src="{{ photo }}" class="w-20 h-12 object-cover" width="80" height="48" />
+          </td>
+          <td class="flex-1 truncate"><a href="/events/{{ event.name | slugify }}-{{ event.id }}" target="_blank">{{ event.name }}</a></td>
+          <td class="w-16 min-w-[4rem]" data-tc="id">{{ event.id }}</td>
+          <td class="flex-1 break-all" data-tc="owner">{{ event.owner.profile.first_name | append: ' ' | append: event.owner.profile.last_name }}</td>
+          <td class="flex-1 break-all">{{ event.created_at | l: 'long', current_profile.timezone }}</td>
+          <td class="flex-1" data-tc="status">{% theme_render_rc 'components/molecules/chip', variant: status, content: event.status %}</td>
+          <td class="flex-1" data-tc="editButton">
+            {% liquid
+              assign edit_url = '/events/' | append: event.id | append: '/edit'
+              theme_render_rc 'components/molecules/iconbutton', icon: 'pencil', weight: 'primary', classes: 'w-11', href: edit_url , gap: 0
+              function can_do = 'modules/user/helpers/can_do', entity: event, do: 'approve', requester: current_profile, access_callback: 'modules/community/can/events'
+              if can_do
+                theme_render_rc 'modules/community/components/molecules/event_approve_button', event: event
+              endif
+               function can_do = 'modules/user/helpers/can_do', entity: event, do: 'reject', requester: current_profile, access_callback: 'modules/community/can/events'
+              if can_do
+                theme_render_rc 'modules/community/components/molecules/event_reject_button', event: event
+              endif
+            %}
+          </td>
+          <td class="flex-1">
+            <form action="/events/{{ event.id }}" method="post" data-confirm="delete">
+              <input type="hidden" name="_method" value="delete" />
+              <input type="hidden" name="authenticity_token" value="{{ context.authenticity_token }}">
+              {% theme_render_rc 'components/molecules/iconbutton', icon: 'trash', weight: 'primary', variant: 'important' classes: 'w-11', attributes: attributes, gap: 0, type: 'submit' %}
+            </form>
+           </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ 'modules/community/search.no_items_found.title' | t: default: 'No results' }}</p>
+  {% endif %}
+  {% endcapture %}
+  {% theme_render_rc 'components/atoms/card', content: content %}
+
+  <div class="container pt-5 flex flex-row-reverse">
+    {% liquid
+      if events.total_pages > 1
+      assign url_params = filters.params | hash_merge: page: ''
+      assign url_template = "{?status,sort_by,page}"
+      assign pager_url = url_template | expand_url_template: url_params
+      theme_render_rc 'components/molecules/pagination', count: events.total_pages, active: page, maxCount: 5, url: pager_url
+      endif
+    %}
+  </div>
+</div>
+
+<script>
+const eventFilter = document.querySelector('[data-events-list=""]');
+eventFilter?.querySelectorAll('select')?.forEach(select => {
+  select.addEventListener('change', () => {
+    eventFilter.submit();
+  });
+});
+</script>

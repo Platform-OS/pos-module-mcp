@@ -1,0 +1,259 @@
+---
+metadata:
+  name: Event form
+  params:
+    action: '/events'
+    event: {}
+    errors: {}
+    current_profile: {}
+    context: {}
+    photos: {}
+---
+
+
+{% liquid
+  assign action = action | default: params.action | default: '/events'
+  assign event = event | default: params.event
+  assign errors = errors | default: params.errors
+  assign current_profile = current_profile | default: params.current_profile
+  if event == blank
+    assign event = '{}' | parse_json
+  endif
+
+  function event_moderation_workflow_enabled = 'modules/core/queries/variable/get', name: 'event_moderation_workflow_enabled', default: true, type: 'boolean'
+  function can_update_status = 'modules/user/helpers/can_do', requester: current_profile, entity: event, do: 'events.set_status', access_callback: null
+
+  # platformos-check-disable UnknownProperty
+  if event.id
+  # platformos-check-enable UnknownProperty
+    assign method = 'put'
+  else
+    assign method = 'post'
+  endif
+  assign uuid = '' | uuid
+  # platformos-check-disable UnknownProperty
+  assign event_uuid = event.uuid | default: uuid
+  # platformos-check-enable UnknownProperty
+%}
+
+{%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+{% if event.id %}
+{%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+<aside class="pos-community-space-filters">
+  <div>
+    {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+    {% if event_moderation_workflow_enabled and event.id != blank %}
+    {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      {{ 'modules/community/events.status' | t }}: 
+    {% endif %}
+
+    {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+    {% if event_moderation_workflow_enabled and can_update_status and event.status and event.id != blank %}
+    {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+
+      {% liquid
+        assign status = 'warning'
+        # platformos-check-disable UnknownProperty
+        if event.status == 'published'
+        # platformos-check-enable UnknownProperty
+          assign status = 'success'
+        # platformos-check-disable UnknownProperty
+        elsif event.status == 'unpublished' or event.status == 'cancelled'
+        # platformos-check-enable UnknownProperty
+          assign status = 'error'
+        endif
+      %}
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      <span class="pos-tag pos-tag-{{ status }}">{{ event.status }}</span>
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+
+    {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+    {% elsif event_moderation_workflow_enabled and event.id != blank %}
+    {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+
+      {% liquid
+        assign status = 'warning'
+        # platformos-check-disable UnknownProperty
+        if event.status == 'published'
+        # platformos-check-enable UnknownProperty
+          assign status = 'success'
+        # platformos-check-disable UnknownProperty
+        elsif event.status == 'unpublished'
+        # platformos-check-enable UnknownProperty
+          assign status = 'error'
+        endif
+      %}
+      {{ 'modules/community/events.status_description' | t }}
+
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      {% if event.status %}
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+        {{ 'modules/community/events.status' | t }}:
+        {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+        <span class="pos-tag pos-tag-{{ status }}">{{ event.status }}</span>
+        {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      {% endif %}
+
+    {% endif %}
+  </div>
+</aside>
+{% endif %}
+
+
+<form action="{{ action }}" method="post" class="pos-form pos-form-simple" data-event-form data-photo-upload-base>
+  {% render 'modules/core/helpers/authenticity_token', authenticity_token: context.authenticity_token, token: context.authenticity_token %}
+  <input type="hidden" name="_method" value="{{ method }}">
+
+  <h3 class="pos-heading-3">Event info</h3>
+
+  <div class="pos-card">
+
+    {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+    {% if event.id %}
+    {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      <input type="hidden" name="id" value="{{ event.id }}">
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      <input type="hidden" name="event[id]" value="{{ event.id }}">
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+    {% endif %}
+    <input type="hidden" name="event[uuid]" value="{{ event_uuid }}">
+    {% render 'modules/common-styling/forms/error_list', name: 'event[uuid]', errors: errors['uuid'] %}
+
+    <fieldset>
+      <label for="pos-community-event-name">Event name</label>
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      <input type="text" id="pos-community-event-name" name="event[name]" value="{{ event.name }}" required {% render 'modules/common-styling/forms/error_input_handler', name: 'event[name]', errors: errors['name'] %}>
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      {% render 'modules/common-styling/forms/error_list', name: 'event[name]', errors: errors['name'] %}
+    </fieldset>
+
+    {% liquid
+    # platformos-check-disable UnknownProperty
+    if event.start_date != blank
+    # platformos-check-enable UnknownProperty
+      # platformos-check-disable UnknownProperty
+      hash_assign event['start_date'] = event.start_date | to_time: current_profile.timezone | l: 'system'
+      # platformos-check-enable UnknownProperty
+    else
+      hash_assign event['start_date'] = 'now' | to_time: current_profile.timezone | strftime: "%Y-%m-%dT%H:%M:00%z" | to_time: current_profile.timezone | l: 'system'
+    endif
+    %}
+    <fieldset>
+      <label for="pos-community-event-start-date">Start date</label>
+      <input type="datetime-local" id="pos-community-event-start-date" name="event[start_date]" value="{{ event.start_date }}" required {% render 'modules/common-styling/forms/error_input_handler', name: 'event[start_date]', errors: errors['start_date'] %}>
+      {% render 'modules/common-styling/forms/error_list', name: 'event[start_date]', errors: errors['start_date'] %}
+    </fieldset>
+
+    {% liquid
+    # platformos-check-disable UnknownProperty
+    if event.end_date != blank
+    # platformos-check-enable UnknownProperty
+        # platformos-check-disable UnknownProperty
+        hash_assign event['end_date'] = event.end_date | to_time: current_profile.timezone | l: 'system'
+        # platformos-check-enable UnknownProperty
+      else
+        hash_assign event['end_date'] = event.start_date | to_time: current_profile.timezone | strftime: "%Y-%m-%dT%H:%M:00%z" | add_to_time: 1, 'h' | to_time: current_profile.timezone | l: 'system'
+      endif
+    %}
+    <fieldset>
+      <label for="pos-community-event-end-date">End date</label>
+      <input type="datetime-local" id="pos-community-event-end-date" name="event[end_date]" value="{{ event.end_date }}" required {% render 'modules/common-styling/forms/error_input_handler', name: 'event[end_date]', errors: errors['end_date'] %}>
+      {% render 'modules/common-styling/forms/error_list', name: 'event[end_date]', errors: errors['end_date'] %}
+    </fieldset>
+
+    <fieldset>
+      <label for="pos-community-event-link">
+        <strong>Online event link</strong>
+        <small>Add link where your online event will take place</small>
+      </label>
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      <input type="text" id="pos-community-event-link" name="event[link]" value="{{ event.link }}" {% render 'modules/common-styling/forms/error_input_handler', name: 'event[link]', errors: errors['link'] %}>
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      {% render 'modules/common-styling/forms/error_list', name: 'event[link]', errors: errors['link'] %}
+    </fieldset>
+
+    <fieldset>
+      <label for="pos-community-event-venue">
+        <strong>In person event venue address</strong>
+        <small>Add address (venue name, street, city, state, ZIP code) where your local event will take place.</small>
+      </label>
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      <input type="text" id="pos-community-event-venue" name="event[venue]" value="{{ event.venue }}" {% render 'modules/common-styling/forms/error_input_handler', name: 'event[venue]', errors: errors['venue'] %}>
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      {% render 'modules/common-styling/forms/error_list', name: 'event[venue]', errors: errors['venue'] %}
+    </fieldset>
+
+    <fieldset>
+      <label for="pos-community-event-short-description">
+        <strong>Short description</strong>
+        <small>Describe in a sentence what your event is about, appearing on the cover pic. Max 140 characters.</small>
+      </label>
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      <input type="text" id="pos-community-event-short-description" name="event[short_description]" required value="{{ event.short_description }}" {% render 'modules/common-styling/forms/error_input_handler', name: 'event[short_description]', errors: errors['short_description'] %}>
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      {% render 'modules/common-styling/forms/error_list', name: 'event[short_description]', errors: errors['short_description'] %}
+    </fieldset>
+
+    <fieldset>
+      <label>
+        <strong>Cover picture</strong>
+        <small>Must be a .jpg, .png or .webp file smaller than 2 MB. Use only free images.</small>
+      </label>
+      {%- comment -%}platformos-check-disable UnknownProperty,PartialCallArguments,MissingRenderPartialArguments,ValidRenderPartialArgumentTypes{%- endcomment -%}
+      {% render 'modules/common-styling/forms/upload',
+        id: 'event[cover]',
+        presigned_upload: context.presigned_url,
+        name: 'event[cover]',
+        files: event.cover,
+        allowed_file_types: ["image/*"],
+        max_number_of_files: 1
+      %}
+      {%- comment -%}platformos-check-enable UnknownProperty,PartialCallArguments,MissingRenderPartialArguments,ValidRenderPartialArgumentTypes{%- endcomment -%}
+    </fieldset>
+
+  </div>
+
+
+  {% comment %} TO DO: Replace hashtag textarea with new component version {% endcomment %}
+  <h3 class="pos-heading-3">Detailed description</h3>
+  <div class="pos-card">
+    <fieldset>
+      <label for="event[description]">
+        <strong>Description</strong>
+        <small>Describe the purpose of your event in detail</small>
+      </label>
+      {% liquid
+        assign input_attributes = null | hash_merge: rows: '5'
+        # platformos-check-disable UnknownProperty
+        assign input_params = null | hash_merge: name: 'event[description]', required: true, value: event.description, attributes: input_attributes, classes: "w-full h-24"
+        # platformos-check-enable UnknownProperty
+        assign description_params = null | hash_merge: content: ''
+        assign validation = '{}' | parse_json
+        if errors['description']
+          hash_assign validation['passed'] = false
+          hash_assign validation['messages'] = errors['description']
+        endif
+        assign fieldset_params = null | hash_merge: input_params: input_params, description_params: description_params, validation: validation, classes: "mb-6"
+        theme_render_rc 'components/molecules/hashtag-textarea-field', params: fieldset_params
+      %}
+    </fieldset>
+  </div>
+
+  <h3 class="pos-heading-3">Options</h3>
+  <div class="pos-card">
+    <fieldset>
+      {%- comment -%}platformos-check-disable UnknownProperty{%- endcomment -%}
+      <input type="checkbox" name="event[commentable]" id="pos-community-event-commentable" value="true" {% if event.commentable %} checked {% elsif event.id == blank %} checked {% endif %}>
+      {%- comment -%}platformos-check-enable UnknownProperty{%- endcomment -%}
+      <label for="pos-community-event-commentable">Enable comments even for people not participating in the event</label>
+    </fieldset>
+  </div>
+
+  <fieldset class="pos-form-actions">
+    <button type="button" class="pos-button" onClick="if(window.confirm('You will lost all the provided information if you cancel. Continue?')) javascript:history.back();">{{ 'modules/community/events.cancel_edit' | t }}</button>
+    <button type="submit" class="pos-button pos-button-primary">{{ 'modules/community/events.save' | t }}</button>
+  </fieldset>
+
+</form>

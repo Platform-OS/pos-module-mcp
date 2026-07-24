@@ -1,0 +1,46 @@
+---
+metadata:
+  name: Like button
+  params:
+    profile_id: '9'
+    post: {}
+    parent_entity_type:
+      - group
+      - modules/community/event
+    action: ''
+---
+{% liquid
+  assign profile_id = profile_id | default: params.profile_id
+  assign post = post | default: params.post
+  assign parent_entity_type = parent_entity_type | default: params.parent_entity_type
+  assign default_action = '/api/posts/' | append: post.id | append: '/vote'
+  assign action = action | default: params.action | default: default_action
+  assign upvote_profile_ids = post.upvote_profile_ids
+%}
+{% if profile_id %}
+  <form
+    action="{{ action }}"
+    class="pos-community-post-like {% if upvote_profile_ids contains profile_id %}pos-community-post-like-active{% endif %}"
+  >
+    <input type="hidden" name="id" value="{{ post.id }}">
+    <input type="hidden" name="type" value="{% if upvote_profile_ids contains profile_id %}clear{% else %}up{% endif %}">
+    <input type="hidden" name="parent_entity_type" value="{{ parent_entity_type }}">
+
+    <button type="submit">
+      <span class="pos-community-post-like-liked">
+        {% theme_render_rc 'components/atoms/icon', name: 'heartFull' %}
+        <span class="pos-button-label">{{ 'modules/community/posts.like_button.vote_clear' | t }}</span>
+      </span>
+
+      <span class="pos-community-post-like-unliked">
+        {% theme_render_rc 'components/atoms/icon', name: 'heart' %}
+        <span class="pos-button-label">{{ 'modules/community/posts.like_button.vote_up' | t }}</span>
+      </span>
+
+      <span>
+        <span class="pos-community-post-like-count">{{ upvote_profile_ids.size | default: 0 }}</span>
+        {{ 'modules/community/posts.like_button.likes' | t }}
+      </span>
+    </button>
+  </form>
+{% endif %}

@@ -1,0 +1,31 @@
+{% liquid
+  assign event_uuid = '' | uuid
+  assign description = object.description | default: ""
+  assign data = {"id": object.id, "event_uuid": event_uuid, "name": object.name, "short_description": object.short_description, "description": description, "link": object.link, "venue": object.venue, "commentable": false, "status": "pending", "uuid": object.uuid, "c__names": profile.name}
+
+  if object.start_date != blank
+    assign start_date = object.start_date | to_time: profile.timezone | to_time: 'UTC' | strftime: "%Y-%m-%dT%H:%M:%S%Z"
+  endif
+  if object.end_date != blank
+    assign end_date = object.end_date | to_time: profile.timezone | to_time: 'UTC' | strftime: "%Y-%m-%dT%H:%M:%S%Z"
+  endif
+
+  hash_assign data['start_date'] = start_date
+  hash_assign data['end_date'] = end_date
+
+  if object.commentable
+    hash_assign data['commentable'] = true
+  endif
+
+  function event_moderation_workflow_enabled = 'modules/core/queries/variable/get', name: 'event_moderation_workflow_enabled', default: true, type: 'boolean'
+  unless event_moderation_workflow_enabled
+    hash_assign data['status'] = "published"
+  endunless
+
+  function can_update_status = 'modules/user/helpers/can_do', requester: profile, entity: object, do: 'events.set_status', access_callback: null
+  if can_update_status and object.status
+    hash_assign data['status'] = object.status
+  endif
+
+  return data
+%}
