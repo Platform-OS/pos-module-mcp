@@ -7,7 +7,7 @@
  * gates on tool-surface regression. This is the automation around the eval/run
  * command, which stores results as queryable records.
  *
- * Run:  node modules/mcp/tests/eval.mjs
+ * Run:  node tests/eval.mjs
  * Env (optional; falls back to the repo .pos "ps" env + demo operator):
  *   MCP_URL, MCP_TOKEN         - instance url + ADMIN api token
  *   MCP_OP_EMAIL, MCP_OP_PASS  - operator login (defaults to the demo operator)
@@ -29,7 +29,7 @@ function loadEnv() {
   let url = process.env.MCP_URL, token = process.env.MCP_TOKEN;
   if (!url || !token) {
     const here = dirname(fileURLToPath(import.meta.url));
-    const dotpos = JSON.parse(readFileSync(resolve(here, '../../../.pos'), 'utf8'));
+    const dotpos = JSON.parse(readFileSync(resolve(here, '../.pos'), 'utf8'));
     const env = dotpos.ps || Object.values(dotpos)[0];
     url = url || env.url; token = token || env.token;
   }

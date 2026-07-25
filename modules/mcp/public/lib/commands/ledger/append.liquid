@@ -12,12 +12,16 @@
   SECURITY: never pass raw arguments in `entry` — pass input_sha256 + input_bytes
   (and audit_json for declared non-sensitive fields only).
 
-  CONCURRENCY: the chain tail is read then written; truly concurrent appends could
-  fork the chain (two entries sharing a prev_entry_hash). platformOS gives no
-  advisory lock in Liquid, so this is single-writer-correct and documented as a
-  known limitation (verify_chain still detects the resulting fork as a linkage
-  break). Acceptable for the request-serial governance path; revisit if bulk
-  concurrent writes are introduced.
+  CONCURRENCY: the chain tail is read then written, so truly concurrent appends must
+  be serialized or they fork the chain (two entries sharing a prev_entry_hash → dup
+  seq → verify_chain linkage break). platformOS Liquid has no advisory lock, no unique
+  index, and {% transaction %} is plain READ COMMITTED, so we serialize with a MUTEX
+  ROW: inside the transaction the FIRST op UPDATEs the single mcp_chain_lock row (with a
+  fresh unique token, so ActiveRecord always issues the UPDATE), which takes a Postgres
+  row-write-lock held until commit. A concurrent append blocks on that UPDATE until we
+  commit, then reads the tail we just wrote — no fork. Best-effort: if the mutex row is
+  somehow absent we still append (attestation must never be dropped), and verify_chain
+  remains the backstop detector.
 
   @param {object} entry - payload fields (method, tool_name, ..., input_sha256,
                           input_bytes, authz_*, execution_outcome, error_code,
@@ -27,7 +31,27 @@
 {%- endcomment -%}
 {% liquid
   assign table = 'modules/mcp/mcp_ledger'
+  assign lock_table = 'modules/mcp/mcp_chain_lock'
   assign zero = '0000000000000000000000000000000000000000000000000000000000000000'
+
+  # Ensure the singleton mutex row exists (OUTSIDE the critical section, so we never
+  # hold the lock across a create). All appends lock the lowest-id row, so even a rare
+  # bootstrap race that creates two rows converges on one mutex.
+  graphql lock_probe = 'modules/mcp/ledger/lock_find', table: lock_table
+  assign lock_row = lock_probe.records.results.first
+  if lock_row == blank
+    graphql lock_seeded = 'modules/mcp/ledger/lock_create', table: lock_table, token: 'genesis'
+    graphql lock_probe = 'modules/mcp/ledger/lock_find', table: lock_table
+    assign lock_row = lock_probe.records.results.first
+  endif
+  # A unique token per append so the mutex UPDATE is never a no-op (which would take no lock).
+  assign lock_token = 'now' | to_time | strftime: '%s%3N' | append: '-' | append: entry.request_id | append: '-' | append: entry.input_sha256
+
+  # ---- serialized critical section: read tail → build → write, under the mutex ----
+  transaction timeout: 10
+  if lock_row
+    graphql lock_held = 'modules/mcp/ledger/lock_bump', id: lock_row.id, token: lock_token
+  endif
 
   graphql last_res = 'modules/mcp/ledger/last', table: table
   assign last = last_res.records.results.first
@@ -78,6 +102,7 @@
   endunless
 
   graphql created = 'modules/mcp/ledger/create', table: table, seq: next_seq, occurred_at: occurred_at, method: w.method, tool_name: w.tool_name, tool_version: w.tool_version, client_id: w.client_id, agent_id: w.agent_id, principal_id: w.principal_id, delegation_mode: w.delegation_mode, input_sha256: w.input_sha256, input_bytes: v_input_bytes, authz_policy: w.authz_policy, authz_decision: w.authz_decision, authz_reason: w.authz_reason, execution_outcome: w.execution_outcome, error_code: v_error_code, duration_ms: v_duration_ms, subject_type: w.subject_type, subject_id: w.subject_id, idempotency_key: w.idempotency_key, request_id: w.request_id, audit_json: w.audit_json, prev_entry_hash: prev_hash, entry_hash: entry_hash
+  endtransaction
 
   assign out = '{}' | parse_json
   hash_assign out['seq'] = next_seq

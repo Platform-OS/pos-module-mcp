@@ -56,7 +56,8 @@
     function decision = policy_path, principal: principal, agent: agent, arguments: arguments, tool: tool, delegation_mode: delegation_mode
   catch e
     assign errored = true
-    log policy | append: ': ' | append: e.message, type: 'mcp.authz_policy_error'
+    assign _lm = policy | append: ': ' | append: e.message
+    log _lm, type: 'mcp.authz_policy_error'
   endtry
 
   if errored

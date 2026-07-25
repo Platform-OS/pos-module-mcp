@@ -66,7 +66,8 @@
         hash_assign ex['errors'] = errors
         assign excluded = excluded | array_add: ex
         assign ej = errors | join: '; '
-        log ex.name | append: ': ' | append: ej, type: 'mcp.prompts_excluded'
+        assign _lm = ex.name | append: ': ' | append: ej
+        log _lm, type: 'mcp.prompts_excluded'
       endif
     endfor
   endif

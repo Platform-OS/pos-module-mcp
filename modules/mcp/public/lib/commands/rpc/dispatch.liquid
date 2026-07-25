@@ -72,7 +72,23 @@
       function result = 'modules/mcp/commands/rpc/ping'
       assign handled = true
     when 'tools/list'
-      function result = 'modules/mcp/commands/rpc/tools_list', params: params.params
+      # Discovery stays an OPEN method (never 401). When tools_list_scope is
+      # 'principal', resolve identity fail-soft (resolve_principal returns a deny
+      # object, it never throws) and hand the caller down so the list is filtered to
+      # what this principal may call; an unauthenticated caller resolves to the
+      # 'anonymous' scope and is advertised nothing. 'open' keeps the legacy path
+      # (no identity work, every tool listed).
+      assign tl_scope = cfg.tools_list_scope | default: 'open'
+      if tl_scope == 'principal'
+        function tl_id = 'modules/mcp/commands/identity/resolve_principal', headers: headers
+        if tl_id.authenticated == true
+          function result = 'modules/mcp/commands/rpc/tools_list', params: params.params, scope: 'principal', principal: tl_id.principal, agent: tl_id.agent, delegation_mode: tl_id.delegation_mode
+        else
+          function result = 'modules/mcp/commands/rpc/tools_list', params: params.params, scope: 'anonymous'
+        endif
+      else
+        function result = 'modules/mcp/commands/rpc/tools_list', params: params.params
+      endif
       assign handled = true
     when 'resources/list'
       function result = 'modules/mcp/commands/rpc/resources_list', params: params.params

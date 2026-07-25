@@ -9,7 +9,7 @@
  * the "Security boundaries — what the engine does NOT do for you" doc into an
  * automated gate.
  *
- * Run:   node modules/mcp/tests/lint-tools.mjs [--strict] [--json]
+ * Run:   node tests/lint-tools.mjs [--strict] [--json]
  *   --strict  warnings also fail the run (default: only errors fail)
  *   --json    machine-readable output
  * Exit:  0 clean · 1 findings at the failing level · 2 setup error
@@ -25,7 +25,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const APP = join(ROOT, 'app');
 const TOOLS_DIR = join(APP, 'views/partials/mcp/tools');
 const POLICIES_DIR = join(APP, 'views/partials/mcp/policies');

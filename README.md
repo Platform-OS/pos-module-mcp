@@ -89,6 +89,7 @@ every request — no redeploy needed.
 |---|---|---|
 | `server_name` | `pos-module-mcp` | `serverInfo.name` + the `claude mcp add <name>` alias on `/mcp-tools` |
 | `endpoint_path` | `/mcp` | endpoint path (advertised as the OAuth resource id) |
+| `tools_list_scope` | `open` | `open` advertises every tool to any caller (MCP-default open discovery); `principal` scopes `tools/list` to what the caller may actually call — restricted tools aren't leaked to unauthorized/anonymous callers (least-disclosure). Execution is authorized per-call either way. |
 | `defaults.rate_limit_per_min` | `60` | per-principal fixed-window rate limit |
 | `defaults.max_input_bytes` | `65536` | request body size cap |
 | `defaults.max_schema_depth` | `5` | argument-validation nesting cap |
@@ -324,7 +325,10 @@ ledger with security-lens quick filters and a paginated JSON export.
   backdate/reorder. Immutability is append-only-by-construction + tamper-*evidence*
   (a privileged insider is detected, not silently prevented — the admin API is
   god-mode on platformOS). Pre-auth failures are logged, never chained (no anonymous
-  ledger spam).
+  ledger spam). Appends are **serialized under concurrency** via a mutex row
+  (`mcp_chain_lock`): the read-tail→write is protected by a Postgres row-lock so
+  simultaneous requests cannot fork the chain (platformOS Liquid offers no advisory
+  lock and `{% transaction %}` is READ COMMITTED).
 - **Human-in-the-loop** — high-impact tools require operator approval; execution runs
   as the original principal, re-authorized.
 - **Least leakage** — denials return a stable generic message; specifics go to the
@@ -346,20 +350,38 @@ for the full list.
 
 ## Testing
 
-Two self-contained Node runners (built-ins only, no deps; read url + admin token from
-`.pos`, or `MCP_URL`/`MCP_TOKEN` env). Both are CI-gateable (exit non-zero on failure)
-and **non-destructive** (isolated principal; clean up their own artifacts).
+Self-contained Node runners (built-ins only, no deps; read url + admin token from
+`.pos`, or `MCP_URL`/`MCP_TOKEN` env). All are CI-gateable (exit non-zero on failure)
+and **non-destructive** (they seed their own principals/rows/pages, then clean up).
 
 ```bash
-node modules/mcp/tests/conformance.mjs   # 35 assertions: transport, identity, discovery,
-                                         # validation, execution, adversarial, resources,
-                                         # rate-limit, ledger attestation
-node modules/mcp/tests/eval.mjs          # tool-surface eval: description quality, no-poison,
-                                         # uniqueness, golden-case tool-exists + args-valid
-node modules/mcp/tests/lint-tools.mjs    # static tool linter: injection/SSRF/ledger-write,
-        [--strict] [--json]              # schema correctness, per-field-kind content hardening,
-                                         # governance/audit hygiene — fails CI on real issues
+node tests/conformance.mjs   # 42 assertions, single-principal: transport, identity,
+                             # discovery, validation, prompts, execution, adversarial,
+                             # resources, rate-limit, ledger, malformed-input
+node tests/coverage.mjs      # 76 assertions, MULTI-principal: tools/list scoping (leakage),
+                             # authz-deny, validation matrix, commit/rollback, idempotency
+                             # (+window), approval (queue/dedup/cap/execute-as-principal/
+                             # reject/expired/status-poll), token revoke + allowed_tools,
+                             # rate-limit isolation, abuse (suspend/window/unknown-tool),
+                             # ledger tamper-evidence (verify_chain), and the WEB console
+                             # (operator authz-gating, access request→grant→mint→revoke,
+                             # token IDOR guard, ledger JSON export)
+node tests/eval.mjs          # tool-surface eval: description quality, no-poison,
+                             # uniqueness, golden-case tool-exists + args-valid
+node tests/lint-tools.mjs    # static tool linter: injection/SSRF/ledger-write, schema
+        [--strict] [--json]  # correctness, per-field-kind content hardening, governance/
+                             # audit hygiene — fails CI on real issues
 ```
+
+`coverage.mjs` drives a four-role fixture matrix (`fixtures.mjs`: operator / member /
+requester / outsider — real users + bearer tokens created through the admin API) against
+a set of **gated test tools** registered only when the `MCP_ENABLE_TEST_TOOLS` constant
+is set (never in a production deploy). Its assertions read real ledger / table / approval-
+queue state, so a broken plane fails them — e.g. an approved action's row must be owned by
+the *original* principal, and a rolled-back write must leave *no* row. The tools are
+community-free and write only to a host `test_note` table. `.github/workflows/mcp-ci.yml`
+runs the static gates on every PR and the live suite (conformance + coverage + eval)
+against an ephemeral instance reserved from the CI pool.
 
 The **tool linter** statically analyzes every tool's manifest + handler + query
 (including unregistered drafts) and catches the author-responsibility issues the

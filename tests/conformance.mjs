@@ -12,7 +12,7 @@
  * it resets the transient MCP_CONFIG constant it toggles and prunes its own rate
  * counters. Real ledger entries from other principals are left intact.
  *
- * Run:  node modules/mcp/tests/conformance.mjs
+ * Run:  node tests/conformance.mjs
  * Env (optional; falls back to the repo .pos "ps" env):
  *   MCP_URL    - instance base url (e.g. https://host/)
  *   MCP_TOKEN  - instance ADMIN api token (for seed/cleanup + ledger reads)
@@ -38,7 +38,7 @@ function loadEnv() {
   if (!url || !token) {
     try {
       const here = dirname(fileURLToPath(import.meta.url));
-      const dotpos = JSON.parse(readFileSync(resolve(here, '../../../.pos'), 'utf8'));
+      const dotpos = JSON.parse(readFileSync(resolve(here, '../.pos'), 'utf8'));
       const env = dotpos.ps || Object.values(dotpos)[0];
       url = url || env.url; token = token || env.token;
     } catch (e) { console.error('No MCP_URL/MCP_TOKEN and .pos unreadable:', e.message); process.exit(2); }
@@ -83,6 +83,20 @@ async function pruneRate() {
   // Rate keys are "principal:<id>:<window>" — match the full scope prefix.
   const r = await gql(`{ records(per_page: 200, filter: { table: { value: "${TABLE_RATE}" } properties: [{ name: "key", starts_with: "principal:${CONF_PRINCIPAL}" }] }) { results { id } } }`);
   for (const row of r?.data?.records?.results || []) await recordDelete(TABLE_RATE, row.id);
+}
+// Seed/delete a live markdown doc PAGE so the resources test owns its own fixture
+// (pages are code, not records — created via the admin API, removed by slug prefix).
+async function pageCreate(slug, content, title) {
+  const r = await gql(`mutation($p: PageInputType!){ admin_page_create(page: $p){ id slug } }`, {
+    p: { slug, format: 'html', handler: 'liquid', content, manually_managed: true,
+         physical_file_path: 'modules/mcp/public/views/pages/' + slug + '.liquid',
+         metadata: { title: title || slug, description: 'conformance-seeded doc resource' } },
+  });
+  if (r?.errors) throw new Error('admin_page_create: ' + JSON.stringify(r.errors));
+  return r?.data?.admin_page_create;
+}
+async function pagesDeleteByPrefix(prefix) {
+  await gql(`mutation($f: PageFilterInput!){ admin_pages_delete_all(filter: $f){ count } }`, { f: { slug: { starts_with: prefix } } });
 }
 
 // ---- suite -----------------------------------------------------------------
@@ -175,12 +189,58 @@ async function main() {
     {
       const off = await rpc({ jsonrpc: '2.0', id: 1, method: 'resources/list' });
       ok('resources OFF by default → empty', (off.json?.result?.resources || []).length === 0);
+
+      // Self-contained fixture: seed a docs-prefixed page we own so the assertion
+      // never depends on shipped content (cleaned up in finally).
+      const docSlug = 'docs/conf-' + CONF_KEYWORD;
+      const docUri = 'mcp+page:///' + docSlug;
+      const docMarker = 'seeded-' + CONF_KEYWORD;
+      await pageCreate(docSlug, '# Conformance doc\n' + docMarker, 'Conformance Doc');
+
       await setConstant('MCP_CONFIG', JSON.stringify({ resources: { expose_markdown_pages: true } }));
-      const on = await rpc({ jsonrpc: '2.0', id: 2, method: 'resources/list' });
-      ok('resources ON → lists docs pages', (on.json?.result?.resources || []).some(r => r.uri.startsWith('mcp+page:///docs')));
+      // Allow a beat for the new page + constant to become visible (poll, don't sleep-guess).
+      let onRes = [];
+      for (let a = 0; a < 6; a++) {
+        const on = await rpc({ jsonrpc: '2.0', id: 2, method: 'resources/list' });
+        onRes = on.json?.result?.resources || [];
+        if (onRes.some(r => r.uri === docUri)) break;
+        await new Promise(res => setTimeout(res, 500));
+      }
+      ok('resources ON → lists our seeded docs page', onRes.some(r => r.uri === docUri));
+      const readOk = await rpc({ jsonrpc: '2.0', id: 4, method: 'resources/read', params: { uri: docUri } });
+      ok('resources/read returns the seeded markdown (no html leak)', JSON.stringify(readOk.json?.result || {}).includes(docMarker));
       const bad = await rpc({ jsonrpc: '2.0', id: 3, method: 'resources/read', params: { uri: 'mcp+page:///mcp' } });
       ok('read outside allowlist → not found (no leak)', bad.json?.error?.code === -32002);
       await unsetConstant('MCP_CONFIG');
+    }
+
+    group('Prompts (§13.1)');
+    {
+      const list = await rpc({ jsonrpc: '2.0', id: 1, method: 'prompts/list' });
+      const prompts = list.json?.result?.prompts || [];
+      const p = prompts.find(x => x.name === 'draft_announcement');
+      ok('prompts/list advertises draft_announcement', !!p);
+      ok('prompt declares its arguments (event_name required)', !!p && Array.isArray(p.arguments) && p.arguments.some(a => a.name === 'event_name' && a.required));
+      const got = await rpc({ jsonrpc: '2.0', id: 2, method: 'prompts/get', params: { name: 'draft_announcement', arguments: { event_name: 'Jazz Night', date: 'Friday' } } });
+      ok('prompts/get → messages', Array.isArray(got.json?.result?.messages) && got.json.result.messages.length > 0);
+      const missing = await rpc({ jsonrpc: '2.0', id: 3, method: 'prompts/get', params: { name: 'draft_announcement', arguments: { event_name: 'Jazz Night' } } });
+      ok('prompts/get missing required arg → error', !!missing.json?.error, 'code=' + missing.json?.error?.code);
+      const unknown = await rpc({ jsonrpc: '2.0', id: 4, method: 'prompts/get', params: { name: 'no_such_prompt', arguments: {} } });
+      ok('prompts/get unknown prompt → error', !!unknown.json?.error);
+    }
+
+    group('Malformed input (§13.2)');
+    {
+      // NOTE (platform limitation, documented): platformOS parses the JSON body into
+      // context.params BEFORE this page runs, so a malformed application/json body is
+      // rejected by the platform (HTTP 415) before dispatch — the JSON-RPC -32700 parse
+      // code is unreachable from the engine. Well-formed MCP clients always send valid
+      // JSON; this asserts the achievable guarantee: malformed input is REJECTED with a
+      // 4xx and never accepted, never 5xx, never leaks internals.
+      const res = await fetch(MCP, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{ this is not : valid json' });
+      const txt = await res.text();
+      const leaked = /SQL|Liquid error|ActiveRecord|stack trace|undefined method/i.test(txt);
+      ok('malformed JSON → 4xx rejection, no leak (platformOS 415 pre-dispatch; -32700 unreachable)', res.status >= 400 && res.status < 500 && !leaked, 'status=' + res.status);
     }
 
     group('Rate limiting (§12.4)');
@@ -215,6 +275,7 @@ async function main() {
     await pruneRate();
     if (tokenId) await recordDelete(TABLE_TOKEN, tokenId);
     if (eventId) await recordDelete(TABLE_EVENT, eventId);
+    try { await pagesDeleteByPrefix('docs/conf-' + CONF_KEYWORD); } catch {}
   }
 
   console.log(`\n${pass} passed, ${fail} failed`);

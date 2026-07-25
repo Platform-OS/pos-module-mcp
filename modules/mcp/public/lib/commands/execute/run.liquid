@@ -31,7 +31,8 @@
     function hres = handler, arguments: arguments, principal: principal, agent: agent, context_meta: context_meta
   catch e
     assign threw = true
-    log context_meta.tool_name | append: ': ' | append: e.message, type: 'mcp.handler_exception'
+    assign _lm = context_meta.tool_name | append: ': ' | append: e.message
+    log _lm, type: 'mcp.handler_exception'
   endtry
 
   assign out = '{}' | parse_json

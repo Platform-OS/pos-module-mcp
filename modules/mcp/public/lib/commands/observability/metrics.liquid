@@ -28,7 +28,11 @@
     if page > cap
       break
     endif
+    # Sequential ledger pagination to aggregate metrics — one query PER PAGE is the
+    # intended shape (bounded by `cap`), not a per-row N+1 that can be hoisted.
+    # platformos-check-disable NestedGraphQLQuery
     graphql res = 'modules/mcp/ledger/list', table: table, page: page, per_page: per_page
+    # platformos-check-enable NestedGraphQLQuery
     assign rows = res.records.results
     assign n = rows | size
     if n == 0
@@ -75,9 +79,13 @@
 
   # Rates (guard divide-by-zero).
   assign denial_rate = 0
+  # `by_outcome` is a dynamically-aggregated hash keyed by ledger outcome; the linter
+  # can't know its keys statically. Correct at runtime.
+  # platformos-check-disable UnknownProperty
   assign rollbacks = by_outcome['rolled_back'] | default: 0
   assign pending_approvals = by_outcome['pending_approval'] | default: 0
   assign suspends = by_outcome['suspended'] | default: 0
+  # platformos-check-enable UnknownProperty
   assign rollback_rate = 0
   # "Blocked" = every call the governance layer stopped: policy denials + schema/
   # arg rejections + rate-limits. Broader than `denials` (policy-deny only) so the

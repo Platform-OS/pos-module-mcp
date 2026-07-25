@@ -29,6 +29,43 @@
   hash_assign e3['path'] = 'mcp/tools/broadcast_event'
   assign tools = tools | array_add: e3
 
+  # ── TEST FIXTURES (gated) ──────────────────────────────────────────────────────
+  # Registered ONLY when the MCP_ENABLE_TEST_TOOLS constant is '1'/'true' (CI + eval
+  # hosts). A normal production deploy leaves the constant unset, so these are never
+  # served — zero production surface. They are community-free and write only to the
+  # host test_note table. They give the coverage suite deterministic surfaces for
+  # every governance plane: visibility tiers (public/member/admin), validation/rate
+  # (echo), transaction commit + idempotency (write), rollback (fail), and the
+  # human-in-the-loop gate (approve).
+  assign test_gate = context.constants.MCP_ENABLE_TEST_TOOLS | default: ''
+  if test_gate == '1' or test_gate == 'true'
+    assign test_names = 'test_public,test_member,test_admin,test_echo,test_write,test_fail,test_approve,test_validate' | split: ','
+    for tn in test_names
+      assign te = '{}' | parse_json
+      hash_assign te['name'] = tn
+      assign tp = 'mcp/tools/' | append: tn
+      hash_assign te['path'] = tp
+      assign tools = tools | array_add: te
+    endfor
+  endif
+
+  # ── NEGATIVE-CONTROL VULNERABLE FIXTURES (gated; task-6) ────────────────────────
+  # Registered ONLY when MCP_ENABLE_VULN_TOOLS is '1'/'true'. These are DELIBERATELY
+  # INSECURE tools, each breaking one governance control (privilege escalation, IDOR,
+  # stored XSS, secret leak), used by agentic-eval to prove the harness + graders + agent
+  # actually DETECT a real vulnerability (not just confirm defenses). NEVER enable in
+  # production — a plain deploy leaves the constant unset, so they are never served.
+  assign vuln_gate = context.constants.MCP_ENABLE_VULN_TOOLS | default: ''
+  if vuln_gate == '1' or vuln_gate == 'true'
+    assign vuln_names = 'vuln_privesc,vuln_idor,vuln_xss,vuln_secret' | split: ','
+    for vn in vuln_names
+      assign ve = '{}' | parse_json
+      hash_assign ve['name'] = vn
+      assign vp = 'mcp/tools/' | append: vn
+      hash_assign ve['path'] = vp
+      assign tools = tools | array_add: ve
+    endfor
+  endif
 
   return tools
 %}

@@ -34,6 +34,16 @@
   # App-provided prompt registry (§13.1 prompts). app/views/partials/mcp/prompts.liquid
   # returning [{name, description, arguments, template}]. Empty/absent = no prompts.
   hash_assign c['prompts_partial'] = 'mcp/prompts'
+  # tools/list visibility (spec §14.2). 'open' (default) advertises every registered
+  # tool to any caller — MCP discovery is a public method. 'principal' scopes the
+  # advertised list to the CALLER: a tool appears only if its authorization policy
+  # admits that principal, so restricted tools are not leaked to unauthorized (or
+  # anonymous) callers (least-disclosure). Execution is authorized per-call either
+  # way; this only controls what discovery reveals. Opt in per instance via
+  # MCP_CONFIG {"tools_list_scope":"principal"} (any value other than the exact
+  # string "principal" is treated as "open"). Cost: 'principal' evaluates each tool's
+  # policy on every tools/list, so it is off by default.
+  hash_assign c['tools_list_scope'] = 'open'
 
   assign d = '{}' | parse_json
   hash_assign d['timeout_ms'] = 5000
@@ -88,6 +98,9 @@
   if raw != blank
     assign override = raw | parse_json
     unless override == blank
+      # `override` is operator-supplied JSON (parse_json) — its keys are dynamic, so
+      # the linter's static property check can't see them. Correct at runtime.
+      # platformos-check-disable UnknownProperty
       unless override.defaults == blank
         assign merged_defaults = c.defaults | hash_merge: override.defaults
         hash_assign override['defaults'] = merged_defaults
@@ -96,6 +109,7 @@
         assign merged_resources = c.resources | hash_merge: override.resources
         hash_assign override['resources'] = merged_resources
       endunless
+      # platformos-check-enable UnknownProperty
       assign c = c | hash_merge: override
     endunless
   endif

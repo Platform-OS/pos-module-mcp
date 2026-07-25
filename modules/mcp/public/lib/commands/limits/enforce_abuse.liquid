@@ -53,7 +53,8 @@
     hash_assign le['request_id'] = '' | uuid
     function _ = 'modules/mcp/commands/ledger/append', entry: le
     hash_assign out['suspended'] = true
-    log principal_id | append: ' suspended after ' | append: count | append: ' violations', type: 'mcp.abuse_suspend'
+    assign _lm = principal_id | append: ' suspended after ' | append: count | append: ' violations'
+    log _lm, type: 'mcp.abuse_suspend'
   endif
   return out
 %}
