@@ -12,6 +12,7 @@ query find_by_digest($token_digest: String!) {
       label: property(name: "label")
       status: property(name: "status")
       allowed_tools: property_array(name: "allowed_tools")
+      last_used_at: property(name: "last_used_at")
     }
   }
 }

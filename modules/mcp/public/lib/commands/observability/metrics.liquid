@@ -120,7 +120,15 @@
     hash_assign latency['available'] = false
   endif
 
-  function chain = 'modules/mcp/commands/ledger/verify_chain'
+  # Chain verification. Default (chain_tail unset/0) = full walk, unchanged for any caller.
+  # A caller may pass chain_tail: N to do the BOUNDED recent-window check instead (the
+  # operator console uses this for a cheap per-load status, with an on-demand full audit).
+  assign chain_tail = chain_tail | default: 0 | plus: 0
+  if chain_tail > 0
+    function chain = 'modules/mcp/commands/ledger/verify_chain_recent', limit: chain_tail
+  else
+    function chain = 'modules/mcp/commands/ledger/verify_chain'
+  endif
 
   assign out = '{}' | parse_json
   hash_assign out['total'] = total
