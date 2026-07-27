@@ -12,6 +12,24 @@
                    max_schema_depth,rate_limit_per_min}, ledger{retention_days}.
 {%- endcomment -%}
 {% liquid
+  # Per-request memo (spec §17.3). config is a PURE function of the MCP_CONFIG /
+  # MCP_OAUTH_* constants + request host — all invariant within a single request —
+  # yet it is invoked from ~18 call sites and rebuilt several times per tools/call
+  # across partial boundaries (a plain `assign` cannot be reused across a `function`
+  # call). context.exports is threaded through the shared Liquid environment, so a
+  # value exported by the FIRST invocation is readable by every later one in the
+  # SAME request (and never leaks across requests — that is the cache tag, not this).
+  # Return the memo when present; otherwise build once and export at the bottom.
+  # Safe to share by reference: every caller binds the result read-only (no caller
+  # mutates it in place). `context.exports` is nil until something is exported, and
+  # nil traversal yields nil (= blank), so the guard is safe on the first call.
+  # platformos-check-disable UnknownProperty
+  assign cfg_memo = context.exports.mcp.config
+  # platformos-check-enable UnknownProperty
+  unless cfg_memo == blank
+    return cfg_memo
+  endunless
+
   assign c = '{}' | parse_json
   # MCP protocol revision this server implements (pinned — spec §13.1/§18.7).
   hash_assign c['protocol_version'] = '2025-06-18'
@@ -114,5 +132,10 @@
     endunless
   endif
 
-  return c
+  # Memoize the fully-resolved config for the remainder of THIS request (see the
+  # top-of-file note). `export` stores `config` under context.exports.mcp.config,
+  # which the read guard above consumes on every subsequent invocation.
+  assign config = c
+  export config, namespace: 'mcp'
+  return config
 %}
