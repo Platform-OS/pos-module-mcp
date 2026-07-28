@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "user": "^5.2.11"
-  },
-  "machine_name": "mcp",
-  "version": "0.1.0",
-  "name": "pos-module-mcp"
-}

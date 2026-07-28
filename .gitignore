@@ -1,6 +1,7 @@
 .marketplace-kit
 .pos
 tmp/
+tests-v1
 /node_modules/
 .DS_Store
 test/pictures/
