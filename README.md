@@ -373,15 +373,38 @@ node tests/lint-tools.mjs    # static tool linter: injection/SSRF/ledger-write, 
                              # audit hygiene — fails CI on real issues
 ```
 
-`coverage.mjs` drives a four-role fixture matrix (`fixtures.mjs`: operator / member /
-requester / outsider — real users + bearer tokens created through the admin API) against
-a set of **gated test tools** registered only when the `MCP_ENABLE_TEST_TOOLS` constant
-is set (never in a production deploy). Its assertions read real ledger / table / approval-
-queue state, so a broken plane fails them — e.g. an approved action's row must be owned by
-the *original* principal, and a rolled-back write must leave *no* row. The tools are
-community-free and write only to a host `test_note` table. `.github/workflows/mcp-ci.yml`
-runs the static gates on every PR and the live suite (conformance + coverage + eval)
-against an ephemeral instance reserved from the CI pool.
+`conformance.mjs` and `coverage.mjs` run against **deterministic, id-stable fixtures**
+(`tests/seed/seed.mjs` — the single source of truth): fixed users in a reserved id range
+(90100+), each with a **known** bearer token (only its sha256 digest is seeded) and, where
+relevant, an `mcp_access` row — one dedicated user per stateful plane so no test inherits
+another's suspend/abuse state (no shared-state `revive`). The fixtures are seeded via
+platformOS `import_users` / `import_models` with `_id_remap:false` (the numeric ids are
+preserved on every run); each suite calls `applyReset()` at start, which **re-imports to
+baseline** (upsert) so local re-runs are repeatable **without a `data clean`**. No runtime
+`user_create`, no `randomBytes`. Fixtures are never deleted (a deleted fixed id can't be
+re-imported) — only their properties are reset.
+
+For **deploy-time** seeding, `tests/seed/generate_migrations.mjs` emits a byte-deterministic
+migration (`app/migrations/…_seed_mcp_test_fixtures.liquid`) **gated on the
+`MCP_SEED_TEST_FIXTURES` constant** — a plain deploy leaves it unset (no fixtures land);
+the published module ships zero migrations. Regenerate it only when the seed changes:
+`node tests/seed/generate_migrations.mjs`.
+
+`coverage.mjs` drives its fixture users (operator / member / outsider / requester + dedicated
+rate/abuse/validator/conformance principals) against a set of **gated test tools** registered
+only when the `MCP_ENABLE_TEST_TOOLS` constant is set (never in a production deploy). Its
+assertions read real ledger / table / approval-queue state, so a broken plane fails them —
+e.g. an approved action's row must be owned by the *original* principal, and a rolled-back
+write must leave *no* row. The tools are community-free and write only to a host `test_note`
+table. `.github/workflows/mcp-ci.yml` runs the static gates on every PR and the live suite
+(conformance + coverage + eval) against an ephemeral instance reserved from the CI pool.
+
+The test **`app/` is a minimal MCP harness**, not a full community app: it holds only the
+Layer-2 tools (`app/views/partials/mcp/`), their queries (`app/graphql/mcp/`), the
+`test_note` table, the seed migration, and `config`/`user.yml`. The community domain the
+demo tools wrap comes from the vendored `community`/`components` modules; base `user`
+provides login. Deploy the harness with `pos-cli deploy ps` (the published module —
+`modules/mcp/`, deps `{user}` — is unaffected; only `app/` and vendored modules change).
 
 The **tool linter** statically analyzes every tool's manifest + handler + query
 (including unregistered drafts) and catches the author-responsibility issues the

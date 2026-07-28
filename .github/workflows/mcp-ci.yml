@@ -56,10 +56,24 @@ jobs:
       # Catch syntax errors in every harness before the live job tries to run them.
       - name: Syntax-check test harnesses
         run: |
-          for f in fixtures conformance coverage eval lint-tools ci-bootstrap-operator; do
+          for f in fixtures conformance coverage eval lint-tools ci-bootstrap-operator \
+                   seed/seed seed/generate_migrations; do
             node --check "tests/$f.mjs"
           done
           echo "harnesses parse ✓"
+
+      # The generated seed migration must be BYTE-IDENTICAL to the committed seed —
+      # regenerate and fail if `git diff` is non-empty (someone edited the migration by
+      # hand, or changed seed.mjs without regenerating).
+      - name: Seed migration is up-to-date (deterministic)
+        run: |
+          node tests/seed/generate_migrations.mjs
+          if ! git diff --quiet -- app/migrations; then
+            echo "::error::seed migration out of date — run: node tests/seed/generate_migrations.mjs"
+            git --no-pager diff -- app/migrations
+            exit 1
+          fi
+          echo "seed migration up-to-date ✓"
 
       # Author-boundary security gate: static analysis of every tool's manifest,
       # handler and query (including unregistered drafts) for injection / SSRF /
@@ -97,9 +111,12 @@ jobs:
       # The reserved instance URL + the admin api token that authenticates against it.
       MCP_URL: ${{ needs.reserve-and-deploy.outputs.mpkit-url }}
       MCP_TOKEN: ${{ secrets.MPKIT_TOKEN }}
-      # Operator browser login (coverage seeds its own operator; eval uses this one).
+      # Operator browser login (eval uses this one; coverage uses its seeded operator fixture).
       MCP_OP_EMAIL: ${{ secrets.MPKIT_EMAIL }}
       MCP_OP_PASS: ${{ secrets.E2E_TEST_PASSWORD }}
+      # Enable the gated deploy-time seed migration (deterministic fixtures; TASK-5). The
+      # suites also self-seed via applyReset(), so they are deterministic either way.
+      MCP_SEED_TEST_FIXTURES: '1'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -115,7 +132,8 @@ jobs:
 
       # Multi-principal governance planes (visibility scoping/leakage, authz-deny,
       # commit, idempotency, rollback, approval queue + execute-as-principal + reject,
-      # abuse auto-suspend). Seeds its own 4-user matrix + gated test tools.
+      # abuse auto-suspend). Uses deterministic fixtures (tests/seed) re-baselined via
+      # applyReset() + gated test tools; repeatable without a data clean.
       - name: Coverage
         run: node tests/coverage.mjs
 

@@ -18,16 +18,18 @@
  *   MCP_TOKEN  - instance ADMIN api token (for seed/cleanup + ledger reads)
  */
 import { readFileSync } from 'node:fs';
-import { createHash, randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { FIXT, applyReset } from './seed/seed.mjs';
 
-// ---- isolated conformance identity + fixtures ------------------------------
-const RAW_TOKEN = 'mcp_conf_' + randomBytes(16).toString('hex');
-const TOKEN_DIGEST = createHash('sha256').update(RAW_TOKEN).digest('hex');
-const CONF_USER = '999';                       // isolated principal → user:999
-const CONF_PRINCIPAL = 'user:' + CONF_USER;
-const CONF_KEYWORD = 'confjazz' + randomBytes(3).toString('hex');  // unique, only our event matches
+// ---- isolated conformance identity + fixtures (deterministic; TASK-5) ------
+// Fixed, id-stable fixtures seeded by tests/seed (import_users/import_models): no
+// runtime user_create, no randomBytes. applyReset() re-imports them to baseline at
+// the start of the run, so re-runs are repeatable without a full data clean.
+const RAW_TOKEN = FIXT.users.conformance.rawToken;
+const CONF_USER = FIXT.users.conformance.userId;
+const CONF_PRINCIPAL = FIXT.users.conformance.principal;
+const CONF_KEYWORD = FIXT.confKeyword;              // matches ONLY the seeded fixture event
 const TABLE_LEDGER = 'modules/mcp/mcp_ledger';
 const TABLE_TOKEN = 'modules/mcp/mcp_token';
 const TABLE_RATE = 'modules/mcp/mcp_rate_counter';
@@ -103,8 +105,9 @@ async function pagesDeleteByPrefix(prefix) {
 async function main() {
   console.log(`pos-module-mcp conformance → ${MCP}\n(isolated principal ${CONF_PRINCIPAL}, keyword ${CONF_KEYWORD})`);
   await unsetConstant('MCP_CONFIG'); // ensure clean config baseline
-  const eventId = await recordCreate(TABLE_EVENT, { name: 'Conformance Jazz', short_description: CONF_KEYWORD, description: 'a ' + CONF_KEYWORD + ' show', start_date: '2026-09-01T19:00:00Z', status: 'published' });
-  const tokenId = await recordCreate(TABLE_TOKEN, { user_id: CONF_USER, token_digest: TOKEN_DIGEST, label: 'conformance', status: 'active' });
+  // Deterministic fixtures (TASK-5): (re-)import the fixed conformance user + token and
+  // the seeded published event to baseline. Idempotent upsert — safe to run every time.
+  await applyReset(gql);
 
   try {
     group('Transport / envelope (§13)');
@@ -195,6 +198,7 @@ async function main() {
       const docSlug = 'docs/conf-' + CONF_KEYWORD;
       const docUri = 'mcp+page:///' + docSlug;
       const docMarker = 'seeded-' + CONF_KEYWORD;
+      try { await pagesDeleteByPrefix(docSlug); } catch {} // fixed slug now → delete any leftover first
       await pageCreate(docSlug, '# Conformance doc\n' + docMarker, 'Conformance Doc');
 
       await setConstant('MCP_CONFIG', JSON.stringify({ resources: { expose_markdown_pages: true } }));
@@ -270,11 +274,10 @@ async function main() {
       ok('authorized calls carry allow decision', rows.some(x => x.authz_decision === 'allow'));
     }
   } finally {
-    // Surgical cleanup: only our own artifacts. Real tokens/users/ledger untouched.
+    // Reset transient state only; the fixed fixtures (user/token/event) PERSIST and are
+    // re-baselined by applyReset on the next run. Real tokens/users/ledger untouched.
     await unsetConstant('MCP_CONFIG');
     await pruneRate();
-    if (tokenId) await recordDelete(TABLE_TOKEN, tokenId);
-    if (eventId) await recordDelete(TABLE_EVENT, eventId);
     try { await pagesDeleteByPrefix('docs/conf-' + CONF_KEYWORD); } catch {}
   }
 

@@ -18,8 +18,12 @@
  * Run: node tests/coverage.mjs
  * Env: MCP_URL, MCP_TOKEN (instance admin api token) — falls back to the repo .pos "ps".
  */
-import { loadEnv, makeAdmin, seedMatrix, teardownMatrix, pruneRate } from './fixtures.mjs';
-import { createHash, randomBytes } from 'node:crypto';
+import { loadEnv, makeAdmin, pruneRate } from './fixtures.mjs';
+import { FIXT, applyReset, seededRecordIds } from './seed/seed.mjs';
+
+// Ids of the persistent seeded rows — NEVER delete these (a deleted fixed id cannot be
+// re-imported); cleanup removes only web-flow-created EXTRA rows.
+const SEEDED = seededRecordIds();
 
 const { base, admin } = loadEnv();
 const MCP = base.endsWith('/') ? base + 'mcp' : base + '/mcp';
@@ -81,32 +85,15 @@ async function clearAbuse(principal) {
   const r = await adm.gql(`{ records(per_page: 200, filter: { table: { value: "modules/mcp/mcp_rate_counter" } properties: [{ name: "key", starts_with: "abuse:${principal}" }] }) { results { id } } }`);
   for (const row of (r?.data?.records?.results || [])) await adm.recordDelete('modules/mcp/mcp_rate_counter', row.id);
 }
-// Reset a fixture to a clean state between plane-tests: clear its abuse counter and
-// re-activate its token (the abuse mechanism may have auto-suspended it — correctly —
-// from a prior group's deliberate violations). Independent planes must not inherit
-// abuse state from each other; the abuse plane itself is tested on separate principals.
-async function revive(h) {
-  try { await clearAbuse(h.principal); } catch {}
-  try { if (h.tokenId) await recordUpdate('modules/mcp/mcp_token', h.tokenId, { status: 'active' }); } catch {}
+// Clear a principal's idempotency records — the fixed fixtures use FIXED keys, so a prior
+// run's cached result would otherwise replay (no new write) and break re-runs.
+async function clearIdempotencyFor(principalId) {
+  const r = await adm.gql(`{ records(per_page: 200, filter: { table: { value: "modules/mcp/mcp_idempotency" } properties: [{ name: "principal_id", value: "${principalId}" }] }) { results { id } } }`);
+  for (const row of (r?.data?.records?.results || [])) await adm.recordDelete('modules/mcp/mcp_idempotency', row.id);
 }
 async function pendingRecordsFor(principalId) {
   const r = await adm.gql(`{ records(per_page: 100, filter: { table: { value: "${T_PENDING}" } properties: [{ name: "principal_id", value: "${principalId}" }, { name: "status", value: "pending" }] }, sort: [{ id: { order: DESC } }]) { results { id handle: property(name: "handle") } } }`);
   return r?.data?.records?.results || [];
-}
-// Mint a bearer token for a user, optionally narrowed to a set of tools (allowed_tools).
-async function mintToken(userId, allowedTools) {
-  const raw = 'mcp_ci_' + randomBytes(16).toString('hex');
-  const digest = createHash('sha256').update(raw).digest('hex');
-  const props = [
-    `{ name: "user_id", value: "${userId}" }`,
-    `{ name: "token_digest", value: "${digest}" }`,
-    `{ name: "label", value: "cov-extra" }`,
-    `{ name: "status", value: "active" }`,
-  ];
-  if (allowedTools) props.push(`{ name: "allowed_tools", value_array: ${JSON.stringify(allowedTools)} }`);
-  const r = await adm.gql(`mutation { record_create(record: { table: "modules/mcp/mcp_token" properties: [ ${props.join(' ')} ] }) { id } }`);
-  if (!r?.data?.record_create?.id) throw new Error('mintToken failed: ' + JSON.stringify(r?.errors || r));
-  return { raw, id: r.data.record_create.id };
 }
 async function recordUpdate(table, id, props) {
   const p = Object.entries(props).map(([k, v]) => `{ name: "${k}", value: ${JSON.stringify(String(v))} }`).join(' ');
@@ -157,18 +144,25 @@ async function tokensFor(userId) {
   const r = await adm.gql(`{ records(per_page: 50, filter: { table: { value: "modules/mcp/mcp_token" } properties: [{ name: "user_id", value: "${userId}" }] }) { results { id label: property(name: "label") status: property(name: "status") } } }`);
   return r?.data?.records?.results || [];
 }
-// Remove a user's access + token rows (web flows create rows the fixture handles don't track).
+// Remove a user's WEB-FLOW-created access + token rows (mint/grant create rows the fixtures
+// don't track). SKIPS seeded fixture ids — those persist and are re-baselined by applyReset.
 async function purgeUserRecords(userId) {
-  for (const t of await tokensFor(userId)) { try { await adm.recordDelete('modules/mcp/mcp_token', t.id); } catch {} }
+  for (const t of await tokensFor(userId)) { if (SEEDED.has(String(t.id))) continue; try { await adm.recordDelete('modules/mcp/mcp_token', t.id); } catch {} }
   const a = await adm.gql(`{ records(per_page: 50, filter: { table: { value: "modules/mcp/mcp_access" } properties: [{ name: "user_id", value: "${userId}" }] }) { results { id } } }`);
-  for (const row of (a?.data?.records?.results || [])) { try { await adm.recordDelete('modules/mcp/mcp_access', row.id); } catch {} }
+  for (const row of (a?.data?.records?.results || [])) { if (SEEDED.has(String(row.id))) continue; try { await adm.recordDelete('modules/mcp/mcp_access', row.id); } catch {} }
 }
 
 async function main() {
   console.log(`pos-module-mcp coverage → ${MCP}`);
   await setConstant('MCP_ENABLE_TEST_TOOLS', 'true');
-  const M = await seedMatrix(adm, {});
-  const op = M.operator, mem = M.member, out = M.outsider, req = M.requester;
+  // Deterministic fixtures (TASK-5): (re-)import the fixed users/tokens/access to baseline.
+  // Idempotent upsert resets any state a prior run mutated — no runtime user_create, no
+  // randomBytes, no `revive`. One dedicated user per stateful plane so nothing cross-contaminates.
+  await applyReset(adm.gql);
+  const op = FIXT.users.operator, mem = FIXT.users.member, out = FIXT.users.outsider, req = FIXT.users.requester;
+  const rate = FIXT.users.rate, abuseA = FIXT.users.abuseA, abuseB = FIXT.users.abuseB, abuseC = FIXT.users.abuseC, validator = FIXT.users.validator;
+  const narrowTok = mem.tokens.find(t => t.label === 'fixt-narrow');   // pre-seeded, allowed_tools:[test_public]
+  const revokeTok = mem.tokens.find(t => t.label === 'fixt-revoke');   // pre-seeded, revoked+reset per run
   console.log(`(fixtures: operator=${op.principal} member=${mem.principal} outsider=${out.principal})`);
 
   try {
@@ -215,6 +209,7 @@ async function main() {
     // ---- idempotency (§16) ----
     group('Idempotency (§16)');
     await deleteNotesFor(mem.userId);
+    await clearIdempotencyFor(mem.principal);
     {
       const key = 'cov-idem-' + mem.userId;
       await callTool(mem.rawToken, 'test_write', { label: 'idem' }, { idempotencyKey: key });
@@ -293,13 +288,15 @@ async function main() {
     }
 
     // ---- abuse: auto-suspend after repeated violations (§12.4) ----
+    // Dedicated principal (abuseA) so a suspend never contaminates the shared fixtures.
     group('Abuse — auto-suspend after threshold (§12.4)');
     await setConstant('MCP_CONFIG', JSON.stringify({ defaults: { abuse_threshold: 3, abuse_window_seconds: 600 } }));
-    await pruneRate(adm, out.principal);
+    await clearAbuse(abuseA.principal);
+    await pruneRate(adm, abuseA.principal);
     {
-      // Each outsider→test_member is an authorization denial = a counted violation.
-      for (let i = 0; i < 4; i++) await callTool(out.rawToken, 'test_member', {});
-      const after = await callTool(out.rawToken, 'test_public', {});
+      // abuseA is a member (role=user); each abuseA→test_admin is an authorization denial = a counted violation.
+      for (let i = 0; i < 4; i++) await callTool(abuseA.rawToken, 'test_admin', {});
+      const after = await callTool(abuseA.rawToken, 'test_public', {});
       ok('token auto-suspended past threshold → 401', after.status === 401, 'status=' + after.status);
     }
     await unsetConstant('MCP_CONFIG');
@@ -307,19 +304,17 @@ async function main() {
     // ---- token lifecycle: revoke (kill switch) + allowed_tools narrowing ----
     group('Token lifecycle — revoke + allowed_tools narrowing (§9, §6.2)');
     {
-      const t = await mintToken(mem.userId, null);
-      ok('freshly minted token works', isOkResult(await callTool(t.raw, 'test_public', {})));
-      await recordUpdate('modules/mcp/mcp_token', t.id, { status: 'revoked' });
-      const after = await callTool(t.raw, 'test_public', {});
+      // Pre-seeded revoke fixture starts active; applyReset restores it to active next run.
+      ok('active token works', isOkResult(await callTool(revokeTok.raw, 'test_public', {})));
+      await recordUpdate('modules/mcp/mcp_token', revokeTok.id, { status: 'revoked' });
+      const after = await callTool(revokeTok.raw, 'test_public', {});
       ok('revoked token → 401 (central kill switch)', after.status === 401, 'status=' + after.status);
-      await adm.recordDelete('modules/mcp/mcp_token', t.id);
     }
     {
-      const t = await mintToken(mem.userId, ['test_public']);
-      ok('narrowed token: an allowed tool works', isOkResult(await callTool(t.raw, 'test_public', {})));
-      const denied = await callTool(t.raw, 'test_member', {});
+      // Pre-seeded narrow fixture: allowed_tools = ['test_public'].
+      ok('narrowed token: an allowed tool works', isOkResult(await callTool(narrowTok.raw, 'test_public', {})));
+      const denied = await callTool(narrowTok.raw, 'test_member', {});
       ok('narrowed token: a NON-allowed tool is refused (never widens)', isDenied(denied), 'status=' + denied.status);
-      await adm.recordDelete('modules/mcp/mcp_token', t.id);
     }
 
     // ---- expired approval never executes ----
@@ -364,7 +359,7 @@ async function main() {
     // ---- validation matrix (strict, no coercion) ----
     group('Validation matrix (§10, strict, no coercion)');
     {
-      const V = (args) => callTool(mem.rawToken, 'test_validate', args);
+      const V = (args) => callTool(validator.rawToken, 'test_validate', args); // dedicated: its many arg-rejections don't accrue on `member`
       const rej = (r) => r.json?.error?.code === -32602;
       const valid = { kind: 'alpha', count: 5, ratio: 0.5, email: 'a@b.co', uid: '123e4567-e89b-12d3-a456-426614174000', when: '2026-01-01T00:00:00Z', tags: ['x'], code: 'abc' };
       ok('fully valid input accepted', isOkResult(await V(valid)));
@@ -387,53 +382,48 @@ async function main() {
 
     // ---- rate limiting: per-principal isolation ----
     group('Rate limiting — per-principal isolation (§12.4)');
-    await revive(mem);
     await setConstant('MCP_CONFIG', JSON.stringify({ defaults: { rate_limit_per_min: 3 } }));
-    await pruneRate(adm, mem.principal);
+    await pruneRate(adm, rate.principal);
     await pruneRate(adm, op.principal);
     {
       const codes = [];
-      for (let i = 0; i < 5; i++) codes.push((await callTool(mem.rawToken, 'test_public', {})).status);
-      ok('member exhausts its own limit → 429', codes.slice(0, 3).every(c => c === 200) && codes.slice(3).some(c => c === 429), codes.join(','));
+      for (let i = 0; i < 5; i++) codes.push((await callTool(rate.rawToken, 'test_public', {})).status);
+      ok('a principal exhausts its own limit → 429', codes.slice(0, 3).every(c => c === 200) && codes.slice(3).some(c => c === 429), codes.join(','));
       const other = (await callTool(op.rawToken, 'test_public', {})).status;
       ok('a DIFFERENT principal is unaffected (isolation)', other === 200, 'status=' + other);
     }
     await unsetConstant('MCP_CONFIG');
-    await pruneRate(adm, mem.principal);
+    await pruneRate(adm, rate.principal);
 
     // ---- abuse: windowed counter resets across windows ----
     group('Abuse — windowed counter resets across windows (§12.4)');
     {
-      const t = await mintToken(req.userId, null); // requester principal = clean slate
-      await clearAbuse(req.principal);
+      await clearAbuse(abuseB.principal); // dedicated principal = clean slate
       await setConstant('MCP_CONFIG', JSON.stringify({ defaults: { abuse_threshold: 3, abuse_window_seconds: 1 } }));
-      await callTool(t.raw, 'test_admin', {}); // deny = violation (window A)
-      await callTool(t.raw, 'test_admin', {});
+      await callTool(abuseB.rawToken, 'test_admin', {}); // deny = violation (window A)
+      await callTool(abuseB.rawToken, 'test_admin', {});
       await new Promise(r => setTimeout(r, 1500)); // roll to window B
-      await callTool(t.raw, 'test_admin', {}); // window B
-      await callTool(t.raw, 'test_admin', {});
-      const after = await callTool(t.raw, 'test_public', {});
+      await callTool(abuseB.rawToken, 'test_admin', {}); // window B
+      await callTool(abuseB.rawToken, 'test_admin', {});
+      const after = await callTool(abuseB.rawToken, 'test_public', {});
       ok('violations split across windows do NOT accumulate to suspend', after.status === 200, 'status=' + after.status);
       await unsetConstant('MCP_CONFIG');
-      await adm.recordDelete('modules/mcp/mcp_token', t.id);
     }
 
     // ---- abuse: unknown-tool attempts count as violations ----
     group('Abuse — unknown-tool attempts trigger suspend (§12.4)');
     {
-      const t = await mintToken(req.userId, null);
-      await clearAbuse(req.principal);
+      await clearAbuse(abuseC.principal);
       await setConstant('MCP_CONFIG', JSON.stringify({ defaults: { abuse_threshold: 3, abuse_window_seconds: 600 } }));
-      for (let i = 0; i < 4; i++) await callTool(t.raw, 'no_such_tool_xyz', {}); // unknown-tool violations
-      const after = await callTool(t.raw, 'test_public', {});
+      for (let i = 0; i < 4; i++) await callTool(abuseC.rawToken, 'no_such_tool_xyz', {}); // unknown-tool violations
+      const after = await callTool(abuseC.rawToken, 'test_public', {});
       ok('repeated unknown-tool attempts → token suspended (401)', after.status === 401, 'status=' + after.status);
       await unsetConstant('MCP_CONFIG');
-      await adm.recordDelete('modules/mcp/mcp_token', t.id);
     }
 
     // ---- mcp_approval_status polling ----
     group('Approval status polling — mcp_approval_status (§9.6)');
-    await revive(mem);
+    await clearAbuse(mem.principal);
     await clearPendingFor(mem.principal);
     await callTool(mem.rawToken, 'test_approve', { label: 'pollme' });
     {
@@ -447,8 +437,9 @@ async function main() {
 
     // ---- idempotency window expiry ----
     group('Idempotency — window expiry re-executes (§16.3)');
-    await revive(mem);
+    await clearAbuse(mem.principal);
     await deleteNotesFor(mem.userId);
+    await clearIdempotencyFor(mem.principal);
     await setConstant('MCP_CONFIG', JSON.stringify({ defaults: { idempotency_window_seconds: 1 } }));
     {
       const key = 'cov-idemexp-' + mem.userId;
@@ -534,10 +525,14 @@ async function main() {
       ok('export honors a filter param (echoed)', jf?.filter?.execution_outcome === 'success', 'filter=' + JSON.stringify(jf?.filter));
     }
   } finally {
-    // ---- restore + clean ----
+    // ---- reset transient state + restore fixtures to baseline (no user teardown) ----
     await unsetConstant('MCP_CONFIG');
-    for (const h of [op, mem, out, req]) { if (!h) continue; try { await deleteNotesFor(h.userId); } catch {} try { await clearPendingFor(h.principal); } catch {} try { await pruneRate(adm, h.principal); } catch {} try { await clearAbuse(h.principal); } catch {} try { await purgeUserRecords(h.userId); } catch {} }
-    await teardownMatrix(adm, M);
+    const principals = [op, mem, out, req, rate, abuseA, abuseB, abuseC, validator];
+    for (const h of principals) { if (!h) continue; try { await deleteNotesFor(h.userId); } catch {} try { await clearPendingFor(h.principal); } catch {} try { await pruneRate(adm, h.principal); } catch {} try { await clearAbuse(h.principal); } catch {} try { await clearIdempotencyFor(h.principal); } catch {} }
+    // Remove web-flow-created rows (granted access + minted tokens), then re-import so every
+    // fixture (incl. the revoked/narrowed tokens and any purged seeded token) returns to baseline.
+    for (const h of [out, mem]) { try { await purgeUserRecords(h.userId); } catch {} }
+    try { await applyReset(adm.gql); } catch {}
     await unsetConstant('MCP_ENABLE_TEST_TOOLS');
   }
 

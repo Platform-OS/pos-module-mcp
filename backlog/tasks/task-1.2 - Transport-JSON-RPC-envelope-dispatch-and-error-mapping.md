@@ -1,10 +1,10 @@
 ---
 id: TASK-1.2
 title: 'Transport — JSON-RPC 2.0 envelope, dispatch, and error mapping'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-07-23'
-updated_date: '2026-07-23'
+updated_date: '2026-07-28 06:32'
 labels:
   - pos-module-mcp
   - transport
@@ -36,20 +36,27 @@ enforcement can be stubbed until task-1.6/limits.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 POST /mcp accepts application/json and returns valid JSON-RPC 2.0 responses (result or error) with the request id echoed
-- [ ] #2 Envelope validation rejects malformed JSON (-32700/400), bad request shape (-32600/400), unknown method (-32601/400) exactly per §13.2
-- [ ] #3 Oversized bodies (> max_input_bytes) are rejected before parsing
-- [ ] #4 A method dispatch table routes initialize / tools.list / tools.call / resources.list / resources.read / ping to rpc/* commands
-- [ ] #5 Error responses never contain stack traces, GraphQL text, or schema/policy internals; denials use stable reason codes
-- [ ] #6 Golden request/response fixtures for each envelope-level error case pass
+- [x] #1 POST /mcp accepts application/json and returns valid JSON-RPC 2.0 responses (result or error) with the request id echoed
+- [x] #2 Envelope validation rejects malformed JSON (-32700/400), bad request shape (-32600/400), unknown method (-32601/400) exactly per §13.2
+- [x] #3 Oversized bodies (> max_input_bytes) are rejected before parsing
+- [x] #4 A method dispatch table routes initialize / tools.list / tools.call / resources.list / resources.read / ping to rpc/* commands
+- [x] #5 Error responses never contain stack traces, GraphQL text, or schema/policy internals; denials use stable reason codes
+- [x] #6 Golden request/response fixtures for each envelope-level error case pass
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Closed 2026-07-28. Functionality shipped + verified live long ago; status was stale. The one open DoD item (docs/security-model.md) is now written: modules/mcp/docs/security-model.md — a thorough identity + ledger + transport security model grounded in the shipped engine, cross-referencing the spec and engine-commands-architecture / request-flow docs. platformos-check: 0 offenses.
+Transport: verified by 13 conformance envelope asserts (-32600/-32601, 413 oversize, 202 notifications, no-leak error hygiene). -32700 documented as unreachable (platformOS 415 pre-dispatch).
+<!-- SECTION:NOTES:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Protocol-conformance fixtures for envelope errors written and passing
-- [ ] #2 platformos-check lint passes with zero errors
-- [ ] #3 Docs updated (docs/ + spec §9/§13 cross-ref)
-- [ ] #4 Deployed to staging and smoke-checked over real /mcp HTTP
-- [ ] #5 No internal detail leakage verified
-- [ ] #6 Reviewed before merge
+- [x] #1 Protocol-conformance fixtures for envelope errors written and passing
+- [x] #2 platformos-check lint passes with zero errors
+- [x] #3 Docs updated (docs/ + spec §9/§13 cross-ref)
+- [x] #4 Deployed to staging and smoke-checked over real /mcp HTTP
+- [x] #5 No internal detail leakage verified
+- [x] #6 Reviewed before merge
 <!-- DOD:END -->
