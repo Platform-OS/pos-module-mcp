@@ -88,9 +88,17 @@ function makeDb(adm) {
     },
     // Mint a fresh active bearer token for a user — used by graders that must probe the
     // surface themselves with a clean token (not the agent's possibly rate-limited/suspended one).
-    async mintToken(userId) {
+    // Optional `allowedTools` narrows the token (per-token least-privilege); it's an array
+    // property, so we mint via import_models (the proven array-property path) in that case.
+    async mintToken(userId, allowedTools) {
       const raw = 'mcp_ci_' + randomBytes(16).toString('hex');
       const digest = createHash('sha256').update(raw).digest('hex');
+      if (allowedTools && allowedTools.length) {
+        const models = [{ type_name: 'modules/mcp/mcp_token', user_id: String(userId), properties: {
+          user_id: String(userId), token_digest: digest, label: 'grader-narrow', status: 'active', allowed_tools: allowedTools } }];
+        const r = await adm.gql('mutation($models:[CustomizationImport!]!){ import_models(_id_remap:true,_index_rebuild:false, models:$models){ ids } }', { models });
+        return { raw, id: r?.data?.import_models?.ids?.[0] };
+      }
       const r = await adm.gql(`mutation { record_create(record: { table: "modules/mcp/mcp_token" properties: [ { name: "user_id", value: "${userId}" } { name: "token_digest", value: "${digest}" } { name: "label", value: "grader-probe" } { name: "status", value: "active" } ] }) { id } }`);
       return { raw, id: r?.data?.record_create?.id };
     },
@@ -215,7 +223,7 @@ async function main() {
     console.error(`\n${sig} — cleaning up…`);
     const h = activeHandle; activeHandle = null;
     if (h && !args.keep) { try { await teardownMatrix(adm, { agent: h }); } catch {} }
-    if (args.vuln) await setVuln(false);
+    try { await setVuln(false); } catch {} // unset regardless (covers --vuln and per-task needsVulnTools)
     process.exit(130);
   };
   process.on('SIGINT', () => onSignal('SIGINT'));
@@ -231,7 +239,7 @@ async function main() {
     for (let rep = 1; rep <= args.k; rep++) {
       const runId = `${defaultRunId()}-${task.id}-${rep}`;
       const started = Date.now();
-      let handle = null, row;
+      let handle = null, row, setup = null, taskVuln = false;
       try {
         // seed a scoped principal (real user + bearer token)
         handle = await makeUser(adm, { runId, key: 'agent', role: task.seed.role, status: task.seed.status, withToken: true, label: `eval-${task.id}` });
@@ -244,6 +252,12 @@ async function main() {
           console.log(brief.split('\n').map((l) => '      ' + l).join('\n') + '\n');
           row = { task: task.id, rep, runId, dry: true, principal: handle.principal };
         } else {
+          // Per-task hooks: some scenarios need the gated honeypot/vuln tools live for the
+          // run (independent of --vuln's inverted verdict) and/or pre-seeded world state
+          // (e.g. a poisoned record). Enabled here, guaranteed-restored in the finally.
+          taskVuln = !!task.needsVulnTools && !args.vuln;
+          if (taskVuln) await setVuln(true);
+          if (task.setup) setup = await task.setup({ adm, db, handle, runId });
           if (args.verbose) console.log(`▶ ${task.id}#${rep}  principal=${handle.principal}  driving ${task.agent || 'default'}…`);
           const drv = await driveAgent({
             brief, agent: task.agent, model: args.model,
@@ -252,7 +266,7 @@ async function main() {
           // persist the raw agent transcript as evidence (schema-inspectable JSONL)
           const tPath = join(resultsDir, `${runId}.transcript.jsonl`);
           try { appendFileSync(tPath, drv.stdout); } catch {}
-          const graded = await task.grade({ adm, db, handle, cursor, transcript: drv.stdout, runId, mcpUrl: evalUrl, verifyChain });
+          const graded = await task.grade({ adm, db, handle, cursor, transcript: drv.stdout, runId, mcpUrl: evalUrl, verifyChain, setup });
           const inconclusive = graded.verdict === 'INCONCLUSIVE';
           const plantedDetected = (graded.checks || []).filter((c) => c.planted && !c.pass).length;
           // --vuln (negative control) INVERTS the meaning: the run PASSES when the eval
@@ -291,6 +305,8 @@ async function main() {
         row = { task: task.id, rep, runId, error: e.message, ms: Date.now() - started };
         console.log(`! ${task.id}#${rep}  ERROR — ${e.message}`);
       } finally {
+        if (setup && setup.cleanup) { try { await setup.cleanup(); } catch (e) { console.error(`  setup cleanup warn: ${e.message}`); } }
+        if (taskVuln) { try { await setVuln(false); } catch {} }
         if (handle && !args.keep) { try { await teardownMatrix(adm, { agent: handle }); } catch (e) { console.error(`  teardown warn: ${e.message}`); } }
         activeHandle = null;
       }

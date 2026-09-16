@@ -13,13 +13,16 @@
     "predeploy": "npm run clean:assets",
     "start": "npx concurrently --kill-others-on-fail npm:dev-*",
 
-    "eslint": "eslint src/js --ext .js"
+    "eslint": "eslint src/js --ext .js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/node": "^22.15.29",
     "rimraf": "^3.0.2",
     "tailwindcss": "^2.2.16",
-    "tailwindcss-rtl": "^0.7.3"
+    "tailwindcss-rtl": "^0.7.3",
+    "vitest": "^4.1.10"
   },
   "optionalDependencies": {
     "fsevents": "^2.3.2"

@@ -252,6 +252,9 @@
     assign sc = '{}' | parse_json
     hash_assign sc['status'] = 'pending_approval'
     hash_assign sc['handle'] = pa.handle
+    # 2026-07-28 Tasks alias: the handle IS the taskId — a Tasks-aware client can poll
+    # tasks/get / withdraw via tasks/update. Additive; 2025 clients ignore the extra key.
+    hash_assign sc['taskId'] = pa.handle
     hash_assign sc['expires_at'] = pa.expires_at
     hash_assign result['structuredContent'] = sc
     function body = 'modules/mcp/commands/rpc/success', id: id, result: result

@@ -203,4 +203,4 @@ What this security model deliberately does **not** claim:
 | Availability | `limits/check`, `note_violation`, `enforce_abuse` | §12.4 | 1.6 |
 | Ledger | `ledger/append`, `canonical`, `verify_chain`, `verify_chain_recent` | §6.1 | 1.7 |
 
-All invariants above are exercised by `tests/conformance.mjs` (transport, identity, validation, execution, adversarial, ledger) and `tests/coverage.mjs` (authorization deny, commit/rollback, idempotency, approval, abuse, ledger tamper-evidence, web-console), which gate CI.
+All invariants above are exercised by `tests/conformance.test.mjs` (transport, identity, validation, execution, adversarial, ledger) and `tests/coverage.test.mjs` (authorization deny, commit/rollback, idempotency, approval, abuse, ledger tamper-evidence, web-console) — Vitest suites that gate CI.

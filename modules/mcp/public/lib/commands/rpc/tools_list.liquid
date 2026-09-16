@@ -111,5 +111,10 @@
     assign nc = 'offset:' | append: next_offset | base64_encode
     hash_assign result['nextCursor'] = nc
   endif
+  # Client-side cache hint (2026-07-28 only; dispatch passes it or nil).
+  unless cache == blank
+    hash_assign result['ttlMs'] = cache.ttlMs
+    hash_assign result['cacheScope'] = cache.cacheScope
+  endunless
   return result
 %}

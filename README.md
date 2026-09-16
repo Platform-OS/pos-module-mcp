@@ -350,27 +350,38 @@ for the full list.
 
 ## Testing
 
-Self-contained Node runners (built-ins only, no deps; read url + admin token from
-`.pos`, or `MCP_URL`/`MCP_TOKEN` env). All are CI-gateable (exit non-zero on failure)
-and **non-destructive** (they seed their own principals/rows/pages, then clean up).
+[Vitest](https://vitest.dev) suites (dev-only; not shipped in the module). They read url +
+admin token from `.pos`, or `MCP_URL`/`MCP_TOKEN` env, and are **non-destructive** (they
+seed their own principals/rows/pages via the deterministic fixtures, then clean up). The
+live suites drive ONE instance and share mutable server state, so the runner is pinned to
+**strictly serial, single-instance** execution (see `vitest.config.mjs`) — do not relax it.
 
 ```bash
-node tests/conformance.mjs   # 42 assertions, single-principal: transport, identity,
-                             # discovery, validation, prompts, execution, adversarial,
-                             # resources, rate-limit, ledger, malformed-input
-node tests/coverage.mjs      # 76 assertions, MULTI-principal: tools/list scoping (leakage),
-                             # authz-deny, validation matrix, commit/rollback, idempotency
-                             # (+window), approval (queue/dedup/cap/execute-as-principal/
-                             # reject/expired/status-poll), token revoke + allowed_tools,
-                             # rate-limit isolation, abuse (suspend/window/unknown-tool),
-                             # ledger tamper-evidence (verify_chain), and the WEB console
-                             # (operator authz-gating, access request→grant→mint→revoke,
-                             # token IDOR guard, ledger JSON export)
-node tests/eval.mjs          # tool-surface eval: description quality, no-poison,
-                             # uniqueness, golden-case tool-exists + args-valid
-node tests/lint-tools.mjs    # static tool linter: injection/SSRF/ledger-write, schema
-        [--strict] [--json]  # correctness, per-field-kind content hardening, governance/
-                             # audit hygiene — fails CI on real issues
+npm ci            # once — installs vitest
+npm test          # run all suites (npx vitest run)
+npm run test:watch  # watch mode while developing
+
+# or target one suite:
+npx vitest run tests/conformance.test.mjs   # single-principal: transport, identity, discovery,
+                                            # validation, prompts, execution, adversarial,
+                                            # resources, rate-limit, ledger, malformed-input
+npx vitest run tests/coverage.test.mjs      # MULTI-principal: tools/list scoping (leakage),
+                                            # authz-deny, validation matrix, commit/rollback,
+                                            # idempotency (+window), approval (queue/dedup/cap/
+                                            # execute-as-principal/reject/expired/status-poll),
+                                            # token revoke + allowed_tools, rate-limit isolation,
+                                            # abuse (suspend/window/unknown-tool), ledger
+                                            # tamper-evidence, and the WEB console flows
+npx vitest run tests/eval.test.mjs          # tool-surface eval: description quality, no-poison,
+                                            # uniqueness, golden-case tool-exists + args-valid
+npx vitest run tests/lint-tools.test.mjs    # static tool linter (LINT_STRICT=1 fails on warnings)
+```
+
+The tool linter is also a standalone, dependency-free CLI (no instance needed):
+
+```bash
+node tests/lib/lint-tools.mjs [--strict] [--json]   # injection/SSRF/ledger-write, schema
+                                                     # correctness, content hardening, hygiene
 ```
 
 `conformance.mjs` and `coverage.mjs` run against **deterministic, id-stable fixtures**

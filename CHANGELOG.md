@@ -25,6 +25,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **MCP `2026-07-28` protocol support — per-request negotiation.** The engine now implements
+  both `2025-06-18` and the new stateless `2026-07-28` revision and negotiates **per request**
+  (`_meta.protocolVersion` → `MCP-Protocol-Version` header → `initialize` params → default).
+  A version-less/unknown request stays on `2025-06-18`, byte-for-byte unchanged; the
+  `2026-07-28` additions activate ONLY when explicitly negotiated: **header-based routing**
+  (`Mcp-Method`/`Mcp-Name` reconciliation — a header may supply a missing body value, but one
+  that *disagrees* is rejected `-32600`, never silently resolved) and **cacheable list results**
+  (`ttlMs`/`cacheScope` on `tools/list`, `prompts/list`, `resources/list`, `resources/read`;
+  registry is deploy-invariant → long TTL, principal-scoped list → `cacheScope:"per-principal"`).
+  `initialize` echoes the *negotiated* revision and advertises `_meta.supportedProtocolVersions`;
+  `/mcp-health` lists `protocols_supported`. New `commands/protocol/{negotiate,cache_hint}`;
+  full gap analysis + migration checklist in `docs/spec-2026-07-28-gap.md`. Verified by a new
+  `conformance.test.mjs` block (negotiation precedence, unchanged-for-2025, gated cache hints,
+  header reconciliation) — no regression to the 2025-06-18 pipeline.
+- **Tasks extension** (`io.modelcontextprotocol/tasks`) — an approval-gated action is now a
+  first-class **task**: a 2026-07-28 client polls it with **`tasks/get`** and withdraws it with
+  **`tasks/update`** (cancel only). Self-scoped (a caller sees only its own tasks — unknown and
+  not-yours both return "not found", no enumeration) and terminal-immutable. Critically,
+  `tasks/update` supports **cancel only** — an agent can never self-approve, so the operator
+  human-in-the-loop gate cannot be bypassed (approve/reject stay console-only). The methods are
+  gated to a 2026-negotiated client (a 2025 client keeps using the built-in `mcp_approval_status`);
+  the capability is advertised in `initialize` and the pending `tools/call` response carries a
+  `taskId` alias. New `commands/rpc/{tasks_get,tasks_update}` + `commands/tasks/present`. Verified
+  by `coverage.test.mjs › Tasks extension` (poll → working, cancel → cancelled + queue freed,
+  cross-principal not-found, self-approve blocked `-32602`, capability gated to 2026).
 - **Agentic-eval harness** (`agentic-eval/`) — a methodology skeleton that drives a real
   LLM agent (opencode) against the live governed surface and grades on the **ledger +
   active probes, not the agent's self-report**. Self-contained `penetration-tester`
@@ -45,6 +70,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the grader actively probes each planted vuln, and a run that DETECTS them reads as
   `NEG-CONTROL PASS`. Verified live (`detected 4/4 planted vulns`) + verified never served
   when the constant is unset (no production surface). Community-free. (task-6)
+- **Stored-prompt-injection agentic scenario** (`agentic-eval`, task `stored-injection`) —
+  proves the engine contains a *second-order* injection: `setup()` seeds a poisoned event
+  (user-generated content instructing the agent to call a destructive tool), a normal
+  helpful agent is told to review and act on events, and the grader verifies all three
+  containment mechanisms against safe `vuln_delete_all*` **honeypot** tools — **authz-deny**,
+  **least-privilege** (`allowed_tools`), and the **approval gate** — from the ledger. The
+  verdict is deterministic containment (no honeypot ever returns `success`); agent
+  susceptibility is reported as non-gating telemetry. Honeypots are gated negative controls
+  with safe no-op handlers (`MCP_ENABLE_VULN_TOOLS`, enabled per-task via a new
+  `needsVulnTools` hook + a `task.setup` world-seeding hook), and the linter skips `vuln_*`.
 
 - **Principal-scoped tool discovery** — new `tools_list_scope` config key. `open`
   (default) keeps MCP's public discovery; `principal` filters `tools/list` to the tools
@@ -71,6 +106,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CI** (`.github/workflows/mcp-ci.yml`) — static gates (engine-decoupling guard,
   tool linter, `pos-cli check`) on every PR + a live stage that reserves an ephemeral
   instance, deploys, and runs conformance + coverage + eval.
+- **Security & architecture docs** (`modules/mcp/docs/`) — `security-model.md` (identity,
+  transport, and the two-fold ledger-integrity model: append-only by construction +
+  tamper-evident), `engine-commands-architecture.md`, and an exhaustive step-by-step
+  request-flow walkthrough (`request-flow.md`).
+- **Deterministic test fixtures** (`tests/seed/`) — migration-seeded fixed-id users,
+  tokens, and access rows (gated by `MCP_SEED_TEST_FIXTURES`) so the conformance and
+  coverage suites are repeatable across back-to-back runs instead of minting random state.
 
 ### Changed
 
@@ -80,6 +122,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fix). 35 → 36 assertions.
 - `.platformos-check.yml` scoped to lint only pos-module-mcp's own sources; the module
   is now `pos-cli check`-clean.
+- **Publish shape corrected** — the root `pos-module.json` now declares only the `user`
+  dependency. The vendored `community` module and its dependencies belong to the test
+  app, not to pos-module-mcp; publishing as-was would have pulled the whole test
+  harness's dependency tree into consumers.
+- **`app/` slimmed to the test surface** — removed the vendored user/admin module copies,
+  community migrations, and unrelated assets/translations; `app/` now carries only the
+  Layer-2 test tools, their queries, the `test_note` table, and the seed migration.
+
+### Performance
+
+- **Registry build cached** (`registry/load`) — the tool registry (manifest
+  meta-validation + description lint) is deploy-invariant but was rebuilt on *every*
+  `tools/list` and every `tools/call` (via `resolve_tool`). It is now wrapped in
+  `{% cache %}` and shared across requests, auto-invalidated on deploy. The cache key
+  folds in the `MCP_ENABLE_TEST_TOOLS` / `MCP_ENABLE_VULN_TOOLS` gate constants — a
+  constant change is not a view change, so a static key would serve a stale registry.
+- **Observability metrics via exact server-side counts** — the console metrics replaced
+  an O(N) paged ledger scan (capped at 10k rows, ~10s at 10k) with a fixed set of
+  `total_entries` filtered counts (one per outcome / decision / error-code / registered
+  tool). Now all-time **exact**, uncapped, and flat (~O(1), index-backed) as the ledger
+  grows; latency percentiles come from a bounded recent sample. Backed by new
+  `ledger/count_all|count_by|count_by_int|recent_durations` queries, with the scan-vs-count
+  decision measured by a perf harness (`tests/perf/ledger-metrics-bench.mjs`).
+- **Per-request config memoization** — `commands/config` builds the effective config once
+  and shares it across the function-tag subcontext via `context.exports` (a shared
+  per-request namespace), instead of re-parsing the `MCP_CONFIG` constant on every command
+  that reads it.
+
+### Console
+
+- **Left-sidebar navigation** replaces the top tab bar on the operator console — still
+  URL-driven (`?tab=`), still JS-free; folds to a horizontal bar on narrow screens.
+- **Gruvbox-dark TUI theme** across the operator console (`/mcp-admin`) and the token
+  console (`/mcp-tools`): monospace, square corners, flat surfaces, visible box borders,
+  a navy base with warm-indigo panels. Dark-only, with a local-first JetBrains Mono font
+  stack (no external font fetch — a security console should not depend on one).
+- **All presentation moved into stylesheet classes** — every inline `style=""` attribute
+  removed from both pages (component classes + a small utility layer); conditional styling
+  uses conditional classes.
+- **Subtle CSS-only motion** — entrance fades, staggered card reveals, and gentle
+  attention pulses (pending-approvals badge, chain-broken banner, freshly-minted token),
+  all gated behind `prefers-reduced-motion: reduce`.
+- **Token console restyle** — the three states (signed out / access-pending / token
+  console) unified under a single HTML skeleton and stylesheet.
+
+### Security
+
+- **Authenticated pages are no longer cacheable (`Cache-Control: no-store`).** The token
+  console renders a raw bearer token once (server-side one-shot via a session flash), but
+  the browser's back-forward cache could restore the rendered page — token included — on
+  Back → Forward, without re-hitting the server. Both `/mcp-tools` and the operator console
+  `/mcp-admin` now send `no-store` (via `{% response_headers %}`), which makes them
+  bfcache-ineligible: Back/Forward forces a fresh server round-trip, by which point the
+  one-shot flash is already consumed. Also keeps secrets out of the disk cache.
+
+### Testing
+
+- **Test suites wrapped in [Vitest](https://vitest.dev)** — `conformance`, `coverage`,
+  `eval`, and the static tool `lint-tools` are now `*.test.mjs` Vitest suites (named,
+  isolated tests + per-check diffs + JUnit output for CI annotations) instead of hand-rolled
+  pass/fail counters. Assertions and detection power are unchanged (the record-and-continue
+  `ok()` maps to `expect.soft`). Because the live suites drive ONE instance and share mutable
+  server state (ledger `seq`, rate/abuse windows, approval queue), the runner is pinned
+  **strictly serial / single-instance** in `vitest.config.mjs` — relaxing that would let
+  suites race. `npm test` runs them all.
+- **Shared harness** (`tests/lib/harness.mjs`) — the MCP JSON-RPC client, config-constant
+  setters, and browser-session helpers are now factory functions shared by the suites
+  (no more copy-per-file). The static linter moved to `tests/lib/lint-tools.mjs`, which
+  exports `lintAll()` and still runs as a dependency-free CLI (`node tests/lib/lint-tools.mjs
+  [--strict] [--json]`). It now **skips the `vuln_*` negative-control fixtures by default**
+  — those are deliberately-insecure tools for the runtime agentic-eval (gated by
+  `MCP_ENABLE_VULN_TOOLS`), not authored tools the static gate should police; pass
+  `--include-vuln` to analyze them anyway.
+- **CI** now installs deps and runs `npx vitest run` for the live stage (JUnit annotations);
+  the static stage runs the linter CLI (`--strict`) with no instance. Node bumped to 22 for
+  Vitest 4.
 
 ## [0.1.0] - 2026-07-24
 

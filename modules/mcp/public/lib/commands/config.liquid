@@ -31,8 +31,25 @@
   endunless
 
   assign c = '{}' | parse_json
-  # MCP protocol revision this server implements (pinned — spec §13.1/§18.7).
+  # MCP protocol revisions. `protocol_version` is the DEFAULT a version-less request
+  # negotiates to — kept at 2025-06-18 so existing clients are byte-for-byte unchanged.
+  # `supported_protocol_versions` is what the server actually implements (latest first);
+  # a request may negotiate up to 2026-07-28 via _meta.protocolVersion, the
+  # MCP-Protocol-Version header, or initialize params (see commands/protocol/negotiate).
+  # spec §13.1/§18.7; 2026-07-28 stateless additions (per-request _meta, header routing,
+  # cacheable lists) activate ONLY when a client explicitly negotiates that revision.
   hash_assign c['protocol_version'] = '2025-06-18'
+  hash_assign c['latest_protocol_version'] = '2026-07-28'
+  hash_assign c['supported_protocol_versions'] = '2026-07-28,2025-06-18' | split: ','
+  # Client-side cache hints (ttlMs/cacheScope) attached to list/read results ONLY for a
+  # 2026-07-28 client. The registry is deploy-invariant → long TTL; resources track page
+  # content → shorter. cacheScope: 'shared' = identical for every caller; 'per-principal'
+  # = varies by identity (principal-scoped tools/list). Tunable via MCP_CONFIG.cache.
+  assign cache = '{}' | parse_json
+  hash_assign cache['tools_ttl_ms'] = 300000
+  hash_assign cache['prompts_ttl_ms'] = 300000
+  hash_assign cache['resources_ttl_ms'] = 60000
+  hash_assign c['cache'] = cache
   # Server display name — reported as serverInfo.name on `initialize` AND used as
   # the suggested `claude mcp add <name>` client alias on /mcp-tools. Override per
   # instance via MCP_CONFIG {"server_name":"acme-community"} to brand the server.

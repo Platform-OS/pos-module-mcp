@@ -57,7 +57,7 @@
   # production — a plain deploy leaves the constant unset, so they are never served.
   assign vuln_gate = context.constants.MCP_ENABLE_VULN_TOOLS | default: ''
   if vuln_gate == '1' or vuln_gate == 'true'
-    assign vuln_names = 'vuln_privesc,vuln_idor,vuln_xss,vuln_secret' | split: ','
+    assign vuln_names = 'vuln_privesc,vuln_idor,vuln_xss,vuln_secret,vuln_delete_all,vuln_delete_all_confirm' | split: ','
     for vn in vuln_names
       assign ve = '{}' | parse_json
       hash_assign ve['name'] = vn

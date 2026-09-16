@@ -9,10 +9,16 @@
  * the "Security boundaries — what the engine does NOT do for you" doc into an
  * automated gate.
  *
- * Run:   node tests/lint-tools.mjs [--strict] [--json]
- *   --strict  warnings also fail the run (default: only errors fail)
- *   --json    machine-readable output
+ * Run:   node tests/lib/lint-tools.mjs [--strict] [--json] [--include-vuln]  (also imported by lint-tools.test.mjs)
+ *   --strict        warnings also fail the run (default: only errors fail)
+ *   --json          machine-readable output
+ *   --include-vuln  also lint the vuln_* negative-control fixtures (see below)
  * Exit:  0 clean · 1 findings at the failing level · 2 setup error
+ *
+ * The vuln_* tools are DELIBERATELY-insecure negative controls for the RUNTIME agentic-eval
+ * (gated behind MCP_ENABLE_VULN_TOOLS) — they exist to be *detected as vulnerable* at
+ * runtime, not to pass a static author-boundary gate. So this linter SKIPS them by default;
+ * pass --include-vuln (or lintAll({ includeVuln: true })) to analyze them anyway.
  *
  * It is fully static — no instance, no network, no deps. Safe to run in CI on every PR.
  *
@@ -25,7 +31,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const APP = join(ROOT, 'app');
 const TOOLS_DIR = join(APP, 'views/partials/mcp/tools');
 const POLICIES_DIR = join(APP, 'views/partials/mcp/policies');
@@ -35,6 +41,11 @@ const REGISTRY = join(APP, 'views/partials/mcp/registry.liquid');
 const args = process.argv.slice(2);
 const STRICT = args.includes('--strict');
 const JSON_OUT = args.includes('--json');
+const INCLUDE_VULN = args.includes('--include-vuln');
+
+// vuln_* = deliberately-insecure negative-control fixtures for the runtime agentic-eval;
+// skipped by the static linter unless explicitly included (they are meant to be insecure).
+const isVulnFixture = (name) => /^vuln_/.test(name || '');
 
 // ---------------------------------------------------------------- findings ----
 const findings = [];
@@ -415,32 +426,56 @@ function lintTool(name, dir, { registered }) {
   }
 }
 
-function main() {
-  if (!existsSync(APP)) { console.error(`No app/ dir at ${APP}`); process.exit(2); }
+// Run the full static analysis and RETURN the findings (no printing, no exit). This is
+// the reusable entrypoint the Vitest suite imports; the CLI wraps it below. `findings` is
+// module-level, so reset it first to make repeated calls independent.
+export function lintAll({ includeVuln = false } = {}) {
+  findings.length = 0;
+  if (!existsSync(APP)) throw new Error(`No app/ dir at ${APP}`);
   const entries = parseRegistry();
   const seen = new Set();
+  const skippedVuln = [];
+  const skip = (name) => !includeVuln && isVulnFixture(name);
 
   // 1) every registered tool (authoritative name)
   for (const { name, path } of entries) {
     const dir = join(APP, 'views/partials', path);
-    seen.add(dir);
+    seen.add(dir); // mark seen either way so the drafts pass never re-lints it
+    if (skip(name)) { skippedVuln.push(name); continue; }
     lintTool(name, dir, { registered: true });
   }
   // 2) every tool dir on disk that ISN'T registered — draft/orphan; still deep-lint it
   if (existsSync(TOOLS_DIR)) {
     for (const d of readdirSync(TOOLS_DIR)) {
       const full = join(TOOLS_DIR, d);
-      if (statSync(full).isDirectory() && !seen.has(full)) lintTool(d, full, { registered: false });
+      if (statSync(full).isDirectory() && !seen.has(full)) {
+        if (skip(d)) { skippedVuln.push(d); continue; }
+        lintTool(d, full, { registered: false });
+      }
     }
   }
 
-  // -------------------------------------------------------- report ----
-  const errors = findings.filter((f) => f.level === 'error');
-  const warns = findings.filter((f) => f.level === 'warn');
-  const infos = findings.filter((f) => f.level === 'info');
+  return {
+    errors: findings.filter((f) => f.level === 'error'),
+    warnings: findings.filter((f) => f.level === 'warn'),
+    infos: findings.filter((f) => f.level === 'info'),
+    findings: [...findings],
+    skippedVuln,
+  };
+}
+
+// -------------------------------------------------------- CLI ----
+function main() {
+  let errors, warns, infos, skippedVuln = [];
+  try { ({ errors, warnings: warns, infos, skippedVuln } = lintAll({ includeVuln: INCLUDE_VULN })); }
+  catch (e) { console.error(e.message); process.exit(2); }
+
+  if (!JSON_OUT && skippedVuln.length) {
+    console.log(`(skipped ${skippedVuln.length} vuln_* negative-control fixture(s): ${skippedVuln.join(', ')} — pass --include-vuln to lint them)`);
+  }
 
   if (JSON_OUT) {
-    console.log(JSON.stringify({ errors: errors.length, warnings: warns.length, infos: infos.length, findings }, null, 2));
+    console.log(JSON.stringify({ errors: errors.length, warnings: warns.length, infos: infos.length, skippedVuln, findings }, null, 2));
   } else {
     const icon = { error: '✗', warn: '⚠', info: 'ℹ' };
     const byTool = {};
@@ -459,4 +494,6 @@ function main() {
   process.exit(fail ? 1 : 0);
 }
 
-main();
+// Only run the CLI when invoked directly (node tests/lib/lint-tools.mjs [--strict] [--json]);
+// when imported by the Vitest suite, expose lintAll() without side effects.
+if (import.meta.url === `file://${process.argv[1]}`) main();

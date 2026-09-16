@@ -366,8 +366,8 @@ curl -s -X POST "$U" -H 'Content-Type: application/json' -H "Authorization: Bear
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_events","arguments":{"limit":"5"}}}'
 ```
 
-Add assertions for your tool to `modules/mcp/tests/conformance.mjs` and run
-`node modules/mcp/tests/conformance.mjs`. Iterate on the handler in isolation with
+Add assertions for your tool to `tests/conformance.test.mjs` and run
+`npx vitest run tests/conformance.test.mjs`. Iterate on the handler in isolation with
 `liquid_render` before wiring — but always confirm over real HTTP: request params
 behave differently there (see gotchas).
 
@@ -413,10 +413,15 @@ manifest, handler, and query and flags the security/quality issues the runtime
 meta-schema can't see (it never has the handler source):
 
 ```bash
-node modules/mcp/tests/lint-tools.mjs            # errors fail; warnings/infos print
-node modules/mcp/tests/lint-tools.mjs --strict   # warnings fail too (recommended in CI)
-node modules/mcp/tests/lint-tools.mjs --json      # machine-readable
+node tests/lib/lint-tools.mjs                 # errors fail; warnings/infos print
+node tests/lib/lint-tools.mjs --strict        # warnings fail too (recommended in CI)
+node tests/lib/lint-tools.mjs --json          # machine-readable
+node tests/lib/lint-tools.mjs --include-vuln  # also lint the vuln_* negative controls
 ```
+
+The `vuln_*` fixtures are deliberately-insecure negative controls for the runtime
+agentic-eval (gated by `MCP_ENABLE_VULN_TOOLS`) — the linter **skips them by default**;
+`--include-vuln` opts them back in.
 
 It lints **every** tool directory, including unregistered drafts (so you can check a
 scaffolded tool before wiring it up), and exits non-zero on findings — drop it into CI
