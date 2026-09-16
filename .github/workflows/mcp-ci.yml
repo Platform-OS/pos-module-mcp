@@ -1,0 +1,154 @@
+name: MCP CI
+
+# CI for pos-module-mcp. Two stages:
+#   • static  — lint + guards, no instance, no secrets. Runs on every push/PR.
+#   • live    — reserve an ephemeral instance from the CI pool, deploy this branch,
+#               run the Vitest suites (conformance + coverage + eval + lint) against it,
+#               then release it.
+# The whole app (community test host + our module) deploys; the harnesses drive only
+# the MCP surface. Per-run instance = full isolation for the rate-limit/ledger/abuse
+# tests that touch global instance state.
+
+on:
+  push:
+    paths:
+      - 'modules/mcp/**'
+      - 'app/views/partials/mcp/**'
+      - 'app/graphql/mcp/**'
+      - 'app/schema/test_note.yml'
+      - 'tests/**'
+      - '.github/workflows/mcp-ci.yml'
+  pull_request:
+    paths:
+      - 'modules/mcp/**'
+      - 'app/views/partials/mcp/**'
+      - 'app/graphql/mcp/**'
+      - 'app/schema/test_note.yml'
+      - 'tests/**'
+      - '.github/workflows/mcp-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  static:
+    name: Static checks (no instance)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The module's headline guarantee: the engine (Layer 1) is standalone — it
+      # references NO other module. This is a property of the source, so we assert
+      # it statically here rather than by deploying to a business-module-free host.
+      # If someone adds a `modules/<x>` reference to the engine, this fails the build.
+      - name: Engine decoupling guard
+        run: |
+          offenders=$(grep -rhoE "modules/[a-z0-9_]+" modules/mcp/public/ \
+            | sort -u | grep -vx "modules/mcp" || true)
+          if [ -n "$offenders" ]; then
+            echo "::error::engine references non-mcp modules — the standalone guarantee is broken:"
+            echo "$offenders"
+            exit 1
+          fi
+          echo "engine references only modules/mcp ✓"
+
+      # Catch syntax errors in every harness/suite before the live job tries to run them.
+      - name: Syntax-check test harnesses
+        run: |
+          find tests -name '*.mjs' -print0 | xargs -0 -I{} node --check "{}"
+          echo "harnesses parse ✓"
+
+      # The generated seed migration must be BYTE-IDENTICAL to the committed seed —
+      # regenerate and fail if `git diff` is non-empty (someone edited the migration by
+      # hand, or changed seed.mjs without regenerating).
+      - name: Seed migration is up-to-date (deterministic)
+        run: |
+          node tests/seed/generate_migrations.mjs
+          if ! git diff --quiet -- app/migrations; then
+            echo "::error::seed migration out of date — run: node tests/seed/generate_migrations.mjs"
+            git --no-pager diff -- app/migrations
+            exit 1
+          fi
+          echo "seed migration up-to-date ✓"
+
+      # Author-boundary security gate: static analysis of every tool's manifest,
+      # handler and query (including unregistered drafts) for injection / SSRF /
+      # ledger-writes / schema faults the runtime meta-schema cannot see.
+      - name: Tool linter (author-boundary security gate)
+        run: node tests/lib/lint-tools.mjs --strict
+
+      # platformOS static analysis (N+1, unescaped output, missing partials, dead
+      # code). .platformos-check.yml scopes reporting to our own sources.
+      - name: pos-cli check
+        run: |
+          npm install -g @platformos/pos-cli
+          pos-cli check run
+
+  reserve-and-deploy:
+    name: Reserve instance + deploy branch
+    needs: static
+    uses: Platform-OS/gh-workflows/.github/workflows/reserve-and-deploy-cs.yml@main
+    with:
+      ci-ps-repository-url: ${{ vars.CI_PS_REPOSITORY_URL }}
+      pw-container: ${{ vars.PW_CONTAINER }}
+      ref_name: ${{ github.head_ref || github.ref_name }}
+    secrets:
+      mpkit-email: ${{ secrets.MPKIT_EMAIL }}
+      e2e-test-password: ${{ secrets.E2E_TEST_PASSWORD }}
+      pos-ci-ps-repo-access-token: ${{ secrets.POS_CI_PS_REPO_ACCESS_TOKEN }}
+
+  live:
+    name: Vitest suites (live instance)
+    needs: [static, reserve-and-deploy]
+    if: success()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # The reserved instance URL + the admin api token that authenticates against it.
+      MCP_URL: ${{ needs.reserve-and-deploy.outputs.mpkit-url }}
+      MCP_TOKEN: ${{ secrets.MPKIT_TOKEN }}
+      # Operator browser login (eval uses this one; coverage uses its seeded operator fixture).
+      MCP_OP_EMAIL: ${{ secrets.MPKIT_EMAIL }}
+      MCP_OP_PASS: ${{ secrets.E2E_TEST_PASSWORD }}
+      # Enable the gated deploy-time seed migration (deterministic fixtures; TASK-5). The
+      # suites also self-seed via applyReset(), so they are deterministic either way.
+      MCP_SEED_TEST_FIXTURES: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'          # Vitest 4 requires Node ^20.19 || ^22.12 || >=24
+      - name: Install test deps
+        run: npm ci
+
+      # Tool-surface eval drives the operator console, so bootstrap the CI operator first
+      # (sets MCP_ADMIN_USER_IDS to the MCP_OP_EMAIL user). conformance + coverage seed
+      # their own principals and don't need it.
+      - name: Bootstrap CI operator (for eval)
+        run: node tests/ci-bootstrap-operator.mjs
+
+      # All suites via Vitest — pinned STRICTLY SERIAL / single-instance (vitest.config.mjs),
+      # because they share this instance's ledger/rate/approval state:
+      #   conformance (protocol + single-principal) · coverage (multi-principal planes) ·
+      #   eval (tool-surface regression) · lint-tools (static author-boundary gate).
+      # Deterministic fixtures (tests/seed) are re-baselined per suite via applyReset().
+      # JUnit report is emitted under CI (see vitest.config.mjs) for run annotations.
+      - name: Test suites (vitest)
+        run: npx vitest run
+
+  cleanup:
+    name: Release CI instance
+    if: always()
+    needs: [static, reserve-and-deploy, live]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release instance back to the pool
+        uses: Platform-OS/ci-repository-reserve-instance-url@0.1.2
+        with:
+          method: release
+          repository-url: ${{ vars.CI_PS_REPOSITORY_URL }}
+          pos-ci-repo-token: ${{ secrets.POS_CI_PS_REPO_ACCESS_TOKEN }}

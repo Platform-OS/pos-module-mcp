@@ -24,7 +24,11 @@
   # Bounded outer paging loop (max 10k pages = 1M entries); breaks when a short
   # page or an empty page is reached.
   for page in (1..10000)
+    # The hash chain MUST be read in order, page by page — sequential pagination is
+    # inherent to chain verification, not a hoistable N+1.
+    # platformos-check-disable NestedGraphQLQuery
     graphql res = 'modules/mcp/ledger/list', table: table, page: page, per_page: per_page
+    # platformos-check-enable NestedGraphQLQuery
     assign rows = res.records.results
     assign n = rows | size
     if n == 0

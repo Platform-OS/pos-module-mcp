@@ -1,26 +1,31 @@
 {%- comment -%}
   JSON-RPC 2.0 dispatch (spec §9.2 steps 1–2, §13). The single entry point behind
   the POST /mcp page. Pure orchestration: validate the envelope, enforce the
-  transport-level size cap, route the method to its rpc/* handler, and return an
+  transport-level size cap, route the method to its rpc/* handler, and return a
   transport-agnostic outcome the page turns into an HTTP response.
 
-  Protocol revision 2025-06-18 removed JSON-RPC batching, so a single request
-  object is expected (no batch arrays). Notifications (method `notifications/*`,
-  no response expected) are acknowledged with 202 and no body.
+  PROTOCOL REVISION. The server implements 2025-06-18 AND 2026-07-28 and negotiates
+  per request (commands/protocol/negotiate) from `_meta.protocolVersion`, the
+  `MCP-Protocol-Version` header, or `initialize` params. A version-less/unknown request
+  falls back to 2025-06-18, so existing clients are unchanged; 2026-07-28 additions
+  (header-based routing reconciliation, cacheable list results) activate only when a
+  client explicitly negotiates that revision. 2025-06-18 removed JSON-RPC batching, so a
+  single request object is expected. Notifications (`notifications/*`) → 202, no body.
 
-  Phase 1 routes: initialize, ping (open); tools/list, tools/call, resources/list,
-  resources/read arrive in later tasks (1.4/1.8) and currently return -32601 so
-  the surface never lies about what it implements.
+  HEADER ROUTING (2026-07-28). A gateway may carry the method + target name in
+  `Mcp-Method` / `Mcp-Name` to route/authorize without parsing the body. We accept them
+  and RECONCILE: a header may supply a missing body value, but a header that DISAGREES
+  with a present body value is a desync we reject (-32600), never silently resolve.
 
   @param {object} params  - context.params (parsed JSON body merged with query)
-  @param {object} headers - context.headers (for auth in the tools/call path)
+  @param {object} headers - context.headers (auth in tools/call; Mcp-* routing headers)
   @return {object} { http_status:int, headers?:object, body?:object }
                    body is a JSON-RPC envelope (or omitted for notifications).
 {%- endcomment -%}
 {% liquid
   function cfg = 'modules/mcp/commands/config'
+  function proto = 'modules/mcp/commands/protocol/negotiate', params: params, headers: headers
 
-  assign method = params.method
   assign id = params.id
   assign out = '{}' | parse_json
 
@@ -33,8 +38,7 @@
     return out
   endif
 
-  # ---- Envelope validation (§13.2). ----
-  # jsonrpc must be exactly "2.0" when present; a missing method is Invalid Request.
+  # ---- Envelope validation (§13.2). jsonrpc must be exactly "2.0" when present. ----
   if params.jsonrpc != blank and params.jsonrpc != '2.0'
     function body = 'modules/mcp/commands/rpc/error', id: id, code: -32600, message: 'Invalid Request'
     hash_assign out['http_status'] = 400
@@ -42,6 +46,22 @@
     return out
   endif
 
+  # ---- Header routing: reconcile Mcp-Method with the body method (2026-07-28). ----
+  assign hdr_method = headers.HTTP_MCP_METHOD | default: ''
+  assign hdr_name = headers.HTTP_MCP_NAME | default: ''
+  assign method = params.method
+  if hdr_method != blank
+    if method == blank
+      assign method = hdr_method
+    elsif method != hdr_method
+      function body = 'modules/mcp/commands/rpc/error', id: id, code: -32600, message: 'Invalid Request: Mcp-Method header disagrees with request method'
+      hash_assign out['http_status'] = 400
+      hash_assign out['body'] = body
+      return out
+    endif
+  endif
+
+  # A missing method (neither body nor header) is Invalid Request.
   if method == blank
     function body = 'modules/mcp/commands/rpc/error', id: id, code: -32600, message: 'Invalid Request'
     hash_assign out['http_status'] = 400
@@ -55,6 +75,18 @@
     return out
   endif
 
+  # ---- Mcp-Name reconciliation for name-bearing methods (tools/call, prompts/get). ----
+  #      A gateway that named the target in the header must agree with the body.
+  assign inner_name = params.params.name
+  if hdr_name != blank and inner_name != blank and hdr_name != inner_name
+    if method == 'tools/call' or method == 'prompts/get'
+      function body = 'modules/mcp/commands/rpc/error', id: id, code: -32600, message: 'Invalid Request: Mcp-Name header disagrees with target name'
+      hash_assign out['http_status'] = 400
+      hash_assign out['body'] = body
+      return out
+    endif
+  endif
+
   # ---- Authenticated methods return a full outcome (status/headers/body). ----
   if method == 'tools/call'
     function oc = 'modules/mcp/commands/rpc/tools_call', params: params, headers: headers, id: id
@@ -66,33 +98,63 @@
   assign handled = false
   case method
     when 'initialize'
-      function result = 'modules/mcp/commands/rpc/initialize', params: params.params
+      # Echo the NEGOTIATED revision (not a hard pin) so a 2026-07-28 client is told the
+      # server speaks its version; a version-less client still gets 2025-06-18.
+      function result = 'modules/mcp/commands/rpc/initialize', protocol_version: proto.version, supported: proto.supported
       assign handled = true
     when 'ping'
       function result = 'modules/mcp/commands/rpc/ping'
       assign handled = true
     when 'tools/list'
-      function result = 'modules/mcp/commands/rpc/tools_list', params: params.params
+      # Discovery stays an OPEN method (never 401). When tools_list_scope is 'principal',
+      # resolve identity fail-soft (resolve_principal returns a deny object, never throws)
+      # and filter the list to what this principal may call; an unauthenticated caller
+      # resolves to 'anonymous' and is advertised nothing. 'open' lists every tool.
+      assign tl_scope = cfg.tools_list_scope | default: 'open'
+      # Cache hint (2026-07-28 only): a principal-scoped list varies by identity, so it is
+      # 'per-principal'; an open list is identical for everyone → 'shared'.
+      assign tools_cache = null
+      if proto.is_2026
+        assign tcs = 'shared'
+        if tl_scope == 'principal'
+          assign tcs = 'per-principal'
+        endif
+        function tools_cache = 'modules/mcp/commands/protocol/cache_hint', kind: 'tools', scope: tcs
+      endif
+      if tl_scope == 'principal'
+        function tl_id = 'modules/mcp/commands/identity/resolve_principal', headers: headers
+        if tl_id.authenticated == true
+          function result = 'modules/mcp/commands/rpc/tools_list', params: params.params, scope: 'principal', principal: tl_id.principal, agent: tl_id.agent, delegation_mode: tl_id.delegation_mode, cache: tools_cache
+        else
+          function result = 'modules/mcp/commands/rpc/tools_list', params: params.params, scope: 'anonymous', cache: tools_cache
+        endif
+      else
+        function result = 'modules/mcp/commands/rpc/tools_list', params: params.params, cache: tools_cache
+      endif
       assign handled = true
     when 'resources/list'
-      function result = 'modules/mcp/commands/rpc/resources_list', params: params.params
+      assign res_cache = null
+      if proto.is_2026
+        function res_cache = 'modules/mcp/commands/protocol/cache_hint', kind: 'resources', scope: 'shared'
+      endif
+      function result = 'modules/mcp/commands/rpc/resources_list', cache: res_cache
       assign handled = true
     when 'resources/templates/list'
       # No parameterized resource templates yet — return an empty set (§13.1).
       assign result = '{"resourceTemplates":[]}' | parse_json
       assign handled = true
     when 'prompts/list'
-      function result = 'modules/mcp/commands/rpc/prompts_list', params: params.params
+      assign pr_cache = null
+      if proto.is_2026
+        function pr_cache = 'modules/mcp/commands/protocol/cache_hint', kind: 'prompts', scope: 'shared'
+      endif
+      function result = 'modules/mcp/commands/rpc/prompts_list', cache: pr_cache
       assign handled = true
     when 'logging/setLevel'
-      # The module logs server-side via `log` with no per-session sink to tune, so a
-      # VALID level is an acknowledged no-op (empty result) per spec. But we still
-      # validate the `level` param against the RFC 5424 / MCP set: an unknown or
-      # missing level is a protocol error (-32602), never a silent success — a
-      # control method must not return {} for garbage input. This method is
-      # intentionally open (like discovery); it changes nothing. If real
-      # per-principal log routing is ever added, it MUST move behind the
-      # authenticated tools/call path (see identity/resolve_principal).
+      # logging is DEPRECATED in 2026-07-28 (12-month window) but still honored: a VALID
+      # level is an acknowledged no-op (empty result); an unknown/missing level is a
+      # protocol error (-32602), never a silent success. Intentionally open (like
+      # discovery); changes nothing.
       assign lvl = params.params.level
       assign valid_levels = 'debug,info,notice,warning,error,critical,alert,emergency' | split: ','
       assign lvl_ok = false
@@ -121,6 +183,11 @@
       hash_assign out['body'] = body
       return out
     endunless
+    if proto.is_2026
+      function rc = 'modules/mcp/commands/protocol/cache_hint', kind: 'resources', scope: 'shared'
+      hash_assign rr['ttlMs'] = rc.ttlMs
+      hash_assign rr['cacheScope'] = rc.cacheScope
+    endif
     function body = 'modules/mcp/commands/rpc/success', id: id, result: rr
     hash_assign out['http_status'] = 200
     hash_assign out['body'] = body
@@ -136,6 +203,41 @@
       return out
     endunless
     function body = 'modules/mcp/commands/rpc/success', id: id, result: pr
+    hash_assign out['http_status'] = 200
+    hash_assign out['body'] = body
+    return out
+  endif
+
+  # ---- Tasks extension (2026-07-28, io.modelcontextprotocol/tasks). An approval-gated
+  #      action IS a task: poll it with tasks/get, withdraw it with tasks/update. Gated to
+  #      a client that negotiated 2026-07-28 (a 2025-06-18 client uses the built-in
+  #      mcp_approval_status tool instead). Both are self-scoped + authenticated. ----
+  if method == 'tasks/get' or method == 'tasks/update'
+    unless proto.is_2026
+      function body = 'modules/mcp/commands/rpc/error', id: id, code: -32601, message: 'Method not found'
+      hash_assign out['http_status'] = 400
+      hash_assign out['body'] = body
+      return out
+    endunless
+    assign tr = null
+    if method == 'tasks/get'
+      function tr = 'modules/mcp/commands/rpc/tasks_get', params: params.params, headers: headers
+    else
+      function tr = 'modules/mcp/commands/rpc/tasks_update', params: params.params, headers: headers
+    endif
+    unless tr._error == blank
+      assign est = 200
+      if tr._error.code == -32001
+        assign est = 401
+      elsif tr._error.code == -32602
+        assign est = 400
+      endif
+      function body = 'modules/mcp/commands/rpc/error', id: id, code: tr._error.code, message: tr._error.message
+      hash_assign out['http_status'] = est
+      hash_assign out['body'] = body
+      return out
+    endunless
+    function body = 'modules/mcp/commands/rpc/success', id: id, result: tr
     hash_assign out['http_status'] = 200
     hash_assign out['body'] = body
     return out

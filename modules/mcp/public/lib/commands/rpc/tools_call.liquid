@@ -141,7 +141,11 @@
     assign edata = '{}' | parse_json
     hash_assign edata['validation_errors'] = val.errors
     function _ = 'modules/mcp/commands/limits/note_violation', principal_id: auth.principal.id
+    # `error` declares and emits an optional `data` param (see rpc/error.liquid); the
+    # linter's arg check doesn't detect it. Valid call.
+    # platformos-check-disable PartialCallArguments
     function body = 'modules/mcp/commands/rpc/error', id: id, code: -32602, message: 'Invalid arguments', data: edata
+    # platformos-check-enable PartialCallArguments
     hash_assign out['http_status'] = 400
     hash_assign out['body'] = body
     return out
@@ -248,6 +252,9 @@
     assign sc = '{}' | parse_json
     hash_assign sc['status'] = 'pending_approval'
     hash_assign sc['handle'] = pa.handle
+    # 2026-07-28 Tasks alias: the handle IS the taskId — a Tasks-aware client can poll
+    # tasks/get / withdraw via tasks/update. Additive; 2025 clients ignore the extra key.
+    hash_assign sc['taskId'] = pa.handle
     hash_assign sc['expires_at'] = pa.expires_at
     hash_assign result['structuredContent'] = sc
     function body = 'modules/mcp/commands/rpc/success', id: id, result: result
@@ -329,6 +336,9 @@
         catch e
           log e.message, type: 'mcp.ledger_append_failed_in_tx'
         endtry
+        # `rollback` is a valid platformOS transaction tag; the linter's HTML/Liquid
+        # parser mis-flags it inside this block. Correct at runtime.
+        # platformos-check-disable LiquidHTMLSyntaxError
         if append_ok
           assign committed = true
         else
@@ -338,6 +348,7 @@
         rollback
       endif
     endtransaction
+    # platformos-check-enable LiquidHTMLSyntaxError
 
     unless committed
       hash_assign le['execution_outcome'] = 'rolled_back'

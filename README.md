@@ -89,6 +89,7 @@ every request — no redeploy needed.
 |---|---|---|
 | `server_name` | `pos-module-mcp` | `serverInfo.name` + the `claude mcp add <name>` alias on `/mcp-tools` |
 | `endpoint_path` | `/mcp` | endpoint path (advertised as the OAuth resource id) |
+| `tools_list_scope` | `open` | `open` advertises every tool to any caller (MCP-default open discovery); `principal` scopes `tools/list` to what the caller may actually call — restricted tools aren't leaked to unauthorized/anonymous callers (least-disclosure). Execution is authorized per-call either way. |
 | `defaults.rate_limit_per_min` | `60` | per-principal fixed-window rate limit |
 | `defaults.max_input_bytes` | `65536` | request body size cap |
 | `defaults.max_schema_depth` | `5` | argument-validation nesting cap |
@@ -324,7 +325,10 @@ ledger with security-lens quick filters and a paginated JSON export.
   backdate/reorder. Immutability is append-only-by-construction + tamper-*evidence*
   (a privileged insider is detected, not silently prevented — the admin API is
   god-mode on platformOS). Pre-auth failures are logged, never chained (no anonymous
-  ledger spam).
+  ledger spam). Appends are **serialized under concurrency** via a mutex row
+  (`mcp_chain_lock`): the read-tail→write is protected by a Postgres row-lock so
+  simultaneous requests cannot fork the chain (platformOS Liquid offers no advisory
+  lock and `{% transaction %}` is READ COMMITTED).
 - **Human-in-the-loop** — high-impact tools require operator approval; execution runs
   as the original principal, re-authorized.
 - **Least leakage** — denials return a stable generic message; specifics go to the
@@ -346,20 +350,72 @@ for the full list.
 
 ## Testing
 
-Two self-contained Node runners (built-ins only, no deps; read url + admin token from
-`.pos`, or `MCP_URL`/`MCP_TOKEN` env). Both are CI-gateable (exit non-zero on failure)
-and **non-destructive** (isolated principal; clean up their own artifacts).
+[Vitest](https://vitest.dev) suites (dev-only; not shipped in the module). They read url +
+admin token from `.pos`, or `MCP_URL`/`MCP_TOKEN` env, and are **non-destructive** (they
+seed their own principals/rows/pages via the deterministic fixtures, then clean up). The
+live suites drive ONE instance and share mutable server state, so the runner is pinned to
+**strictly serial, single-instance** execution (see `vitest.config.mjs`) — do not relax it.
 
 ```bash
-node modules/mcp/tests/conformance.mjs   # 35 assertions: transport, identity, discovery,
-                                         # validation, execution, adversarial, resources,
-                                         # rate-limit, ledger attestation
-node modules/mcp/tests/eval.mjs          # tool-surface eval: description quality, no-poison,
-                                         # uniqueness, golden-case tool-exists + args-valid
-node modules/mcp/tests/lint-tools.mjs    # static tool linter: injection/SSRF/ledger-write,
-        [--strict] [--json]              # schema correctness, per-field-kind content hardening,
-                                         # governance/audit hygiene — fails CI on real issues
+npm ci            # once — installs vitest
+npm test          # run all suites (npx vitest run)
+npm run test:watch  # watch mode while developing
+
+# or target one suite:
+npx vitest run tests/conformance.test.mjs   # single-principal: transport, identity, discovery,
+                                            # validation, prompts, execution, adversarial,
+                                            # resources, rate-limit, ledger, malformed-input
+npx vitest run tests/coverage.test.mjs      # MULTI-principal: tools/list scoping (leakage),
+                                            # authz-deny, validation matrix, commit/rollback,
+                                            # idempotency (+window), approval (queue/dedup/cap/
+                                            # execute-as-principal/reject/expired/status-poll),
+                                            # token revoke + allowed_tools, rate-limit isolation,
+                                            # abuse (suspend/window/unknown-tool), ledger
+                                            # tamper-evidence, and the WEB console flows
+npx vitest run tests/eval.test.mjs          # tool-surface eval: description quality, no-poison,
+                                            # uniqueness, golden-case tool-exists + args-valid
+npx vitest run tests/lint-tools.test.mjs    # static tool linter (LINT_STRICT=1 fails on warnings)
 ```
+
+The tool linter is also a standalone, dependency-free CLI (no instance needed):
+
+```bash
+node tests/lib/lint-tools.mjs [--strict] [--json]   # injection/SSRF/ledger-write, schema
+                                                     # correctness, content hardening, hygiene
+```
+
+`conformance.mjs` and `coverage.mjs` run against **deterministic, id-stable fixtures**
+(`tests/seed/seed.mjs` — the single source of truth): fixed users in a reserved id range
+(90100+), each with a **known** bearer token (only its sha256 digest is seeded) and, where
+relevant, an `mcp_access` row — one dedicated user per stateful plane so no test inherits
+another's suspend/abuse state (no shared-state `revive`). The fixtures are seeded via
+platformOS `import_users` / `import_models` with `_id_remap:false` (the numeric ids are
+preserved on every run); each suite calls `applyReset()` at start, which **re-imports to
+baseline** (upsert) so local re-runs are repeatable **without a `data clean`**. No runtime
+`user_create`, no `randomBytes`. Fixtures are never deleted (a deleted fixed id can't be
+re-imported) — only their properties are reset.
+
+For **deploy-time** seeding, `tests/seed/generate_migrations.mjs` emits a byte-deterministic
+migration (`app/migrations/…_seed_mcp_test_fixtures.liquid`) **gated on the
+`MCP_SEED_TEST_FIXTURES` constant** — a plain deploy leaves it unset (no fixtures land);
+the published module ships zero migrations. Regenerate it only when the seed changes:
+`node tests/seed/generate_migrations.mjs`.
+
+`coverage.mjs` drives its fixture users (operator / member / outsider / requester + dedicated
+rate/abuse/validator/conformance principals) against a set of **gated test tools** registered
+only when the `MCP_ENABLE_TEST_TOOLS` constant is set (never in a production deploy). Its
+assertions read real ledger / table / approval-queue state, so a broken plane fails them —
+e.g. an approved action's row must be owned by the *original* principal, and a rolled-back
+write must leave *no* row. The tools are community-free and write only to a host `test_note`
+table. `.github/workflows/mcp-ci.yml` runs the static gates on every PR and the live suite
+(conformance + coverage + eval) against an ephemeral instance reserved from the CI pool.
+
+The test **`app/` is a minimal MCP harness**, not a full community app: it holds only the
+Layer-2 tools (`app/views/partials/mcp/`), their queries (`app/graphql/mcp/`), the
+`test_note` table, the seed migration, and `config`/`user.yml`. The community domain the
+demo tools wrap comes from the vendored `community`/`components` modules; base `user`
+provides login. Deploy the harness with `pos-cli deploy ps` (the published module —
+`modules/mcp/`, deps `{user}` — is unaffected; only `app/` and vendored modules change).
 
 The **tool linter** statically analyzes every tool's manifest + handler + query
 (including unregistered drafts) and catches the author-responsibility issues the

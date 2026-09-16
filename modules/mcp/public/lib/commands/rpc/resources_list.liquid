@@ -18,7 +18,11 @@
   if cfg.resources.expose_markdown_pages
     assign host = context.location.host
     for prefix in cfg.resources.markdown_page_prefixes
+      # One query per operator-configured slug prefix (a small allowlist, default 1) —
+      # the prefixes are distinct filters, not a per-row N+1.
+      # platformos-check-disable NestedGraphQLQuery
       graphql pres = 'modules/mcp/resources/pages_by_prefix', prefix: prefix, per_page: 100
+      # platformos-check-enable NestedGraphQLQuery
       for page in pres.admin_pages.results
         assign r = '{}' | parse_json
         hash_assign r['uri'] = 'mcp+page:///' | append: page.slug
@@ -41,5 +45,10 @@
 
   assign result = '{}' | parse_json
   hash_assign result['resources'] = resources
+  # Client-side cache hint (2026-07-28 only; dispatch passes it or nil).
+  unless cache == blank
+    hash_assign result['ttlMs'] = cache.ttlMs
+    hash_assign result['cacheScope'] = cache.cacheScope
+  endunless
   return result
 %}

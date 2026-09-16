@@ -46,7 +46,8 @@
           function manifest = manifest_path
         catch e
           assign load_error = 'manifest failed to load'
-          log reg_name | default: path | append: ': ' | append: e.message, type: 'mcp.registry_manifest_load_error'
+          assign _lm = reg_name | default: path | append: ': ' | append: e.message
+          log _lm, type: 'mcp.registry_manifest_load_error'
         endtry
       endif
 
@@ -82,7 +83,8 @@
         assign tools = tools | array_add: m
         if v.warnings.size > 0
           assign wj = v.warnings | join: '; '
-          log v.name | append: ': ' | append: wj, type: 'mcp.registry_lint_warning'
+          assign _lm = v.name | append: ': ' | append: wj
+          log _lm, type: 'mcp.registry_lint_warning'
         endif
       else
         assign ex = '{}' | parse_json
@@ -90,7 +92,8 @@
         hash_assign ex['errors'] = v.errors
         assign excluded = excluded | array_add: ex
         assign ej = v.errors | join: '; '
-        log ex.name | append: ': ' | append: ej, type: 'mcp.registry_excluded_manifest'
+        assign _lm = ex.name | append: ': ' | append: ej
+        log _lm, type: 'mcp.registry_excluded_manifest'
       endif
     endfor
   endif

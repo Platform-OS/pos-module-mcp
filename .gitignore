@@ -1,6 +1,7 @@
 .marketplace-kit
 .pos
 tmp/
+tests-v1
 /node_modules/
 .DS_Store
 test/pictures/
@@ -23,3 +24,7 @@ modules/*
 !modules/components/
 !modules/mcp/
 .platformos-tools.log
+.mcp.json
+
+# vitest
+tests/.vitest-junit.xml

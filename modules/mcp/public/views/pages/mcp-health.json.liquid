@@ -39,6 +39,7 @@ format: json
   hash_assign out['status'] = status
   hash_assign out['server'] = cfg.server_name
   hash_assign out['protocol'] = cfg.protocol_version
+  hash_assign out['protocols_supported'] = cfg.supported_protocol_versions
   hash_assign out['checks'] = checks
   hash_assign out['time'] = 'now' | to_time | strftime: '%Y-%m-%dT%H:%M:%SZ'
   echo out

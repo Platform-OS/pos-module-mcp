@@ -29,7 +29,11 @@ format: json
     unless keep_going
       break
     endunless
+    # Bounded pagination (max 50 pages, capped by export_cap) to stream the export —
+    # one query per page is intended, not a per-row N+1.
+    # platformos-check-disable NestedGraphQLQuery
     graphql s = 'modules/mcp/ledger/search', tool_name: context.params.tool_name, principal_id: context.params.principal_id, client_id: context.params.client_id, authz_decision: context.params.authz_decision, execution_outcome: context.params.execution_outcome, page: page, per_page: per_page
+    # platformos-check-enable NestedGraphQLQuery
     assign total_pages = s.records.total_pages
     for r in s.records.results
       assign out_rows = out_rows | array_add: r

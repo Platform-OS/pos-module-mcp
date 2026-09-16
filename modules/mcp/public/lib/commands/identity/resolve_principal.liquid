@@ -74,6 +74,26 @@
   hash_assign agent['registered'] = true
   hash_assign agent['allowed_tools'] = token.allowed_tools
 
+  # Best-effort recency stamp for the operator console ("last used"). THROTTLED to at most
+  # one write per token per minute (coarse granularity is plenty for a "last seen" display),
+  # so it never becomes a per-request hot-path cost. Semantics: last successful auth of this
+  # token — stamped even if the specific call is later authz-denied (the token WAS used).
+  assign _now_s = 'now' | to_time | strftime: '%s' | plus: 0
+  assign _stamp = false
+  if token.last_used_at == blank
+    assign _stamp = true
+  else
+    assign _last_s = token.last_used_at | to_time | strftime: '%s' | plus: 0
+    assign _age = _now_s | minus: _last_s
+    if _age >= 60
+      assign _stamp = true
+    endif
+  endif
+  if _stamp
+    assign _now_iso = 'now' | to_time | strftime: '%Y-%m-%dT%H:%M:%SZ'
+    graphql _touch = 'modules/mcp/tokens/touch', id: token.id, last_used_at: _now_iso
+  endif
+
   assign ok = '{}' | parse_json
   hash_assign ok['authenticated'] = true
   hash_assign ok['principal'] = principal

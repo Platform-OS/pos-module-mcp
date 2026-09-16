@@ -38,5 +38,10 @@
 
   assign result = '{}' | parse_json
   hash_assign result['prompts'] = out_prompts
+  # Client-side cache hint (2026-07-28 only; dispatch passes it or nil).
+  unless cache == blank
+    hash_assign result['ttlMs'] = cache.ttlMs
+    hash_assign result['cacheScope'] = cache.cacheScope
+  endunless
   return result
 %}

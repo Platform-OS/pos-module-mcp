@@ -1,9 +1,0 @@
-{% graphql r %}
-mutation set_constants {
-  redirect: constant_set(name: "AFTER_LOGIN_REDIRECT", value: "/dashboard"){
-    name
-    value
-  }
-}
-{% endgraphql %}
-{% log r, type: 'migrations/set_redirect' %}
